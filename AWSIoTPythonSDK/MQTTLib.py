@@ -585,7 +585,7 @@ class AWSIoTMQTTShadowClient:
 
         """
         # AWSIoTMQTTClient.configureIAMCredentials
-        self._AWSIoTMQTTClient.configureIAMCredentials(AWSAccessKeyID, AWSSecretAccessKey. AWSSTSToken)
+        self._AWSIoTMQTTClient.configureIAMCredentials(AWSAccessKeyID, AWSSecretAccessKey, AWSSTSToken)
 
     def configureCredentials(self, CAFilePath, KeyPath="", CertificatePath=""):  # Should be good for MutualAuth and Websocket
         """
