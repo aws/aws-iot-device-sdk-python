@@ -613,9 +613,6 @@ incoming message and notice the syncing of the state.
 Instructions
 ************
 
-To run the example, you will need to update the endpoint,
-shadow name, and credential configuration in the ``samples/ThingShadowEcho/ThingShadowEcho.py`` file.
-
 Run the example like this:
 
 .. code-block:: python
