@@ -29,9 +29,9 @@ import struct
 import socket
 import base64
 import hashlib
-from core.util.sigV4Core import sigV4Core
-from core.exception.AWSIoTExceptions import wssNoKeyInEnvironmentError
-from core.exception.AWSIoTExceptions import wssHandShakeError
+from AWSIoTPythonSDK.core.util.sigV4Core import sigV4Core
+from AWSIoTPythonSDK.exception.AWSIoTExceptions import wssNoKeyInEnvironmentError
+from AWSIoTPythonSDK.exception.AWSIoTExceptions import wssHandShakeError
 
 # This is an internal class that buffers the incoming bytes into an
 # internal buffer until it gets the full desired length of bytes.

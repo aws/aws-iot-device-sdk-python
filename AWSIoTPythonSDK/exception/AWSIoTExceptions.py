@@ -13,8 +13,8 @@
 # * permissions and limitations under the License.
 # */
 
-import core.exception.operationTimeoutException as operationTimeoutException
-import core.exception.operationError as operationError
+import AWSIoTPythonSDK.exception.operationTimeoutException as operationTimeoutException
+import AWSIoTPythonSDK.exception.operationError as operationError
 
 
 # Serial Exception

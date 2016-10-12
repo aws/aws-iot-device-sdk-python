@@ -45,9 +45,9 @@ if platform.system() == 'Windows':
 else:
     EAGAIN = errno.EAGAIN
 # AWS WSS implementation
-import core.protocol.paho.securedWebsocket.securedWebsocketCore as wssCore
-import core.util.progressiveBackoffCore as backoffCore
-import core.util.offlinePublishQueue as offlinePublishQueue
+import AWSIoTPythonSDK.core.protocol.paho.securedWebsocket.securedWebsocketCore as wssCore
+import AWSIoTPythonSDK.core.util.progressiveBackoffCore as backoffCore
+import AWSIoTPythonSDK.core.util.offlinePublishQueue as offlinePublishQueue
 
 VERSION_MAJOR=1
 VERSION_MINOR=0
@@ -988,6 +988,8 @@ class Client(object):
         self._state_mutex.acquire()
         self._state = mqtt_cs_disconnecting
         self._state_mutex.release()
+
+        self._backoffCore.stopStableConnectionTimer()
 
         if self._sock is None and self._ssl is None:
             return MQTT_ERR_NO_CONN

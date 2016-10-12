@@ -7,7 +7,7 @@ from distutils.core import setup
 setup(
     name = 'AWSIoTPythonSDK',
     packages = ['AWSIoTPythonSDK', "AWSIoTPythonSDK.core", \
-                "AWSIoTPythonSDK.core.exception", "AWSIoTPythonSDK.core.shadow", \
+                "AWSIoTPythonSDK.exception", "AWSIoTPythonSDK.core.shadow", \
                 "AWSIoTPythonSDK.core.util", \
                 "AWSIoTPythonSDK.core.protocol", "AWSIoTPythonSDK.core.protocol.paho", \
                 "AWSIoTPythonSDK.core.protocol.paho.securedWebsocket"],

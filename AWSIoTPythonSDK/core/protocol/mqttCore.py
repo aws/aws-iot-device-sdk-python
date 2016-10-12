@@ -18,20 +18,20 @@ import ssl
 import time
 import logging
 import threading
-import core.protocol.paho.client as mqtt
-import core.util.offlinePublishQueue as offlinePublishQueue
+import AWSIoTPythonSDK.core.protocol.paho.client as mqtt
+import AWSIoTPythonSDK.core.util.offlinePublishQueue as offlinePublishQueue
 from threading import Lock
-from core.exception.AWSIoTExceptions import connectError
-from core.exception.AWSIoTExceptions import connectTimeoutException
-from core.exception.AWSIoTExceptions import disconnectError
-from core.exception.AWSIoTExceptions import disconnectTimeoutException
-from core.exception.AWSIoTExceptions import publishError
-from core.exception.AWSIoTExceptions import publishQueueFullException
-from core.exception.AWSIoTExceptions import publishQueueDisabledException
-from core.exception.AWSIoTExceptions import subscribeError
-from core.exception.AWSIoTExceptions import subscribeTimeoutException
-from core.exception.AWSIoTExceptions import unsubscribeError
-from core.exception.AWSIoTExceptions import unsubscribeTimeoutException
+from AWSIoTPythonSDK.exception.AWSIoTExceptions import connectError
+from AWSIoTPythonSDK.exception.AWSIoTExceptions import connectTimeoutException
+from AWSIoTPythonSDK.exception.AWSIoTExceptions import disconnectError
+from AWSIoTPythonSDK.exception.AWSIoTExceptions import disconnectTimeoutException
+from AWSIoTPythonSDK.exception.AWSIoTExceptions import publishError
+from AWSIoTPythonSDK.exception.AWSIoTExceptions import publishQueueFullException
+from AWSIoTPythonSDK.exception.AWSIoTExceptions import publishQueueDisabledException
+from AWSIoTPythonSDK.exception.AWSIoTExceptions import subscribeError
+from AWSIoTPythonSDK.exception.AWSIoTExceptions import subscribeTimeoutException
+from AWSIoTPythonSDK.exception.AWSIoTExceptions import unsubscribeError
+from AWSIoTPythonSDK.exception.AWSIoTExceptions import unsubscribeTimeoutException
 
 # Class that holds queued publish request details
 class _publishRequest:
@@ -221,6 +221,15 @@ class mqttCore:
             raise TypeError("None type inputs detected.")
         self._pahoClient.configIAMCredentials(srcAWSAccessKeyID, srcAWSSecretAccessKey, srcAWSSessionToken)
 
+    def setLastWill(self, srcTopic, srcPayload, srcQos):
+        if srcTopic is None or srcPayload is None or srcQos is None:
+            self._log.error("setLastWill: None type inputs detected.")
+            raise TypeError("None type inputs detected.")
+        self._pahoClient.will_set(srcTopic, srcPayload, srcQos, False)
+
+    def clearLastWill(self):
+        self._pahoClient.will_clear()
+
     def setBackoffTime(self, srcBaseReconnectTimeSecond, srcMaximumReconnectTimeSecond, srcMinimumConnectTimeSecond):
         if srcBaseReconnectTimeSecond is None or srcMaximumReconnectTimeSecond is None or srcMinimumConnectTimeSecond is None:
             self._log.error("setBackoffTime: None type inputs detected.")
@@ -230,7 +239,6 @@ class mqttCore:
         self._log.debug("Custom setting for backoff timing: baseReconnectTime = " + str(srcBaseReconnectTimeSecond) + " sec")
         self._log.debug("Custom setting for backoff timing: maximumReconnectTime = " + str(srcMaximumReconnectTimeSecond) + " sec")
         self._log.debug("Custom setting for backoff timing: minimumConnectTime = " + str(srcMinimumConnectTimeSecond) + " sec")
-
 
     def setOfflinePublishQueueing(self, srcQueueSize, srcDropBehavior=mqtt.MSG_QUEUEING_DROP_NEWEST):
         if srcQueueSize is None or srcDropBehavior is None:
@@ -333,7 +341,8 @@ class mqttCore:
         if queuedPublishCondition:
             if self._connectResultCode == sys.maxsize:
                 self._log.info("Offline publish request detected.")
-            if not self._drainingComplete:
+            # If the client is connected but draining is not completed...
+            elif not self._drainingComplete:
                 self._log.info("Drainging is still on-going.")
             self._log.info("Try queueing up this request...")
             # Publish to the queue and report error (raise Exception)

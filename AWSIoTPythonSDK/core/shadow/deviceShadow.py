@@ -329,7 +329,7 @@ class deviceShadow:
 
         .. code:: python
 
-          # Retrieve the shadow JSON document from AWS IoT, with a timeout set to 5 seconds
+          # Update the shadow JSON document from AWS IoT, with a timeout set to 5 seconds
           BotShadow.shadowUpdate(newShadowJSONDocumentString, customCallback, 5)
 
         **Parameters**

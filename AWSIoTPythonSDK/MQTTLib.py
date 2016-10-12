@@ -20,7 +20,6 @@ import core.protocol.mqttCore as mqttCore
 import core.shadow.shadowManager as shadowManager
 # import deviceShadow
 import core.shadow.deviceShadow as deviceShadow
-
 # Constants
 # - Protocol types:
 MQTTv3_1 = 3
@@ -29,7 +28,6 @@ MQTTv3_1_1 = 4
 DROP_OLDEST = 0
 DROP_NEWEST = 1
 #
-
 
 class AWSIoTMQTTClient:
 
@@ -87,6 +85,56 @@ class AWSIoTMQTTClient:
         self._mqttCore = mqttCore.mqttCore(clientID, cleanSession, protocolType, useWebsocket)
 
     # Configuration APIs
+    def configureLastWill(self, topic, payload, QoS):
+        """
+        **Description**
+
+        Used to configure the last will topic, payload and QoS of the client. Should be called before connect.
+
+        **Syntax**
+
+        .. code:: python
+          myAWSIoTMQTTClient.configureLastWill("last/Will/Topic", "lastWillPayload", 0)
+
+        **Parameters**
+
+        *topic* - Topic name that last will publishes to.
+
+        *payload* - Payload to publish for last will.
+
+        *QoS* - Quality of Service. Could be 0 or 1.
+
+        **Returns**
+
+        None
+
+        """
+        # mqttCore.setLastWill(srcTopic, srcPayload, srcQos)
+        self._mqttCore.setLastWill(topic, payload, QoS)
+
+    def clearLastWill(self):
+        """
+        **Description**
+
+        Used to clear the last will configuration that is previously set through configureLastWill.
+
+        **Syntax**
+
+        ..code:: python
+          myAWSIoTMQTTClient.clearLastWill()
+
+        **Parameter**
+
+        None
+
+        **Returns**
+
+        None
+        
+        """
+        #mqttCore.clearLastWill()
+        self._mqttCore.clearLastWill()
+
     def configureEndpoint(self, hostName, portNumber):
         """
         **Description**
@@ -399,7 +447,7 @@ class AWSIoTMQTTClient:
 
         *payload* - Payload to publish.
 
-        *QoS* - Quality of Service. Could be 0 ot 1.
+        *QoS* - Quality of Service. Could be 0 or 1.
 
         **Returns**
 
@@ -525,6 +573,56 @@ class AWSIoTMQTTShadowClient:
         self._shadowManager = shadowManager.shadowManager(self._AWSIoTMQTTClient._mqttCore)
 
     # Configuration APIs
+    def configureLastWill(self, topic, payload, QoS):
+        """
+        **Description**
+
+        Used to configure the last will topic, payload and QoS of the client. Should be called before connect.
+
+        **Syntax**
+
+        .. code:: python
+          myAWSIoTMQTTClient.configureLastWill("last/Will/Topic", "lastWillPayload", 0)
+
+        **Parameters**
+
+        *topic* - Topic name that last will publishes to.
+
+        *payload* - Payload to publish for last will.
+
+        *QoS* - Quality of Service. Could be 0 or 1.
+
+        **Returns**
+
+        None
+
+        """
+        # AWSIoTMQTTClient.configureLastWill(srcTopic, srcPayload, srcQos)
+        self._AWSIoTMQTTClient.configureLastWill(topic, payload, QoS)
+
+    def clearLastWill(self):
+        """
+        **Description**
+
+        Used to clear the last will configuration that is previously set through configureLastWill.
+
+        **Syntax**
+
+        ..code:: python
+          myAWSIoTShadowMQTTClient.clearLastWill()
+
+        **Parameter**
+
+        None
+
+        **Returns**
+
+        None
+        
+        """
+        # AWSIoTMQTTClient.clearLastWill()
+        self._AWSIoTMQTTClient.clearLastWill()
+
     def configureEndpoint(self, hostName, portNumber):
         """
         **Description**

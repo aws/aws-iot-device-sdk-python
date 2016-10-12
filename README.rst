@@ -220,7 +220,7 @@ You can initialize and configure the client like this:
     # For TLS mutual authentication
     myMQTTClient.configureEndpoint("YOUR.ENDPOINT", 8883)
     # For Websocket
-    # myShadowClient.configureEndpoint("YOUR.ENDPOINT", 443)
+    # myMQTTClient.configureEndpoint("YOUR.ENDPOINT", 443)
     myMQTTClient.configureCredentials("YOUR/ROOT/CA/PATH", "PRIVATE/KEY/PATH", "CERTIFICATE/PATH")
     # For Websocket, we only need to configure the root CA
     # myMQTTClient.configureCredentials("YOUR/ROOT/CA/PATH")

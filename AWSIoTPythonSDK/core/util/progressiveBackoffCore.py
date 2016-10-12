@@ -78,6 +78,11 @@ class progressiveBackoffCore:
         self._resetBackoffTimer = threading.Timer(self._minimumConnectTimeSecond, self._connectionStableThenResetBackoffTime)
         self._resetBackoffTimer.start()
 
+    def stopStableConnectionTimer(self):
+       if self._resetBackoffTimer is not None:
+           # Cancel the timer
+           self._resetBackoffTimer.cancel()
+
     # Timer callback to reset _currentBackoffTimeSecond
     # If the connection is stable for longer than _minimumConnectTimeSecond,
     # reset the currentBackoffTimeSecond to _baseReconnectTimeSecond
