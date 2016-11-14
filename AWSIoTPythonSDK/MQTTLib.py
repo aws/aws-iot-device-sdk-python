@@ -15,11 +15,11 @@
 # */
 
 # import mqttCore
-import core.protocol.mqttCore as mqttCore
+import AWSIoTPythonSDK.core.protocol.mqttCore as mqttCore
 # import shadowManager
-import core.shadow.shadowManager as shadowManager
+import AWSIoTPythonSDK.core.shadow.shadowManager as shadowManager
 # import deviceShadow
-import core.shadow.deviceShadow as deviceShadow
+import AWSIoTPythonSDK.core.shadow.deviceShadow as deviceShadow
 # Constants
 # - Protocol types:
 MQTTv3_1 = 3

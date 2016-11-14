@@ -328,9 +328,9 @@ default configuration for backoff timing will be performed on initialization:
 
 .. code-block:: python
 
-    baseReconnectQuietTimeSecond = 1;
-    maxReconnectQuietTimeSecond = 32;
-    stableConnectionTimeSecond = 20;
+    baseReconnectQuietTimeSecond = 1
+    maxReconnectQuietTimeSecond = 32
+    stableConnectionTimeSecond = 20
 
 Offline Publish Requests Queueing with Draining
 _______________________________________________

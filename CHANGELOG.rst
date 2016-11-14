@@ -2,6 +2,12 @@
 CHANGELOG
 =========
 
+1.1.1
+=====
+* bugfix:Issue:`#23 <https://github.com/aws/aws-iot-device-sdk-python/issues/23>`__
+* bugfix:README documentation
+
+
 1.1.0
 =====
 * feature:AWSIoTMQTTClient:last will configuration APIs

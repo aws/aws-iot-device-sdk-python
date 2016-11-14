@@ -115,11 +115,7 @@ if missingConfiguration:
 	exit(2)
 
 # Configure logging
-logger = None
-if sys.version_info[0] == 3:
-	logger = logging.getLogger("core")  # Python 3
-else:
-	logger = logging.getLogger("AWSIoTPythonSDK.core")  # Python 2
+logger = logging.getLogger("AWSIoTPythonSDK.core")
 logger.setLevel(logging.DEBUG)
 streamHandler = logging.StreamHandler()
 formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
