@@ -439,7 +439,7 @@ class AWSIoTMQTTClient:
           # Publish a QoS0 message "myPayload" to topic "myToppic"
           myAWSIoTMQTTClient.publish("myTopic", "myPayload", 0)
           # Publish a QoS1 message "myPayload2" to topic "myTopic/sub"
-          myAWSIoTMQTTClient.publish("myTopic/sub", "myPayload", 1)
+          myAWSIoTMQTTClient.publish("myTopic/sub", "myPayload2", 1)
 
         **Parameters**
 
@@ -784,7 +784,7 @@ class AWSIoTMQTTShadowClient:
         """
         **Description**
 
-        Connect to AWS IoT, with user-specific keeoalive interval configuration.
+        Connect to AWS IoT, with user-specific keepalive interval configuration.
 
         **Syntax**
 
