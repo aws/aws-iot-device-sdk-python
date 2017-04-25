@@ -155,4 +155,5 @@ Bot.shadowRegisterDeltaCallback(customShadowCallback_Delta)
 
 # Loop forever
 while True:
+	time.sleep(60)
 	pass
