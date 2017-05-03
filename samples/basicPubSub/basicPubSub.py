@@ -19,7 +19,7 @@ from AWSIoTPythonSDK.MQTTLib import AWSIoTMQTTClient
 import sys
 import logging
 import time
-import getopt
+from docopt import docopt
 
 # Custom MQTT message callback
 def customCallback(client, userdata, message):
@@ -31,6 +31,9 @@ def customCallback(client, userdata, message):
 
 # Usage
 usageInfo = """Usage:
+  basicPubSub.py --endpoint ENDPOINT --rootCA ROOT-CA-FILE-PATH --cert CERT-FILE-PATH --key PRIVATE-KEY-FILE-PATH
+  basicPubSub.py --endpoint ENDPOINT --rootCA ROOT-CA-FILE-PATH --websocket
+  basicPubSub.py --help
 
 Use certificate based mutual authentication:
 python basicPubSub.py -e <endpoint> -r <rootCAFilePath> -c <certFilePath> -k <privateKeyFilePath>
@@ -38,70 +41,22 @@ python basicPubSub.py -e <endpoint> -r <rootCAFilePath> -c <certFilePath> -k <pr
 Use MQTT over WebSocket:
 python basicPubSub.py -e <endpoint> -r <rootCAFilePath> -w
 
-Type "python basicPubSub.py -h" for available options.
-"""
-# Help info
-helpInfo = """-e, --endpoint
-	Your AWS IoT custom endpoint
--r, --rootCA
-	Root CA file path
--c, --cert
-	Certificate file path
--k, --key
-	Private key file path
--w, --websocket
-	Use MQTT over WebSocket
--h, --help
-	Help information
-
-
+Options:
+  -e --endpoint     Your AWS IoT custom endpoint
+  -r --rootCA       Root CA file path
+  -c --cert         Certificate file path
+  -k --key          Private key file path
+  -w --websocket    Use MQTT over WebSocket
+  -h --help         Help information
 """
 
 # Read in command-line parameters
-useWebsocket = False
-host = ""
-rootCAPath = ""
-certificatePath = ""
-privateKeyPath = ""
-try:
-	opts, args = getopt.getopt(sys.argv[1:], "hwe:k:c:r:", ["help", "endpoint=", "key=","cert=","rootCA=", "websocket"])
-	if len(opts) == 0:
-		raise getopt.GetoptError("No input parameters!")
-	for opt, arg in opts:
-		if opt in ("-h", "--help"):
-			print(helpInfo)
-			exit(0)
-		if opt in ("-e", "--endpoint"):
-			host = arg
-		if opt in ("-r", "--rootCA"):
-			rootCAPath = arg
-		if opt in ("-c", "--cert"):
-			certificatePath = arg
-		if opt in ("-k", "--key"):
-			privateKeyPath = arg
-		if opt in ("-w", "--websocket"):
-			useWebsocket = True
-except getopt.GetoptError:
-	print(usageInfo)
-	exit(1)
-
-# Missing configuration notification
-missingConfiguration = False
-if not host:
-	print("Missing '-e' or '--endpoint'")
-	missingConfiguration = True
-if not rootCAPath:
-	print("Missing '-r' or '--rootCA'")
-	missingConfiguration = True
-if not useWebsocket:
-	if not certificatePath:
-		print("Missing '-c' or '--cert'")
-		missingConfiguration = True
-	if not privateKeyPath:
-		print("Missing '-k' or '--key'")
-		missingConfiguration = True
-if missingConfiguration:
-	exit(2)
+args = docopt(usageInfo)
+useWebsocket = args['--websocket']
+host = args['ENDPOINT']
+rootCAPath = args['ROOT-CA-FILE-PATH']
+certificatePath = args['CERT-FILE-PATH']
+privateKeyPath = args['PRIVATE-KEY-FILE-PATH']
 
 # Configure logging
 logger = logging.getLogger("AWSIoTPythonSDK.core")
