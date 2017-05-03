@@ -52,6 +52,7 @@ Options:
 
 # Read in command-line parameters
 args = docopt(usageInfo)
+
 useWebsocket = args['--websocket']
 host = args['ENDPOINT']
 rootCAPath = args['ROOT-CA-FILE-PATH']
