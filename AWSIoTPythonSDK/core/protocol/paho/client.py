@@ -804,7 +804,13 @@ class Client(object):
                         ssl.match_hostname(self._ssl.getpeercert(), self._host)
 
         self._sock = sock
-        self._sock.setblocking(0)
+
+        if self._ssl and not self._useSecuredWebsocket:
+            self._ssl.setblocking(0)  # For X.509 cert mutual auth.
+        elif not self._ssl:
+            self._sock.setblocking(0)  # For plain socket
+        else:
+            pass  # For MQTT over WebSocket
 
         return self._send_connect(self._keepalive, self._clean_session)
 

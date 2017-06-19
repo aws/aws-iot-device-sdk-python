@@ -2,6 +2,15 @@
 CHANGELOG
 =========
 
+1.1.2
+=====
+* bugfix:Issue:`#28 <https://github.com/aws/aws-iot-device-sdk-python/issues/28>`__
+* bugfix:Issue:`#29 <https://github.com/aws/aws-iot-device-sdk-python/issues/29>`__
+* bugfix:Pull request:`#32 <https://github.com/aws/aws-iot-device-sdk-python/pull/32>`__
+* improvement:Pull request:`#38 <https://github.com/aws/aws-iot-device-sdk-python/pull/38>`__
+* bugfix:Pull request:`#45 <https://github.com/aws/aws-iot-device-sdk-python/pull/45>`__
+* improvement:Pull request:`#46 <https://github.com/aws/aws-iot-device-sdk-python/pull/46>`__
+
 1.1.1
 =====
 * bugfix:Issue:`#23 <https://github.com/aws/aws-iot-device-sdk-python/issues/23>`__

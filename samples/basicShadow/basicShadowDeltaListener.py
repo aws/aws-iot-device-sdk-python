@@ -20,7 +20,7 @@ import sys
 import logging
 import time
 import json
-import getopt
+import argparse
 
 # Shadow JSON schema:
 #
@@ -44,80 +44,32 @@ def customShadowCallback_Delta(payload, responseStatus, token):
 	print("version: " + str(payloadDict["version"]))
 	print("+++++++++++++++++++++++\n\n")
 
-# Usage
-usageInfo = """Usage:
-
-Use certificate based mutual authentication:
-python basicShadowDeltaListener.py -e <endpoint> -r <rootCAFilePath> -c <certFilePath> -k <privateKeyFilePath>
-
-Use MQTT over WebSocket:
-python basicShadowDeltaListener.py -e <endpoint> -r <rootCAFilePath> -w
-
-Type "python basicShadowDeltaListener.py -h" for available options.
-
-
-"""
-# Help info
-helpInfo = """-e, --endpoint
-	Your AWS IoT custom endpoint
--r, --rootCA
-	Root CA file path
--c, --cert
-	Certificate file path
--k, --key
-	Private key file path
--w, --websocket
-	Use MQTT over WebSocket
--h, --help
-	Help information
-
-
-"""
-
 # Read in command-line parameters
-useWebsocket = False
-host = ""
-rootCAPath = ""
-certificatePath = ""
-privateKeyPath = ""
-try:
-	opts, args = getopt.getopt(sys.argv[1:], "hwe:k:c:r:", ["help", "endpoint=", "key=","cert=","rootCA=", "websocket"])
-	if len(opts) == 0:
-		raise getopt.GetoptError("No input parameters!")
-	for opt, arg in opts:
-		if opt in ("-h", "--help"):
-			print(helpInfo)
-			exit(0)
-		if opt in ("-e", "--endpoint"):
-			host = arg
-		if opt in ("-r", "--rootCA"):
-			rootCAPath = arg
-		if opt in ("-c", "--cert"):
-			certificatePath = arg
-		if opt in ("-k", "--key"):
-			privateKeyPath = arg
-		if opt in ("-w", "--websocket"):
-			useWebsocket = True
-except getopt.GetoptError:
-	print(usageInfo)
-	exit(1)
+parser = argparse.ArgumentParser()
+parser.add_argument("-e", "--endpoint", action="store", required=True, dest="host", help="Your AWS IoT custom endpoint")
+parser.add_argument("-r", "--rootCA", action="store", required=True, dest="rootCAPath", help="Root CA file path")
+parser.add_argument("-c", "--cert", action="store", dest="certificatePath", help="Certificate file path")
+parser.add_argument("-k", "--key", action="store", dest="privateKeyPath", help="Private key file path")
+parser.add_argument("-w", "--websocket", action="store_true", dest="useWebsocket", default=False,
+                    help="Use MQTT over WebSocket")
+parser.add_argument("-n", "--thingName", action="store", dest="thingName", default="Bot", help="Targeted thing name")
+parser.add_argument("-id", "--clientId", action="store", dest="clientId", default="basicShadowDeltaListener", help="Targeted client id")
 
-# Missing configuration notification
-missingConfiguration = False
-if not host:
-	print("Missing '-e' or '--endpoint'")
-	missingConfiguration = True
-if not rootCAPath:
-	print("Missing '-r' or '--rootCA'")
-	missingConfiguration = True
-if not useWebsocket:
-	if not certificatePath:
-		print("Missing '-c' or '--cert'")
-		missingConfiguration = True
-	if not privateKeyPath:
-		print("Missing '-k' or '--key'")
-		missingConfiguration = True
-if missingConfiguration:
+args = parser.parse_args()
+host = args.host
+rootCAPath = args.rootCAPath
+certificatePath = args.certificatePath
+privateKeyPath = args.privateKeyPath
+useWebsocket = args.useWebsocket
+thingName = args.thingName
+clientId = args.clientId
+
+if args.useWebsocket and args.certificatePath and args.privateKeyPath:
+	parser.error("X.509 cert authentication and WebSocket are mutual exclusive. Please pick one.")
+	exit(2)
+
+if not args.useWebsocket and (not args.certificatePath or not args.privateKeyPath):
+	parser.error("Missing credentials for authentication.")
 	exit(2)
 
 # Configure logging
@@ -131,11 +83,11 @@ logger.addHandler(streamHandler)
 # Init AWSIoTMQTTShadowClient
 myAWSIoTMQTTShadowClient = None
 if useWebsocket:
-	myAWSIoTMQTTShadowClient = AWSIoTMQTTShadowClient("basicShadowDeltaListener", useWebsocket=True)
+	myAWSIoTMQTTShadowClient = AWSIoTMQTTShadowClient(clientId, useWebsocket=True)
 	myAWSIoTMQTTShadowClient.configureEndpoint(host, 443)
 	myAWSIoTMQTTShadowClient.configureCredentials(rootCAPath)
 else:
-	myAWSIoTMQTTShadowClient = AWSIoTMQTTShadowClient("basicShadowDeltaListener")
+	myAWSIoTMQTTShadowClient = AWSIoTMQTTShadowClient(clientId)
 	myAWSIoTMQTTShadowClient.configureEndpoint(host, 8883)
 	myAWSIoTMQTTShadowClient.configureCredentials(rootCAPath, privateKeyPath, certificatePath)
 
@@ -148,11 +100,11 @@ myAWSIoTMQTTShadowClient.configureMQTTOperationTimeout(5)  # 5 sec
 myAWSIoTMQTTShadowClient.connect()
 
 # Create a deviceShadow with persistent subscription
-Bot = myAWSIoTMQTTShadowClient.createShadowHandlerWithName("Bot", True)
+deviceShadowHandler = myAWSIoTMQTTShadowClient.createShadowHandlerWithName(thingName, True)
 
 # Listen on deltas
-Bot.shadowRegisterDeltaCallback(customShadowCallback_Delta)
+deviceShadowHandler.shadowRegisterDeltaCallback(customShadowCallback_Delta)
 
 # Loop forever
 while True:
-	pass
+	time.sleep(1)

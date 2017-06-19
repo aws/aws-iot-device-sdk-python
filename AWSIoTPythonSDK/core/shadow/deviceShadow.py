@@ -13,29 +13,22 @@
 # * permissions and limitations under the License.
 # */
 
-import sys
 import json
-import string
-import random
 import logging
+import uuid
 from threading import Timer, Lock, Thread
 
 
 class _shadowRequestToken:
 
+    URN_PREFIX_LENGTH = 9
+
     def __init__(self, srcShadowName, srcClientID):
         self._shadowName = srcShadowName
         self._clientID = srcClientID
-        self._sequenceNumber = 0
-        self._lowercase = string.ascii_lowercase
 
     def getNextToken(self):
-        ret = self._clientID + "_" + self._shadowName + "_" + str(self._sequenceNumber) + "_" + self._randomString(5)
-        self._sequenceNumber += 1
-        return ret
-
-    def _randomString(self, lengthOfString):
-        return "".join(random.choice(self._lowercase) for i in range(lengthOfString))
+        return uuid.uuid4().urn[self.URN_PREFIX_LENGTH:]  # We only need the uuid digits, not the urn prefix
 
 
 class _basicJSONParser:

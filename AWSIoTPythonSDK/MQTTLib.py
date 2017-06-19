@@ -94,6 +94,7 @@ class AWSIoTMQTTClient:
         **Syntax**
 
         .. code:: python
+
           myAWSIoTMQTTClient.configureLastWill("last/Will/Topic", "lastWillPayload", 0)
 
         **Parameters**
@@ -120,7 +121,8 @@ class AWSIoTMQTTClient:
 
         **Syntax**
 
-        ..code:: python
+        .. code:: python
+
           myAWSIoTMQTTClient.clearLastWill()
 
         **Parameter**
@@ -438,8 +440,8 @@ class AWSIoTMQTTClient:
 
           # Publish a QoS0 message "myPayload" to topic "myToppic"
           myAWSIoTMQTTClient.publish("myTopic", "myPayload", 0)
-          # Publish a QoS1 message "myPayload2" to topic "myTopic/sub"
-          myAWSIoTMQTTClient.publish("myTopic/sub", "myPayload", 1)
+          # Publish a QoS1 message "myPayloadWithQos1" to topic "myTopic/sub"
+          myAWSIoTMQTTClient.publish("myTopic/sub", "myPayloadWithQos1", 1)
 
         **Parameters**
 
@@ -582,6 +584,7 @@ class AWSIoTMQTTShadowClient:
         **Syntax**
 
         .. code:: python
+
           myAWSIoTMQTTClient.configureLastWill("last/Will/Topic", "lastWillPayload", 0)
 
         **Parameters**
@@ -608,7 +611,8 @@ class AWSIoTMQTTShadowClient:
 
         **Syntax**
 
-        ..code:: python
+        .. code:: python
+
           myAWSIoTShadowMQTTClient.clearLastWill()
 
         **Parameter**
@@ -784,7 +788,7 @@ class AWSIoTMQTTShadowClient:
         """
         **Description**
 
-        Connect to AWS IoT, with user-specific keeoalive interval configuration.
+        Connect to AWS IoT, with user-specific keepalive interval configuration.
 
         **Syntax**
 

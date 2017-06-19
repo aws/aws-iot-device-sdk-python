@@ -510,6 +510,8 @@ Run the example like this:
     python basicPubSub.py -e <endpoint> -r <rootCAFilePath> -c <certFilePath> -k <privateKeyFilePath>
     # MQTT over WebSocket
     python basicPubSub.py -e <endpoint> -r <rootCAFilePath> -w
+    # Customize client id and topic
+    python basicPubSub.py -e <endpoint> -r <rootCAFilePath> -c <certFilePath> -k <privateKeyFilePath> -id <clientId> -t <topic>
 
 Source
 ******
@@ -541,6 +543,8 @@ Run the example like this:
 .. code-block:: python
 
     python basicPubSub_CognitoSTS.py -e <endpoint> -r <rootCAFilePath> -C <CognitoIdentityPoolID>
+    # Customize client id and topic
+    python basicPubsub_CognitoSTS.py -e <endpoint> -r <rootCAFilePath> -C <CognitoIdentityPoolID> -id <clientId> -t <topic>
 
 Source
 ******
@@ -590,6 +594,7 @@ Then, start the basicShadowUpdater:
     # MQTT over WebSocket
     python basicShadowUpdater.py -e <endpoint> -r <rootCAFilePath> -w
 
+
 After the basicShadowUpdater starts sending shadow update requests, you
 should be able to see corresponding delta messages in the
 basicShadowDeltaListener output.
@@ -621,6 +626,8 @@ Run the example like this:
     python ThingShadowEcho.py -e <endpoint> -r <rootCAFilePath> -c <certFilePath> -k <privateKeyFilePath>
     # MQTT over WebSocket
     python ThingShadowEcho.py -e <endpoint> -r <rootCAFilePath> -w
+    # Customize client Id and thing name
+    python ThingShadowEcho.py -e <endpoint> -r <rootCAFilePath> -c <certFilePath> -k <privateKeyFilePath> -id <clientId> -n <thingName>
 
 Now use the `AWS IoT console <https://console.aws.amazon.com/iot/>`__ or other MQTT
 client to update the shadow desired state only. You should be able to see the reported state is updated to match

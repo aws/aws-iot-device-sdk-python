@@ -20,7 +20,7 @@ from AWSIoTPythonSDK.MQTTLib import AWSIoTMQTTClient
 import sys
 import logging
 import time
-import getopt
+import argparse
 
 # Custom MQTT message callback
 def customCallback(client, userdata, message):
@@ -30,62 +30,20 @@ def customCallback(client, userdata, message):
 	print(message.topic)
 	print("--------------\n\n")
 
-# Usage
-usageInfo = """Usage:
-
-python basicPubSub_CognitoSTS.py -e <endpoint> -r <rootCAFilePath> -C <CognitoIdentityPoolID>
-
-
-Type "python basicPubSub_CognitoSTS.py -h" for available options.
-"""
-# Help info
-helpInfo = """-e, --endpoint
-	Your AWS IoT custom endpoint
--r, --rootCA
-	Root CA file path
--C, --CognitoIdentityPoolID
-	Your AWS Cognito Identity Pool ID
--h, --help
-	Help information
-
-
-"""
-
 # Read in command-line parameters
-host = ""
-rootCAPath = ""
-cognitoIdentityPoolID = ""
-try:
-	opts, args = getopt.getopt(sys.argv[1:], "he:r:C:", ["help", "endpoint=", "rootCA=", "CognitoIdentityPoolID="])
-	if len(opts) == 0:
-		raise getopt.GetoptError("No input parameters!")
-	for opt, arg in opts:
-		if opt in ("-h", "--help"):
-			print(helpInfo)
-			exit(0)
-		if opt in ("-e", "--endpoint"):
-			host = arg
-		if opt in ("-r", "--rootCA"):
-			rootCAPath = arg
-		if opt in ("-C", "--CognitoIdentityPoolID"):
-			cognitoIdentityPoolID = arg
-except getopt.GetoptError:
-	print(usageInfo)
-	exit(1)
+parser = argparse.ArgumentParser()
+parser.add_argument("-e", "--endpoint", action="store", required=True, dest="host", help="Your AWS IoT custom endpoint")
+parser.add_argument("-r", "--rootCA", action="store", required=True, dest="rootCAPath", help="Root CA file path")
+parser.add_argument("-C", "--CognitoIdentityPoolID", action="store", required=True, dest="cognitoIdentityPoolID", help="Your AWS Cognito Identity Pool ID")
+parser.add_argument("-id", "--clientId", action="store", dest="clientId", default="basicPubSub_CognitoSTS", help="Targeted client id")
+parser.add_argument("-t", "--topic", action="store", dest="topic", default="sdk/test/Python", help="Targeted topic")
 
-# Missing configuration notification
-missingConfiguration = False
-if not host:
-	print("Missing '-e' or '--endpoint'")
-	missingConfiguration = True
-if not rootCAPath:
-	print("Missing '-r' or '--rootCA'")
-	missingConfiguration = True
-if not cognitoIdentityPoolID:
-	print("Missing '-C' or '--CognitoIdentityPoolID'")
-	missingConfiguration = True
-if missingConfiguration:
-	exit(2)
+args = parser.parse_args()
+host = args.host
+rootCAPath = args.rootCAPath
+clientId = args.clientId
+cognitoIdentityPoolID = args.cognitoIdentityPoolID
+topic = args.topic
 
 # Configure logging
 logger = logging.getLogger("AWSIoTPythonSDK.core")
@@ -111,7 +69,7 @@ SecretKey = temporaryCredentials["Credentials"]["SecretKey"]
 SessionToken = temporaryCredentials["Credentials"]["SessionToken"]
 
 # Init AWSIoTMQTTClient
-myAWSIoTMQTTClient = AWSIoTMQTTClient("basicPubSub_CognitoSTS", useWebsocket=True)
+myAWSIoTMQTTClient = AWSIoTMQTTClient(clientId, useWebsocket=True)
 
 # AWSIoTMQTTClient configuration
 myAWSIoTMQTTClient.configureEndpoint(host, 443)
@@ -125,12 +83,12 @@ myAWSIoTMQTTClient.configureMQTTOperationTimeout(5)  # 5 sec
 
 # Connect and subscribe to AWS IoT
 myAWSIoTMQTTClient.connect()
-myAWSIoTMQTTClient.subscribe("sdk/test/Python", 1, customCallback)
+myAWSIoTMQTTClient.subscribe(topic, 1, customCallback)
 time.sleep(2)
 
 # Publish to the same topic in a loop forever
 loopCount = 0
 while True:
-	myAWSIoTMQTTClient.publish("sdk/test/Python", "New Message " + str(loopCount), 1)
+	myAWSIoTMQTTClient.publish(topic, "New Message " + str(loopCount), 1)
 	loopCount += 1
 	time.sleep(1)
