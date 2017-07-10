@@ -343,7 +343,7 @@ class mqttCore:
                 self._log.info("Offline publish request detected.")
             # If the client is connected but draining is not completed...
             elif not self._drainingComplete:
-                self._log.info("Drainging is still on-going.")
+                self._log.info("Draining is still on-going.")
             self._log.info("Try queueing up this request...")
             # Publish to the queue and report error (raise Exception)
             currentQueuedPublishRequest = _publishRequest(topic, payload, qos, retain)
