@@ -693,11 +693,25 @@ class AWSIoTMQTTShadowClient:
         """
         **Description**
 
+        Used to configure the rootCA, private key and certificate files. Should be called before connect.
+
         **Syntax**
+
+        .. code:: python
+
+          myAWSIoTMQTTShadowClient.configureCredentials("PATH/TO/ROOT_CA", "PATH/TO/PRIVATE_KEY", "PATH/TO/CERTIFICATE")
 
         **Parameters**
 
+        *CAFilePath* - Path to read the root CA file. Required for all connection types.
+
+        *KeyPath* - Path to read the private key. Required for X.509 certificate based connection.
+
+        *CertificatePath* - Path to read the certificate. Required for X.509 certificate based connection.
+
         **Returns**
+
+        None
 
         """
         # AWSIoTMQTTClient.configureCredentials
