@@ -693,20 +693,6 @@ class AWSIoTMQTTShadowClient:
         """
         **Description**
 
-        **Syntax**
-
-        **Parameters**
-
-        **Returns**
-
-        """
-        # AWSIoTMQTTClient.configureCredentials
-        self._AWSIoTMQTTClient.configureCredentials(CAFilePath, KeyPath, CertificatePath)
-
-    def configureAutoReconnectBackoffTime(self, baseReconnectQuietTimeSecond, maxReconnectQuietTimeSecond, stableConnectionTimeSecond):
-        """
-        **Description**
-
         Used to configure the rootCA, private key and certificate files. Should be called before connect.
 
         **Syntax**
@@ -722,6 +708,38 @@ class AWSIoTMQTTShadowClient:
         *KeyPath* - Path to read the private key. Required for X.509 certificate based connection.
 
         *CertificatePath* - Path to read the certificate. Required for X.509 certificate based connection.
+
+        **Returns**
+
+        None
+
+        """
+        # AWSIoTMQTTClient.configureCredentials
+        self._AWSIoTMQTTClient.configureCredentials(CAFilePath, KeyPath, CertificatePath)
+
+    def configureAutoReconnectBackoffTime(self, baseReconnectQuietTimeSecond, maxReconnectQuietTimeSecond, stableConnectionTimeSecond):
+        """
+        **Description**
+
+        Used to configure the auto-reconnect backoff timing. Should be called before connect.
+
+        **Syntax**
+
+        .. code:: python
+
+          # Configure the auto-reconnect backoff to start with 1 second and use 128 seconds as a maximum back off time.
+          # Connection over 20 seconds is considered stable and will reset the back off time back to its base.
+          myAWSIoTMQTTShadowClient.configureAutoReconnectBackoffTime(1, 128, 20)
+
+        **Parameters**
+
+        *baseReconnectQuietTimeSecond* - The initial back off time to start with, in seconds. 
+        Should be less than the stableConnectionTime.
+
+        *maxReconnectQuietTimeSecond* - The maximum back off time, in seconds.
+
+        *stableConnectionTimeSecond* - The number of seconds for a connection to last to be considered as stable. 
+        Back off time will be reset to base once the connection is stable.
 
         **Returns**
 
