@@ -292,13 +292,51 @@ MQTT operations along with shadow operations:
     myMQTTClient = myShadowClient.getMQTTConnection()
     myMQTTClient.publish("plainMQTTTopic", "Payload", 1)
 
+DiscoveryInfoProvider
+_____________________
+
+This is the client class for device discovery process with AWS IoT Greengrass.
+You can initialize and configure the client like this:
+
+.. code-block:: python
+
+    from AWSIoTPythonSDK.core.greengrass.discovery.providers import DiscoveryInfoProvider
+
+    discoveryInfoProvider = DiscoveryInfoProvider()
+    discoveryInfoProvider.configureEndpoint("YOUR.IOT.ENDPOINT")
+    discoveryInfoProvider.configureCredentials("YOUR/ROOT/CA/PATH", "CERTIFICATE/PATH", "PRIVATE/KEY/PATH")
+    discoveryInfoProvider.configureTimeout(10)  # 10 sec
+
+To perform the discovery process for a Greengrass Aware Device (GGAD) that belongs to a deployed group, your script
+should look like this:
+
+.. code-block:: python
+
+    discoveryInfo = discoveryInfoProvider.discover("myGGADThingName")
+    # I know nothing about the group/core I want to connect to. I want to iterate through all cores and find out.
+    coreList = discoveryInfo.getAllCores()
+    groupIdCAList = discoveryInfo.getAllCas()  # list([(groupId, ca), ...])
+    # I know nothing about the group/core I want to connect to. I want to iterate through all groups and find out.
+    groupList = discoveryInfo.getAllGroups()
+    # I know exactly which group, which core and which connectivity info I need to connect.
+    connectivityInfo = discoveryInfo.toObjectAtGroupLevel()["YOUR_GROUP_ID"]
+                                    .getCoreConnectivityInfo("YOUR_CORE_THING_ARN")
+                                    .getConnectivityInfo("YOUR_CONNECTIVITY_ID")
+    # Connecting logic follows...
+    ...
+
+For more information about discovery information access at group/core/connectivity info set level, please refer to the
+API documentation for ``AWSIoTPythonSDK.core.greengrass.discovery.models``,
+`Greengrass Discovery documentation <http://docs.aws.amazon.com/greengrass/latest/developerguide/gg-discover-api.html>`__
+or `Greengrass overall documentation <http://docs.aws.amazon.com/greengrass/latest/developerguide/what-is-gg.html>`__.
+
 .. _Key_Features:
 
 Key Features
 ~~~~~~~~~~~~
 
-Progressive Reconnect Backoff
-_____________________________
+Progressive Reconnect Back Off
+______________________________
 
 When a non-client-side disconnect occurs, the SDK will reconnect automatically. The following APIs are provided for configuration:
 
@@ -332,11 +370,11 @@ default configuration for backoff timing will be performed on initialization:
     maxReconnectQuietTimeSecond = 32
     stableConnectionTimeSecond = 20
 
-Offline Publish Requests Queueing with Draining
-_______________________________________________
+Offline Requests Queueing with Draining
+_______________________________________
 
 If the client is temporarily offline and disconnected due to 
-network failure, publish requests will be added to an internal
+network failure, publish/subscribe/unsubscribe requests will be added to an internal
 queue until the number of queued-up requests reaches the size limit
 of the queue. This functionality is for plain MQTT operations. Shadow
 client contains time-sensitive data and is therefore not supported.
@@ -347,7 +385,7 @@ The following API is provided for configuration:
 
     AWSIoTPythonSDK.MQTTLib.AWSIoTMQTTClient.configureOfflinePublishQueueing(queueSize, dropBehavior)
 
-After the queue is full, offline publish requests will be discarded or
+After the queue is full, offline publish/subscribe/unsubscribe requests will be discarded or
 replaced according to the configuration of the drop behavior:
 
 .. code-block:: python
@@ -406,7 +444,7 @@ Because the queue is already full, the newest requests ``pub_req6`` and
 
 When the client is back online, connected, and resubscribed to all topics
 it has previously subscribed to, the draining starts. All requests
-in the offline publish queue will be resent at the configured draining
+in the offline request queue will be resent at the configured draining
 rate:
 
 .. code-block:: python
@@ -414,7 +452,7 @@ rate:
     AWSIoTPythonSDK.MQTTLib.AWSIoTMQTTClient.configureDrainingFrequency(frequencyInHz)
 
 If no ``configOfflinePublishQueue`` or ``configureDrainingFrequency`` is
-called, the following default configuration for offline publish queueing
+called, the following default configuration for offline request queueing
 and draining will be performed on the initialization:
 
 .. code-block:: python
@@ -423,16 +461,16 @@ and draining will be performed on the initialization:
     dropBehavior = DROP_NEWEST
     drainingFrequency = 2Hz
 
-Before the draining process is complete, any new publish request
+Before the draining process is complete, any new publish/subscribe/unsubscribe request
 within this time period will be added to the queue. Therefore, the draining rate
-should be higher than the normal publish rate to avoid an endless
+should be higher than the normal request rate to avoid an endless
 draining process after reconnect.
 
 The disconnect event is detected based on PINGRESP MQTT
-packet loss. Offline publish queueing will not be triggered until the
+packet loss. Offline request queueing will not be triggered until the
 disconnect event is detected. Configuring a shorter keep-alive
 interval allows the client to detect disconnects more quickly. Any QoS0
-publish requests issued after the network failure and before the
+publish, subscribe and unsubscribe requests issued after the network failure and before the
 detection of the PINGRESP loss will be lost.
 
 Persistent/Non-Persistent Subscription
@@ -551,6 +589,37 @@ Source
 
 The example is available in ``samples/basicPubSub/``.
 
+BasicPubSub Asynchronous version
+________________________________
+
+This example demonstrates a simple MQTT publish/subscribe with asynchronous APIs using AWS IoT.
+It first registers general notification callbacks for CONNACK reception, disconnect reception and message arrival.
+It then registers ACK callbacks for subscribe and publish requests to print out received ack packet ids.
+It subscribes to a topic with no specific callback and then publishes to the same topic in a loop.
+New messages are printed upon reception by the general message arrival callback, indicating
+the callback function has been called.
+New ack packet ids are printed upon reception of PUBACK and SUBACK through ACK callbacks registered with asynchronous
+API calls, indicating that the the client received ACKs for the corresponding asynchronous API calls.
+
+Instructions
+************
+
+Run the example like this:
+
+.. code-block:: python
+
+    # Certificate based mutual authentication
+    python basicPubSubAsync.py -e <endpoint> -r <rootCAFilePath> -c <certFilePath> -k <privateKeyFilePath>
+    # MQTT over WebSocket
+    python basicPubSubAsync.py -e <endpoint> -r <rootCAFilePath> -w
+    # Customize client id and topic
+    python basicPubSubAsync.py -e <endpoint> -r <rootCAFilePath> -c <certFilePath> -k <privateKeyFilePath> -id <clientId> -t <topic>
+
+Source
+******
+
+The example is available in ``samples/basicPubSub/``.
+
 BasicShadow
 ___________
 
@@ -637,6 +706,37 @@ Source
 ******
 
 The example is available in ``samples/ThingShadowEcho/``.
+
+BasicDiscovery
+______________
+
+This example demonstrates how to perform a discovery process from a Greengrass Aware Device (GGAD) to obtain the required
+connectivity/identity information to connect to the Greengrass Core (GGC) deployed within the same group. It uses the
+discovery information provider to invoke discover call for a certain GGAD with its thing name. After it gets back a
+success response, it picks up the first GGC and the first set of identity information (CA) for the first group, persists \
+it locally and iterates through all connectivity info sets for this GGC to establish a MQTT connection to the designated
+GGC. It then publishes messages to the topic, which, on the GGC side, is configured to route the messages back to the
+same GGAD. Therefore, it receives the published messages and invokes the corresponding message callbacks.
+
+Note that in order to get the sample up and running correctly, you need:
+
+1. Have a successfully deployed Greengrass group.
+
+2. Use the certificate and private key that have been deployed with the group for the GGAD to perform discovery process.
+
+3. The subscription records for that deployed group should contain a route that routes messages from the targeted GGAD to itself via a dedicated MQTT topic.
+
+4. The deployed GGAD thing name, the deployed GGAD certificate/private key and the dedicated MQTT topic should be used as the inputs for this sample.
+
+
+Run the sample like this:
+
+.. code-block:: python
+
+    python basicDiscovery.py -e <endpoint> -r <IoTRootCAFilePath> -c <certFilePath> -k <privateKeyFilePath> -n <GGADThingName> -t <RoutingTopic>
+
+If the group, GGC, GGAD and group subscription/routes are set up correctly, you should be able to see the sample running
+on your GGAD, receiving messages that get published to GGC by itself.
 
 .. _API_Documentation:
 

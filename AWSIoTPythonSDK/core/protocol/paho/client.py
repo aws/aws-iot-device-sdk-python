@@ -44,10 +44,9 @@ if platform.system() == 'Windows':
     EAGAIN = errno.WSAEWOULDBLOCK
 else:
     EAGAIN = errno.EAGAIN
-# AWS WSS implementation
-import AWSIoTPythonSDK.core.protocol.paho.securedWebsocket.securedWebsocketCore as wssCore
-import AWSIoTPythonSDK.core.util.progressiveBackoffCore as backoffCore
-import AWSIoTPythonSDK.core.util.offlinePublishQueue as offlinePublishQueue
+
+from AWSIoTPythonSDK.core.protocol.connection.cores import ProgressiveBackOffCore
+from AWSIoTPythonSDK.core.protocol.connection.cores import SecuredWebSocketCore
 
 VERSION_MAJOR=1
 VERSION_MINOR=0
@@ -503,7 +502,7 @@ class Client(object):
         self._tls_version = tls_version
         self._tls_insecure = False
         self._useSecuredWebsocket = useSecuredWebsocket  # Do we enable secured websocket
-        self._backoffCore = backoffCore.progressiveBackoffCore()  # Init the backoffCore using default configuration
+        self._backoffCore = ProgressiveBackOffCore()  # Init the backoffCore using default configuration
         self._AWSAccessKeyIDCustomConfig = ""
         self._AWSSecretAccessKeyCustomConfig = ""
         self._AWSSessionTokenCustomConfig = ""
@@ -517,7 +516,7 @@ class Client(object):
         Make custom settings for backoff timing for reconnect logic
         srcBaseReconnectTimeSecond - The base reconnection time in seconds
         srcMaximumReconnectTimeSecond - The maximum reconnection time in seconds
-        srcMinimumConnectTimeSecond - The minimum time in milliseconds that a connection must be maintained in order to be considered stable
+        srcMinimumConnectTimeSecond - The minimum time in seconds that a connection must be maintained in order to be considered stable
         * Raise ValueError if input params are malformed
         """
         self._backoffCore.configTime(srcBaseReconnectTimeSecond, srcMaximumReconnectTimeSecond, srcMinimumConnectTimeSecond)
@@ -785,7 +784,7 @@ class Client(object):
                 # Non-None value for ._ssl will allow ops before wss-MQTT connection is established
                 rawSSL = ssl.wrap_socket(sock, ca_certs=self._tls_ca_certs, cert_reqs=ssl.CERT_REQUIRED)  # Add server certificate verification
                 rawSSL.setblocking(0)  # Non-blocking socket
-                self._ssl = wssCore.securedWebsocketCore(rawSSL, self._host, self._port, self._AWSAccessKeyIDCustomConfig, self._AWSSecretAccessKeyCustomConfig, self._AWSSessionTokenCustomConfig)  # Overeride the _ssl socket
+                self._ssl = SecuredWebSocketCore(rawSSL, self._host, self._port, self._AWSAccessKeyIDCustomConfig, self._AWSSecretAccessKeyCustomConfig, self._AWSSessionTokenCustomConfig)  # Overeride the _ssl socket
                 # self._ssl.enableDebug()
             else:
                 self._ssl = ssl.wrap_socket(
@@ -798,7 +797,7 @@ class Client(object):
                     ciphers=self._tls_ciphers)
 
                 if self._tls_insecure is False:
-                    if sys.version_info[0] < 3 or (sys.version_info[0] == 3 and sys.version_info[1] < 2):
+                    if sys.version_info[0] < 3 or (sys.version_info[0] == 3 and sys.version_info[1] < 5):  # No IP host match before 3.5.x
                         self._tls_match_hostname()
                     else:
                         ssl.match_hostname(self._ssl.getpeercert(), self._host)

@@ -14,6 +14,6 @@
 # */
 
 
-class operationError(Exception):
-    def __init__(self, msg="Operation Error"):
-        self.message = msg
+class DropBehaviorTypes(object):
+    DROP_OLDEST = 0
+    DROP_NEWEST = 1

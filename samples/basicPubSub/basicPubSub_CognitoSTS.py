@@ -1,6 +1,6 @@
 '''
 /*
- * Copyright 2010-2016 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2010-2017 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -17,25 +17,28 @@
 
 import boto3
 from AWSIoTPythonSDK.MQTTLib import AWSIoTMQTTClient
-import sys
 import logging
 import time
 import argparse
 
+
 # Custom MQTT message callback
 def customCallback(client, userdata, message):
-	print("Received a new message: ")
-	print(message.payload)
-	print("from topic: ")
-	print(message.topic)
-	print("--------------\n\n")
+    print("Received a new message: ")
+    print(message.payload)
+    print("from topic: ")
+    print(message.topic)
+    print("--------------\n\n")
+
 
 # Read in command-line parameters
 parser = argparse.ArgumentParser()
 parser.add_argument("-e", "--endpoint", action="store", required=True, dest="host", help="Your AWS IoT custom endpoint")
 parser.add_argument("-r", "--rootCA", action="store", required=True, dest="rootCAPath", help="Root CA file path")
-parser.add_argument("-C", "--CognitoIdentityPoolID", action="store", required=True, dest="cognitoIdentityPoolID", help="Your AWS Cognito Identity Pool ID")
-parser.add_argument("-id", "--clientId", action="store", dest="clientId", default="basicPubSub_CognitoSTS", help="Targeted client id")
+parser.add_argument("-C", "--CognitoIdentityPoolID", action="store", required=True, dest="cognitoIdentityPoolID",
+                    help="Your AWS Cognito Identity Pool ID")
+parser.add_argument("-id", "--clientId", action="store", dest="clientId", default="basicPubSub_CognitoSTS",
+                    help="Targeted client id")
 parser.add_argument("-t", "--topic", action="store", dest="topic", default="sdk/test/Python", help="Targeted topic")
 
 args = parser.parse_args()
@@ -89,6 +92,6 @@ time.sleep(2)
 # Publish to the same topic in a loop forever
 loopCount = 0
 while True:
-	myAWSIoTMQTTClient.publish(topic, "New Message " + str(loopCount), 1)
-	loopCount += 1
-	time.sleep(1)
+    myAWSIoTMQTTClient.publish(topic, "New Message " + str(loopCount), 1)
+    loopCount += 1
+    time.sleep(1)

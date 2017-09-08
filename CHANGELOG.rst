@@ -2,6 +2,18 @@
 CHANGELOG
 =========
 
+1.2.0
+=====
+* improvement:AWSIoTMQTTClient:Improved synchronous API backend for ACK tracking
+* feature:AWSIoTMQTTClient:New API for asynchronous API
+* feature:AWSIoTMQTTClient:Expose general notification callbacks for online, offline and message arrival
+* feature:AWSIoTMQTTShadowClient:Expose general notification callbacks for online, offline and message arrival
+* feature:AWSIoTMQTTClient:Extend offline queueing to include offline subscribe/unsubscribe requests
+* feature:DiscoveryInfoProvider:Support for Greengrass discovery
+* bugfix:Pull request:`#50 <https://github.com/aws/aws-iot-device-sdk-python/pull/50>`__
+* bugfix:Pull request:`#51 <https://github.com/aws/aws-iot-device-sdk-python/pull/51>`__
+* bugfix:Issue:`#52 <https://github.com/aws/aws-iot-device-sdk-python/issues/52>`__
+
 1.1.2
 =====
 * bugfix:Issue:`#28 <https://github.com/aws/aws-iot-device-sdk-python/issues/28>`__

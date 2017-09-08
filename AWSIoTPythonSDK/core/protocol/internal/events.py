@@ -13,7 +13,17 @@
 # * permissions and limitations under the License.
 # */
 
+class EventTypes(object):
+    CONNACK = 0
+    DISCONNECT = 1
+    PUBACK = 2
+    SUBACK = 3
+    UNSUBACK = 4
+    MESSAGE = 5
 
-class operationError(Exception):
-    def __init__(self, msg="Operation Error"):
-        self.message = msg
+
+class FixedEventMids(object):
+    CONNACK_MID = "CONNECTED"
+    DISCONNECT_MID = "DISCONNECTED"
+    MESSAGE_MID = "MESSAGE"
+    QUEUED_MID = "QUEUED"

@@ -13,7 +13,6 @@
 # * permissions and limitations under the License.
 # */
 
-
-class operationError(Exception):
-    def __init__(self, msg="Operation Error"):
-        self.message = msg
+DEFAULT_CONNECT_DISCONNECT_TIMEOUT_SEC = 30
+DEFAULT_OPERATION_TIMEOUT_SEC = 5
+DEFAULT_DRAINING_INTERNAL_SEC = 0.5

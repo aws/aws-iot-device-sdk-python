@@ -1,5 +1,5 @@
 # /*
-# * Copyright 2010-2016 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# * Copyright 2010-2017 Amazon.com, Inc. or its affiliates. All Rights Reserved.
 # *
 # * Licensed under the Apache License, Version 2.0 (the "License").
 # * You may not use this file except in compliance with the License.
@@ -80,9 +80,29 @@ class subscribeError(operationError.operationError):
         self.message = "Subscribe Error: " + str(errorCode)
 
 
+class subscribeQueueFullException(operationError.operationError):
+    def __init__(self):
+        self.message = "Internal Subscribe Queue Full"
+
+
+class subscribeQueueDisabledException(operationError.operationError):
+    def __init__(self):
+        self.message = "Offline subscribe request dropped because queueing is disabled"
+
+
 class unsubscribeError(operationError.operationError):
     def __init__(self, errorCode):
         self.message = "Unsubscribe Error: " + str(errorCode)
+
+
+class unsubscribeQueueFullException(operationError.operationError):
+    def __init__(self):
+        self.message = "Internal Unsubscribe Queue Full"
+
+
+class unsubscribeQueueDisabledException(operationError.operationError):
+    def __init__(self):
+        self.message = "Offline unsubscribe request dropped because queueing is disabled"
 
 
 # Websocket Error
@@ -94,3 +114,34 @@ class wssNoKeyInEnvironmentError(operationError.operationError):
 class wssHandShakeError(operationError.operationError):
     def __init__(self):
         self.message = "Error in WSS handshake."
+
+
+# Greengrass Discovery Error
+class DiscoveryDataNotFoundException(operationError.operationError):
+    def __init__(self):
+        self.message = "No discovery data found"
+
+
+class DiscoveryTimeoutException(operationTimeoutException.operationTimeoutException):
+    def __init__(self, message="Discovery request timed out"):
+        self.message = message
+
+
+class DiscoveryInvalidRequestException(operationError.operationError):
+    def __init__(self):
+        self.message = "Invalid discovery request"
+
+
+class DiscoveryUnauthorizedException(operationError.operationError):
+    def __init__(self):
+        self.message = "Discovery request not authorized"
+
+
+class DiscoveryThrottlingException(operationError.operationError):
+    def __init__(self):
+        self.message = "Too many discovery requests"
+
+
+class DiscoveryFailure(operationError.operationError):
+    def __init__(self, message):
+        self.message = message

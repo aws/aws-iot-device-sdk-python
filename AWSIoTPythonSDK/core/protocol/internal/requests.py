@@ -13,7 +13,15 @@
 # * permissions and limitations under the License.
 # */
 
+class RequestTypes(object):
+    CONNECT = 0
+    DISCONNECT = 1
+    PUBLISH = 2
+    SUBSCRIBE = 3
+    UNSUBSCRIBE = 4
 
-class operationError(Exception):
-    def __init__(self, msg="Operation Error"):
-        self.message = msg
+class QueueableRequest(object):
+
+    def __init__(self, type, data):
+        self.type = type
+        self.data = data  # Can be a tuple
