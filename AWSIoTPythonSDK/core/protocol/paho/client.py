@@ -21,6 +21,10 @@ import platform
 import random
 import select
 import socket
+import struct
+import sys
+import threading
+import time
 HAVE_SSL = True
 try:
     import ssl
@@ -30,10 +34,7 @@ except:
     HAVE_SSL = False
     cert_reqs = None
     tls_version = None
-import struct
-import sys
-import threading
-import time
+
 HAVE_DNS = True
 try:
     import dns.resolver
