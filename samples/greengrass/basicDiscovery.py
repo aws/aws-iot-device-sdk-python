@@ -18,6 +18,7 @@ import os
 import sys
 import time
 import uuid
+import json
 import logging
 import argparse
 from AWSIoTPythonSDK.core.greengrass.discovery.providers import DiscoveryInfoProvider
@@ -25,15 +26,11 @@ from AWSIoTPythonSDK.core.protocol.connection.cores import ProgressiveBackOffCor
 from AWSIoTPythonSDK.MQTTLib import AWSIoTMQTTClient
 from AWSIoTPythonSDK.exception.AWSIoTExceptions import DiscoveryInvalidRequestException
 
+AllowedActions = ['both', 'publish', 'subscribe']
 
 # General message notification callback
 def customOnMessage(message):
-    print("Received a new message: ")
-    print(message.payload)
-    print("from topic: ")
-    print(message.topic)
-    print("--------------\n\n")
-
+    print('Received message on topic %s: %s\n' % (message.topic, message.payload))
 
 MAX_DISCOVERY_RETRIES = 10
 GROUP_CA_PATH = "./groupCA/"
@@ -46,6 +43,10 @@ parser.add_argument("-c", "--cert", action="store", dest="certificatePath", help
 parser.add_argument("-k", "--key", action="store", dest="privateKeyPath", help="Private key file path")
 parser.add_argument("-n", "--thingName", action="store", dest="thingName", default="Bot", help="Targeted thing name")
 parser.add_argument("-t", "--topic", action="store", dest="topic", default="sdk/test/Python", help="Targeted topic")
+parser.add_argument("-m", "--mode", action="store", dest="mode", default="both",
+                    help="Operation modes: %s"%str(AllowedActions))
+parser.add_argument("-M", "--message", action="store", dest="message", default="Hello World!",
+                    help="Message to publish")
 
 args = parser.parse_args()
 host = args.host
@@ -55,6 +56,10 @@ privateKeyPath = args.privateKeyPath
 clientId = args.thingName
 thingName = args.thingName
 topic = args.topic
+
+if args.mode not in AllowedActions:
+    parser.error("Unknown --mode option %s. Must be one of %s" % (args.mode, str(AllowedActions)))
+    exit(2)
 
 if not args.certificatePath or not args.privateKeyPath:
     parser.error("Missing credentials for authentication.")
@@ -147,11 +152,19 @@ if not connected:
     sys.exit(-2)
 
 # Successfully connected to the core
-myAWSIoTMQTTClient.subscribe(topic, 0, None)
+if args.mode == 'both' or args.mode == 'subscribe':
+    myAWSIoTMQTTClient.subscribe(topic, 0, None)
 time.sleep(2)
 
 loopCount = 0
 while True:
-    myAWSIoTMQTTClient.publish(topic, "New Message " + str(loopCount), 0)
-    loopCount += 1
+    if args.mode == 'both' or args.mode == 'publish':
+        message = {}
+        message['message'] = args.message
+        message['sequence'] = loopCount
+        messageJson = json.dumps(message)
+        myAWSIoTMQTTClient.publish(topic, messageJson, 0)
+        if args.mode == 'publish':
+            print('Published topic %s: %s\n' % (topic, messageJson))
+        loopCount += 1
     time.sleep(1)

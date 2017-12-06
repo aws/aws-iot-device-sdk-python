@@ -32,6 +32,7 @@ import hashlib
 import hmac
 from AWSIoTPythonSDK.exception.AWSIoTExceptions import wssNoKeyInEnvironmentError
 from AWSIoTPythonSDK.exception.AWSIoTExceptions import wssHandShakeError
+from AWSIoTPythonSDK.core.protocol.internal.defaults import DEFAULT_CONNECT_DISCONNECT_TIMEOUT_SEC
 try:
     from urllib.parse import quote  # Python 3+
 except ImportError:
@@ -378,6 +379,8 @@ class SecuredWebSocketCore:
     _WebsocketConnectInit = -1
     _WebsocketDisconnected = 1
 
+    _logger = logging.getLogger(__name__)
+
     def __init__(self, socket, hostAddress, portNumber, AWSAccessKeyID="", AWSSecretAccessKey="", AWSSessionToken=""):
         self._connectStatus = self._WebsocketConnectInit
         # Handlers
@@ -481,20 +484,26 @@ class SecuredWebSocketCore:
         handshakeBytes = handshakeBytes.encode('utf-8')
         self._sslSocket.write(handshakeBytes)
         # Read it back (Non-blocking socket)
-        # Do we need a timeout here?
+        timeStart = time.time()
         wssHandshakeResponse = bytearray()
         while len(wssHandshakeResponse) == 0:
             try:
                 wssHandshakeResponse += self._sslSocket.read(1024)  # Response is always less than 1024 bytes
             except socket.error as err:
                 if err.errno == ssl.SSL_ERROR_WANT_READ or err.errno == ssl.SSL_ERROR_WANT_WRITE:
-                    pass
+                    if time.time() - timeStart > self._getTimeoutSec():
+                        raise err  # We make sure that reconnect gets retried in Paho upon a wss reconnect response timeout
+                else:
+                    raise err
         # Verify response
         # Now both wssHandshakeResponse and rawSecWebSocketKey are byte strings
         if not self._verifyWSSResponse(wssHandshakeResponse, rawSecWebSocketKey):
             raise wssHandShakeError()
         else:
             pass
+
+    def _getTimeoutSec(self):
+        return DEFAULT_CONNECT_DISCONNECT_TIMEOUT_SEC
 
     # Used to create a single wss frame
     # Assume that the maximum length of a MQTT packet never exceeds the maximum length

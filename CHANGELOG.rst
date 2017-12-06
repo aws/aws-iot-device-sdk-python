@@ -2,6 +2,19 @@
 CHANGELOG
 =========
 
+1.3.0
+=====
+* bugfix:WebSocket handshake response timeout and error escalation
+* bugfix:Prevent GG discovery from crashing if Metadata field is None
+* bugfix:Fix the client object reusability issue
+* bugfix:Prevent NPE due to shadow operation token not found in the pool
+* improvement:Split the publish and subscribe operations in basicPubSub.py sample
+* improvement:Updated default connection keep-alive interval to 600 seconds
+* feature:AWSIoTMQTTClient:New API for username and password configuration
+* feature:AWSIoTMQTTShadowClient:New API for username and password configuration
+* feature:AWSIoTMQTTClient:New API for enabling/disabling metrics collection
+* feature:AWSIoTMQTTShadowClient:New API for enabling/disabling metrics collection
+
 1.2.0
 =====
 * improvement:AWSIoTMQTTClient:Improved synchronous API backend for ACK tracking

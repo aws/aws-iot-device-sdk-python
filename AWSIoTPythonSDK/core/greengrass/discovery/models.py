@@ -460,7 +460,7 @@ class DiscoveryInfo(object):
             connectivity_info = ConnectivityInfo(connectivity_info_object[KEY_CONNECTIVITY_INFO_ID],
                                                  connectivity_info_object[KEY_HOST_ADDRESS],
                                                  connectivity_info_object[KEY_PORT_NUMBER],
-                                                 connectivity_info_object[KEY_METADATA])
+                                                 connectivity_info_object.get(KEY_METADATA,''))
             core_info.appendConnectivityInfo(connectivity_info)
 
         return core_info

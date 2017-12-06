@@ -178,6 +178,10 @@ class deviceShadow:
 
     def _timerHandler(self, srcActionName, srcToken):
         with self._dataStructureLock:
+            # Don't crash if we try to remove an unknown token
+            if srcToken not in self._tokenPool:
+                self._logger.warn('Tried to remove non-existent token from pool: %s' % str(srcToken))
+                return
             # Remove the token
             del self._tokenPool[srcToken]
             # Need to unsubscribe?

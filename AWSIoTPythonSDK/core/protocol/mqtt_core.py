@@ -13,6 +13,7 @@
 # * permissions and limitations under the License.
 # */
 
+import AWSIoTPythonSDK
 from AWSIoTPythonSDK.core.protocol.internal.clients import InternalAsyncMqttClient
 from AWSIoTPythonSDK.core.protocol.internal.clients import ClientStatusContainer
 from AWSIoTPythonSDK.core.protocol.internal.clients import ClientStatus
@@ -24,6 +25,7 @@ from AWSIoTPythonSDK.core.protocol.internal.requests import RequestTypes
 from AWSIoTPythonSDK.core.protocol.internal.requests import QueueableRequest
 from AWSIoTPythonSDK.core.protocol.internal.defaults import DEFAULT_CONNECT_DISCONNECT_TIMEOUT_SEC
 from AWSIoTPythonSDK.core.protocol.internal.defaults import DEFAULT_OPERATION_TIMEOUT_SEC
+from AWSIoTPythonSDK.core.protocol.internal.defaults import METRICS_PREFIX
 from AWSIoTPythonSDK.core.protocol.internal.events import FixedEventMids
 from AWSIoTPythonSDK.core.protocol.paho.client import MQTT_ERR_SUCCESS
 from AWSIoTPythonSDK.exception.AWSIoTExceptions import connectError
@@ -60,6 +62,9 @@ class MqttCore(object):
     _logger = logging.getLogger(__name__)
 
     def __init__(self, client_id, clean_session, protocol, use_wss):
+        self._username = ""
+        self._password = None
+        self._enable_metrics_collection = True
         self._event_queue = Queue()
         self._event_cv = Condition()
         self._event_producer = EventProducer(self._event_cv, self._event_queue)
@@ -77,7 +82,6 @@ class MqttCore(object):
         self._operation_timeout_sec = DEFAULT_OPERATION_TIMEOUT_SEC
         self._init_offline_request_exceptions()
         self._init_workers()
-        self._start_workers()
         self._logger.info("MqttCore initialized")
         self._logger.info("Client id: %s" % client_id)
         self._logger.info("Protocol version: %s" % ("MQTTv3.1" if protocol == MQTTv31 else "MQTTv3.1.1"))
@@ -153,6 +157,17 @@ class MqttCore(object):
         self._logger.info("Clearing last will...")
         self._internal_async_client.clear_last_will()
 
+    def configure_username_password(self, username, password=None):
+        self._logger.info("Configuring username and password...")
+        self._username = username
+        self._password = password
+
+    def enable_metrics_collection(self):
+        self._enable_metrics_collection = True
+
+    def disable_metrics_collection(self):
+        self._enable_metrics_collection = False
+
     def configure_offline_requests_queue(self, max_size, drop_behavior):
         self._logger.info("Configuring offline requests queueing: max queue size: %d", max_size)
         self._offline_requests_manager = OfflineRequestsManager(max_size, drop_behavior)
@@ -174,7 +189,9 @@ class MqttCore(object):
     def connect_async(self, keep_alive_sec, ack_callback=None):
         self._logger.info("Performing async connect...")
         self._logger.info("Keep-alive: %f sec" % keep_alive_sec)
+        self._start_workers()
         self._load_callbacks()
+        self._load_username_password()
         self._client_status.set_status(ClientStatus.CONNECT)
         rc = self._internal_async_client.connect(keep_alive_sec, ack_callback)
         if MQTT_ERR_SUCCESS != rc:
@@ -187,6 +204,13 @@ class MqttCore(object):
         self._internal_async_client.on_online = self.on_online
         self._internal_async_client.on_offline = self.on_offline
         self._internal_async_client.on_message = self.on_message
+
+    def _load_username_password(self):
+        username_candidate = self._username
+        if self._enable_metrics_collection:
+            username_candidate += METRICS_PREFIX
+            username_candidate += AWSIoTPythonSDK.__version__
+        self._internal_async_client.set_username_password(username_candidate, self._password)
 
     def disconnect(self):
         self._logger.info("Performing sync disconnect...")

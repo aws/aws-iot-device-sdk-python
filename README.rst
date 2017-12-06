@@ -110,6 +110,24 @@ The SDK zip file is available `here <https://s3.amazonaws.com/aws-iot-device-sdk
 Use the SDK
 ~~~~~~~~~~~
 
+Collection of Metrics
+_____________________
+
+Beginning with Release v1.3.0 of the SDK, AWS collects usage metrics indicating which language and version of the SDK
+is being used. This feature is enabled by default and allows us to prioritize our resources towards addressing issues
+faster in SDKs that see the most and is an important data point. However, we do understand that not all customers would
+want to report this data. In that case, the sending of usage metrics can be easily disabled by the user using the
+corresponding API:
+
+.. code-block:: python
+
+    # AWS IoT MQTT Client
+    AWSIoTPythonSDK.MQTTLib.AWSIoTMQTTClient.enableMetricsCollection()
+    AWSIoTPythonSDK.MQTTLib.AWSIoTMQTTClient.disableMetricsCollection()
+    # AWS IoT MQTT Shadow Client
+    AWSIoTPythonSDK.MQTTLib.AWSIoTMQTTShadowClient.enableMetricsCollection()
+    AWSIoTPythonSDK.MQTTLib.AWSIoTMQTTShadowClient.disableMetricsCollection()
+
 Credentials
 ___________
 
@@ -550,6 +568,10 @@ Run the example like this:
     python basicPubSub.py -e <endpoint> -r <rootCAFilePath> -w
     # Customize client id and topic
     python basicPubSub.py -e <endpoint> -r <rootCAFilePath> -c <certFilePath> -k <privateKeyFilePath> -id <clientId> -t <topic>
+    # Customize the message
+    python basicPubSub.py -e <endpoint> -r <rootCAFilePath> -c <certFilePath> -k <privateKeyFilePath> -id <clientId> -t <topic> -M <message>
+    # change the run mode to subscribe or publish only (see python basicPubSub.py -h for the available options)
+    python basicPubSub.py -e <endpoint> -r <rootCAFilePath> -c <certFilePath> -k <privateKeyFilePath> -m <mode>
 
 Source
 ******

@@ -378,8 +378,81 @@ class AWSIoTMQTTClient:
         """
         self._mqtt_core.configure_operation_timeout_sec(timeoutSecond)
 
+    def configureUsernamePassword(self, username, password=None):
+        """
+        **Description**
+
+        Used to configure the username and password used in CONNECT packet.
+
+        **Syntax**
+
+        .. code:: python
+
+          # Configure user name and password
+          myAWSIoTMQTTClient.configureUsernamePassword("myUsername", "myPassword")
+
+        **Parameters**
+
+        *username* - Username used in the username field of CONNECT packet.
+
+        *password* - Password used in the password field of CONNECT packet.
+
+        **Returns**
+
+        None
+
+        """
+        self._mqtt_core.configure_username_password(username, password)
+
+    def enableMetricsCollection(self):
+        """
+        **Description**
+
+        Used to enable SDK metrics collection. Username field in CONNECT packet will be used to append the SDK name
+        and SDK version in use and communicate to AWS IoT cloud. This metrics collection is enabled by default.
+
+        **Syntax**
+
+        .. code:: python
+
+          myAWSIoTMQTTClient.enableMetricsCollection()
+
+        **Parameters**
+
+        None
+
+        **Returns**
+
+        None
+
+        """
+        self._mqtt_core.enable_metrics_collection()
+
+    def disableMetricsCollection(self):
+        """
+        **Description**
+
+        Used to disable SDK metrics collection.
+
+        **Syntax**
+
+        .. code:: python
+
+          myAWSIoTMQTTClient.disableMetricsCollection()
+
+        **Parameters**
+
+        None
+
+        **Returns**
+
+        None
+
+        """
+        self._mqtt_core.disable_metrics_collection()
+
     # MQTT functionality APIs
-    def connect(self, keepAliveIntervalSecond=30):
+    def connect(self, keepAliveIntervalSecond=600):
         """
         **Description**
 
@@ -389,15 +462,15 @@ class AWSIoTMQTTClient:
 
         .. code:: python
 
-          # Connect to AWS IoT with default keepalive set to 30 seconds
+          # Connect to AWS IoT with default keepalive set to 600 seconds
           myAWSIoTMQTTClient.connect()
-          # Connect to AWS IoT with keepalive interval set to 55 seconds
-          myAWSIoTMQTTClient.connect(55)
+          # Connect to AWS IoT with keepalive interval set to 1200 seconds
+          myAWSIoTMQTTClient.connect(1200)
 
         **Parameters**
 
         *keepAliveIntervalSecond* - Time in seconds for interval of sending MQTT ping request. 
-        Default set to 30 seconds.
+        Default set to 600 seconds.
 
         **Returns**
 
@@ -407,7 +480,7 @@ class AWSIoTMQTTClient:
         self._load_callbacks()
         return self._mqtt_core.connect(keepAliveIntervalSecond)
 
-    def connectAsync(self, keepAliveIntervalSecond=30, ackCallback=None):
+    def connectAsync(self, keepAliveIntervalSecond=600, ackCallback=None):
         """
         **Description**
 
@@ -417,15 +490,15 @@ class AWSIoTMQTTClient:
 
         .. code:: python
 
-          # Connect to AWS IoT with default keepalive set to 30 seconds and a custom CONNACK callback
+          # Connect to AWS IoT with default keepalive set to 600 seconds and a custom CONNACK callback
           myAWSIoTMQTTClient.connectAsync(ackCallback=my_connack_callback)
-          # Connect to AWS IoT with default keepalive set to 55 seconds and a custom CONNACK callback
-          myAWSIoTMQTTClient.connectAsync(keepAliveInternvalSecond=55, ackCallback=myConnackCallback)
+          # Connect to AWS IoT with default keepalive set to 1200 seconds and a custom CONNACK callback
+          myAWSIoTMQTTClient.connectAsync(keepAliveInternvalSecond=1200, ackCallback=myConnackCallback)
 
         **Parameters**
 
         *keepAliveIntervalSecond* - Time in seconds for interval of sending MQTT ping request.
-        Default set to 30 seconds.
+        Default set to 600 seconds.
 
         *ackCallback* - Callback to be invoked when the client receives a CONNACK. Should be in form
         :code:`customCallback(mid, data)`, where :code:`mid` is the packet id for the connect request
@@ -1036,8 +1109,81 @@ class AWSIoTMQTTShadowClient:
         # AWSIoTMQTTClient.configureMQTTOperationTimeout
         self._AWSIoTMQTTClient.configureMQTTOperationTimeout(timeoutSecond)
 
+    def configureUsernamePassword(self, username, password=None):
+        """
+        **Description**
+
+        Used to configure the username and password used in CONNECT packet.
+
+        **Syntax**
+
+        .. code:: python
+
+          # Configure user name and password
+          myAWSIoTMQTTShadowClient.configureUsernamePassword("myUsername", "myPassword")
+
+        **Parameters**
+
+        *username* - Username used in the username field of CONNECT packet.
+
+        *password* - Password used in the password field of CONNECT packet.
+
+        **Returns**
+
+        None
+
+        """
+        self._AWSIoTMQTTClient.configureUsernamePassword(username, password)
+
+    def enableMetricsCollection(self):
+        """
+        **Description**
+
+        Used to enable SDK metrics collection. Username field in CONNECT packet will be used to append the SDK name
+        and SDK version in use and communicate to AWS IoT cloud. This metrics collection is enabled by default.
+
+        **Syntax**
+
+        .. code:: python
+
+          myAWSIoTMQTTClient.enableMetricsCollection()
+
+        **Parameters**
+
+        None
+
+        **Returns**
+
+        None
+
+        """
+        self._AWSIoTMQTTClient.enableMetricsCollection()
+
+    def disableMetricsCollection(self):
+        """
+        **Description**
+
+        Used to disable SDK metrics collection.
+
+        **Syntax**
+
+        .. code:: python
+
+          myAWSIoTMQTTClient.disableMetricsCollection()
+
+        **Parameters**
+
+        None
+
+        **Returns**
+
+        None
+
+        """
+        self._AWSIoTMQTTClient.disableMetricsCollection()
+
     # Start the MQTT connection
-    def connect(self, keepAliveIntervalSecond=30):
+    def connect(self, keepAliveIntervalSecond=600):
         """
         **Description**
 
@@ -1047,10 +1193,10 @@ class AWSIoTMQTTShadowClient:
 
         .. code:: python
 
-          # Connect to AWS IoT with default keepalive set to 30 seconds
+          # Connect to AWS IoT with default keepalive set to 600 seconds
           myAWSIoTMQTTShadowClient.connect()
-          # Connect to AWS IoT with keepalive interval set to 55 seconds
-          myAWSIoTMQTTShadowClient.connect(55)
+          # Connect to AWS IoT with keepalive interval set to 1200 seconds
+          myAWSIoTMQTTShadowClient.connect(1200)
 
         **Parameters**
 
