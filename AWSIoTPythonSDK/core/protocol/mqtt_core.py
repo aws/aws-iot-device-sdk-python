@@ -219,6 +219,9 @@ class MqttCore(object):
         if not event.wait(self._connect_disconnect_timeout_sec):
             self._logger.error("Disconnect timed out")
             raise disconnectTimeoutException()
+        if not self._event_consumer.wait_until_it_stops(self._connect_disconnect_timeout_sec):
+            self._logger.error("Disconnect timed out in waiting for event consumer")
+            raise disconnectTimeoutException()
         return True
 
     def disconnect_async(self, ack_callback=None):

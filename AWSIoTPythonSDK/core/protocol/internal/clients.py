@@ -151,8 +151,8 @@ class InternalAsyncMqttClient(object):
         return combined_on_disconnect_callback
 
     def _create_converted_on_message_callback(self):
-        def converted_on_message_callback(mid, message):
-            self.on_message(message)
+        def converted_on_message_callback(mid, data):
+            self.on_message(data)
         return converted_on_message_callback
 
     # For client online notification
@@ -212,14 +212,16 @@ class InternalAsyncMqttClient(object):
     def invoke_event_callback(self, mid, data=None):
         with self._event_callback_map_lock:
             event_callback = self._event_callback_map.get(mid)
-            if event_callback:
-                self._logger.debug("Invoking custom event callback...")
-                if data is not None:
-                    event_callback(mid, data)
-                else:
-                    event_callback(mid)
-                if isinstance(mid, Number):  # Do NOT remove callbacks for CONNACK/DISCONNECT/MESSAGE
-                    self._logger.debug("This custom event callback is for pub/sub/unsub, removing it after invocation...")
+        # For invoking the event callback, we do not need to acquire the lock
+        if event_callback:
+            self._logger.debug("Invoking custom event callback...")
+            if data is not None:
+                event_callback(mid=mid, data=data)
+            else:
+                event_callback(mid=mid)
+            if isinstance(mid, Number):  # Do NOT remove callbacks for CONNACK/DISCONNECT/MESSAGE
+                self._logger.debug("This custom event callback is for pub/sub/unsub, removing it after invocation...")
+                with self._event_callback_map_lock:
                     del self._event_callback_map[mid]
 
     def remove_event_callback(self, mid):

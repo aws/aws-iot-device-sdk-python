@@ -652,7 +652,9 @@ class AWSIoTMQTTClient:
 
         *callback* - Function to be called when a new message for the subscribed topic 
         comes in. Should be in form :code:`customCallback(client, userdata, message)`, where
-        :code:`message` contains :code:`topic` and :code:`payload`.
+        :code:`message` contains :code:`topic` and :code:`payload`. Note that :code:`client` and :code:`userdata` are
+        here just to be aligned with the underneath Paho callback function signature. These fields are pending to be
+        deprecated and should not be depended on.
 
         **Returns**
 
@@ -688,7 +690,9 @@ class AWSIoTMQTTClient:
 
         *messageCallback* - Function to be called when a new message for the subscribed topic
         comes in. Should be in form :code:`customCallback(client, userdata, message)`, where
-        :code:`message` contains :code:`topic` and :code:`payload`.
+        :code:`message` contains :code:`topic` and :code:`payload`. Note that :code:`client` and :code:`userdata` are
+        here just to be aligned with the underneath Paho callback function signature. These fields are pending to be
+        deprecated and should not be depended on.
 
         **Returns**
 

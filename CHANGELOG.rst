@@ -2,6 +2,13 @@
 CHANGELOG
 =========
 
+1.3.1
+=====
+* bugfix:Issue:`#67 <https://github.com/aws/aws-iot-device-sdk-python/issues/67>`__
+* bugfix:Fixed a dead lock issue when client async API is called within the event callback
+* bugfix:Updated README and API documentation to provide clear usage information on sync/async API and callbacks
+* improvement:Added a new sample to show API usage within callbacks
+
 1.3.0
 =====
 * bugfix:WebSocket handshake response timeout and error escalation

@@ -348,6 +348,36 @@ API documentation for ``AWSIoTPythonSDK.core.greengrass.discovery.models``,
 `Greengrass Discovery documentation <http://docs.aws.amazon.com/greengrass/latest/developerguide/gg-discover-api.html>`__
 or `Greengrass overall documentation <http://docs.aws.amazon.com/greengrass/latest/developerguide/what-is-gg.html>`__.
 
+
+Synchronous APIs and Asynchronous APIs
+______________________________________
+
+Beginning with Release v1.2.0, SDK provides asynchronous APIs and enforces synchronous API behaviors for MQTT operations,
+which includes:
+- connect/connectAsync
+- disconnect/disconnectAsync
+- publish/publishAsync
+- subscribe/subscribeAsync
+- unsubscribe/unsubscribeAsync
+
+- Asynchronous APIs
+Asynchronous APIs translate the invocation into MQTT packet and forward it to the underneath connection to be sent out.
+They return immediately once packets are out for delivery, regardless of whether the corresponding ACKs, if any, have
+been received. Users can specify their own callbacks for ACK/message (server side PUBLISH) processing for each
+individual request. These callbacks will be sequentially dispatched and invoked upon the arrival of ACK/message (server
+side PUBLISH) packets.
+
+- Synchronous APIs
+Synchronous API behaviors are enforced by registering blocking ACK callbacks on top of the asynchronous APIs.
+Synchronous APIs wait on their corresponding ACK packets, if there is any, before the invocation returns. For example,
+a synchronous QoS1 publish call will wait until it gets its PUBACK back. A synchronous subscribe call will wait until
+it gets its SUBACK back. Users can configure operation time out for synchronous APIs to stop the waiting.
+
+Since callbacks are sequentially dispatched and invoked, calling synchronous APIs within callbacks will deadlock the
+user application. If users are inclined to utilize the asynchronous mode and perform MQTT operations
+within callbacks, asynchronous APIs should be used. For more details, please check out the provided samples at
+``samples/basicPubSub/basicPubSub_APICallInCallback.py``
+
 .. _Key_Features:
 
 Key Features
@@ -636,6 +666,37 @@ Run the example like this:
     python basicPubSubAsync.py -e <endpoint> -r <rootCAFilePath> -w
     # Customize client id and topic
     python basicPubSubAsync.py -e <endpoint> -r <rootCAFilePath> -c <certFilePath> -k <privateKeyFilePath> -id <clientId> -t <topic>
+
+Source
+******
+
+The example is available in ``samples/basicPubSub/``.
+
+BasicPubSub with API invocation in callback
+___________
+
+This example demonstrates the usage of asynchronous APIs within callbacks. It first connects to AWS IoT and subscribes
+to 2 topics with the corresponding message callbacks registered. One message callback contains client asynchronous API
+invocation that republishes the received message from <topic> to  <topic>/republish. The other message callback simply
+prints out the received message. It then publishes messages to <topic> in an infinite loop. For every message received
+from <topic>, it will be republished to <topic>/republish and be printed out as configured in the simple print-out
+message callback.
+New ack packet ids are printed upon reception of PUBACK and SUBACK through ACK callbacks registered with asynchronous
+API calls, indicating that the the client received ACKs for the corresponding asynchronous API calls.
+
+Instructions
+************
+
+Run the example like this:
+
+.. code-block:: python
+
+    # Certificate based mutual authentication
+    python basicPubSub_APICallInCallback.py -e <endpoint> -r <rootCAFilePath> -c <certFilePath> -k <privateKeyFilePath>
+    # MQTT over WebSocket
+    python basicPubSub_APICallInCallback.py -e <endpoint> -r <rootCAFilePath> -w
+    # Customize client id and topic
+    python basicPubSub_APICallInCallback.py -e <endpoint> -r <rootCAFilePath> -c <certFilePath> -k <privateKeyFilePath> -id <clientId> -t <topic>
 
 Source
 ******

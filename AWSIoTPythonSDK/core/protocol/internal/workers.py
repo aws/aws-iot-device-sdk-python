@@ -16,6 +16,7 @@
 import time
 import logging
 from threading import Thread
+from threading import Event
 from AWSIoTPythonSDK.core.protocol.internal.events import EventTypes
 from AWSIoTPythonSDK.core.protocol.internal.events import FixedEventMids
 from AWSIoTPythonSDK.core.protocol.internal.clients import ClientStatus
@@ -91,6 +92,7 @@ class EventConsumer(object):
             RequestTypes.SUBSCRIBE : self._handle_offline_subscribe,
             RequestTypes.UNSUBSCRIBE : self._handle_offline_unsubscribe
         }
+        self._stopper = Event()
 
     def update_offline_requests_manager(self, offline_requests_manager):
         self._offline_requests_manager = offline_requests_manager
@@ -105,6 +107,7 @@ class EventConsumer(object):
         return self._is_running
 
     def start(self):
+        self._stopper.clear()
         self._is_running = True
         dispatch_events = Thread(target=self._dispatch)
         dispatch_events.daemon = True
@@ -127,6 +130,13 @@ class EventConsumer(object):
         self._internal_async_client.clean_up_event_callbacks()
         self._logger.debug("Event callbacks cleared")
 
+    def wait_until_it_stops(self, timeout_sec):
+        self._logger.debug("Waiting for event consumer to completely stop")
+        return self._stopper.wait(timeout=timeout_sec)
+
+    def is_fully_stopped(self):
+        return self._stopper.is_set()
+
     def _dispatch(self):
         while self._is_running:
             with self._cv:
@@ -135,6 +145,8 @@ class EventConsumer(object):
                 else:
                     while not self._event_queue.empty():
                         self._dispatch_one()
+        self._stopper.set()
+        self._logger.debug("Exiting dispatching loop...")
 
     def _dispatch_one(self):
         mid, event_type, data = self._event_queue.get()
