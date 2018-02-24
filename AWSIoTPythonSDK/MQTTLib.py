@@ -33,7 +33,8 @@ DROP_NEWEST = 1
 
 class AWSIoTMQTTClient:
 
-    def __init__(self, clientID, protocolType=MQTTv3_1_1, useWebsocket=False, cleanSession=True):
+    def __init__(self, clientID, protocolType=MQTTv3_1_1, useWebsocket=False, cleanSession=True,
+                 hostName=None, portNumber=None, keepAliveIntervalSecond=600):
         """
 
         The client class that connects to and accesses AWS IoT over MQTT v3.1/3.1.1.
@@ -43,12 +44,12 @@ class AWSIoTMQTTClient:
         - TLSv1.2 Mutual Authentication
 
         X.509 certificate-based secured MQTT connection to AWS IoT
-        
+
         - Websocket SigV4
 
         IAM credential-based secured MQTT connection over Websocket to AWS IoT
 
-        It provides basic synchronous MQTT operations in the classic MQTT publish-subscribe 
+        It provides basic synchronous MQTT operations in the classic MQTT publish-subscribe
         model, along with configurations of on-top features:
 
         - Auto reconnect/resubscribe
@@ -71,12 +72,19 @@ class AWSIoTMQTTClient:
         **Parameters**
 
         *clientID* - String that denotes the client identifier used to connect to AWS IoT.
-        If empty string were provided, client id for this connection will be randomly generated 
+        If empty string were provided, client id for this connection will be randomly generated
         n server side.
 
         *protocolType* - MQTT version in use for this connection. Could be :code:`AWSIoTPythonSDK.MQTTLib.MQTTv3_1` or :code:`AWSIoTPythonSDK.MQTTLib.MQTTv3_1_1`
 
         *useWebsocket* - Boolean that denotes enabling MQTT over Websocket SigV4 or not.
+
+        *hostName* - String that denotes the host name of the user-specific AWS IoT endpoint.
+
+        *portNumber* - Integer that denotes the port number to connect to.
+
+        *keepAliveIntervalSecond* - Time in seconds for interval of sending MQTT ping request.
+        Default set to 30 seconds.
 
         **Returns**
 
@@ -84,6 +92,16 @@ class AWSIoTMQTTClient:
 
         """
         self._mqtt_core = MqttCore(clientID, cleanSession, protocolType, useWebsocket)
+        self._keepAliveIntervalSecond = keepAliveIntervalSecond
+        if hostName and portNumber:
+            self.configureEndpoint(hostName, portNumber)
+
+    def __enter__(self):
+        self.connect(self._keepAliveIntervalSecond)
+        return self
+
+    def __exit__(self, exc_type, exc_val, tb):
+        self.disconnect()
 
     # Configuration APIs
     def configureLastWill(self, topic, payload, QoS, retain=False):
@@ -132,7 +150,7 @@ class AWSIoTMQTTClient:
         **Returns**
 
         None
-        
+
         """
         self._mqtt_core.clear_last_will()
 
@@ -170,7 +188,7 @@ class AWSIoTMQTTClient:
         """
         **Description**
 
-        Used to configure/update the custom IAM credentials for Websocket SigV4 connection to 
+        Used to configure/update the custom IAM credentials for Websocket SigV4 connection to
         AWS IoT. Should be called before connect.
 
         **Syntax**
@@ -250,12 +268,12 @@ class AWSIoTMQTTClient:
 
         **Parameters**
 
-        *baseReconnectQuietTimeSecond* - The initial back off time to start with, in seconds. 
+        *baseReconnectQuietTimeSecond* - The initial back off time to start with, in seconds.
         Should be less than the stableConnectionTime.
 
         *maxReconnectQuietTimeSecond* - The maximum back off time, in seconds.
 
-        *stableConnectionTimeSecond* - The number of seconds for a connection to last to be considered as stable. 
+        *stableConnectionTimeSecond* - The number of seconds for a connection to last to be considered as stable.
         Back off time will be reset to base once the connection is stable.
 
         **Returns**
@@ -314,7 +332,7 @@ class AWSIoTMQTTClient:
 
         .. note::
 
-          Make sure the draining speed is fast enough and faster than the publish rate. Slow draining 
+          Make sure the draining speed is fast enough and faster than the publish rate. Slow draining
           could result in inifinite draining process.
 
         **Parameters**
@@ -332,7 +350,7 @@ class AWSIoTMQTTClient:
         """
         **Description**
 
-        Used to configure the time in seconds to wait for a CONNACK or a disconnect to complete. 
+        Used to configure the time in seconds to wait for a CONNACK or a disconnect to complete.
         Should be called before connect.
 
         **Syntax**
@@ -357,7 +375,7 @@ class AWSIoTMQTTClient:
         """
         **Description**
 
-        Used to configure the timeout in seconds for MQTT QoS 1 publish, subscribe and unsubscribe. 
+        Used to configure the timeout in seconds for MQTT QoS 1 publish, subscribe and unsubscribe.
         Should be called before connect.
 
         **Syntax**
@@ -469,7 +487,7 @@ class AWSIoTMQTTClient:
 
         **Parameters**
 
-        *keepAliveIntervalSecond* - Time in seconds for interval of sending MQTT ping request. 
+        *keepAliveIntervalSecond* - Time in seconds for interval of sending MQTT ping request.
         Default set to 600 seconds.
 
         **Returns**
@@ -650,7 +668,7 @@ class AWSIoTMQTTClient:
 
         *QoS* - Quality of Service. Could be 0 or 1.
 
-        *callback* - Function to be called when a new message for the subscribed topic 
+        *callback* - Function to be called when a new message for the subscribed topic
         comes in. Should be in form :code:`customCallback(client, userdata, message)`, where
         :code:`message` contains :code:`topic` and :code:`payload`. Note that :code:`client` and :code:`userdata` are
         here just to be aligned with the underneath Paho callback function signature. These fields are pending to be
@@ -831,13 +849,14 @@ class AWSIoTMQTTClient:
 
 class AWSIoTMQTTShadowClient:
 
-    def __init__(self, clientID, protocolType=MQTTv3_1_1, useWebsocket=False, cleanSession=True):
+    def __init__(self, clientID, protocolType=MQTTv3_1_1, useWebsocket=False, cleanSession=True,
+                 hostName=None, portNumber=None, keepAliveIntervalSecond=600):
         """
 
         The client class that manages device shadow and accesses its functionality in AWS IoT over MQTT v3.1/3.1.1.
 
-        It is built on top of the AWS IoT MQTT Client and exposes devive shadow related operations. 
-        It shares the same connection types, synchronous MQTT operations and partial on-top features 
+        It is built on top of the AWS IoT MQTT Client and exposes devive shadow related operations.
+        It shares the same connection types, synchronous MQTT operations and partial on-top features
         with the AWS IoT MQTT Client:
 
         - Auto reconnect/resubscribe
@@ -866,12 +885,19 @@ class AWSIoTMQTTShadowClient:
         **Parameters**
 
         *clientID* - String that denotes the client identifier used to connect to AWS IoT.
-        If empty string were provided, client id for this connection will be randomly generated 
+        If empty string were provided, client id for this connection will be randomly generated
         n server side.
 
         *protocolType* - MQTT version in use for this connection. Could be :code:`AWSIoTPythonSDK.MQTTLib.MQTTv3_1` or :code:`AWSIoTPythonSDK.MQTTLib.MQTTv3_1_1`
 
         *useWebsocket* - Boolean that denotes enabling MQTT over Websocket SigV4 or not.
+
+        *hostName* - String that denotes the host name of the user-specific AWS IoT endpoint.
+
+        *portNumber* - Integer that denotes the port number to connect to.
+
+        *keepAliveIntervalSecond* - Time in seconds for interval of sending MQTT ping request.
+        Default set to 30 seconds.
 
         **Returns**
 
@@ -885,6 +911,16 @@ class AWSIoTMQTTShadowClient:
         self._AWSIoTMQTTClient.configureDrainingFrequency(10)
         # Now retrieve the configured mqttCore and init a shadowManager instance
         self._shadowManager = shadowManager.shadowManager(self._AWSIoTMQTTClient._mqtt_core)
+        self._keepAliveIntervalSecond = keepAliveIntervalSecond
+        if hostName and portNumber:
+            self.configureEndpoint(hostName, portNumber)
+
+    def __enter__(self):
+        self.connect(self._keepAliveIntervalSecond)
+        return self
+
+    def __exit__(self, exc_type, exc_val, tb):
+        self.disconnect()
 
     # Configuration APIs
     def configureLastWill(self, topic, payload, QoS):
@@ -934,7 +970,7 @@ class AWSIoTMQTTShadowClient:
         **Returns**
 
         None
-        
+
         """
         # AWSIoTMQTTClient.clearLastWill()
         self._AWSIoTMQTTClient.clearLastWill()
@@ -971,7 +1007,7 @@ class AWSIoTMQTTShadowClient:
         """
         **Description**
 
-        Used to configure/update the custom IAM credentials for the underneath AWS IoT MQTT Client 
+        Used to configure/update the custom IAM credentials for the underneath AWS IoT MQTT Client
         for Websocket SigV4 connection to AWS IoT. Should be called before connect.
 
         **Syntax**
@@ -1065,7 +1101,7 @@ class AWSIoTMQTTShadowClient:
         """
         **Description**
 
-        Used to configure the time in seconds to wait for a CONNACK or a disconnect to complete. 
+        Used to configure the time in seconds to wait for a CONNACK or a disconnect to complete.
         Should be called before connect.
 
         **Syntax**
@@ -1091,7 +1127,7 @@ class AWSIoTMQTTShadowClient:
         """
         **Description**
 
-        Used to configure the timeout in seconds for MQTT QoS 1 publish, subscribe and unsubscribe. 
+        Used to configure the timeout in seconds for MQTT QoS 1 publish, subscribe and unsubscribe.
         Should be called before connect.
 
         **Syntax**
@@ -1204,7 +1240,7 @@ class AWSIoTMQTTShadowClient:
 
         **Parameters**
 
-        *keepAliveIntervalSecond* - Time in seconds for interval of sending MQTT ping request. 
+        *keepAliveIntervalSecond* - Time in seconds for interval of sending MQTT ping request.
         Default set to 30 seconds.
 
         **Returns**
@@ -1263,15 +1299,15 @@ class AWSIoTMQTTShadowClient:
 
         *shadowName* - Name of the device shadow.
 
-        *isPersistentSubscribe* - Whether to unsubscribe from shadow response (accepted/rejected) topics 
-        when there is a response. Will subscribe at the first time the shadow request is made and will 
+        *isPersistentSubscribe* - Whether to unsubscribe from shadow response (accepted/rejected) topics
+        when there is a response. Will subscribe at the first time the shadow request is made and will
         not unsubscribe if isPersistentSubscribe is set.
 
         **Returns**
 
         AWSIoTPythonSDK.core.shadow.deviceShadow.deviceShadow object, which exposes the device shadow interface.
 
-        """        
+        """
         # Create and return a deviceShadow instance
         return deviceShadow.deviceShadow(shadowName, isPersistentSubscribe, self._shadowManager)
         # Shadow APIs are accessible in deviceShadow instance":
@@ -1287,7 +1323,7 @@ class AWSIoTMQTTShadowClient:
         """
         **Description**
 
-        Retrieve the AWS IoT MQTT Client used underneath for shadow operations, making it possible to perform 
+        Retrieve the AWS IoT MQTT Client used underneath for shadow operations, making it possible to perform
         plain MQTT operations along with shadow operations using the same single connection.
 
         **Syntax**
@@ -1308,7 +1344,7 @@ class AWSIoTMQTTShadowClient:
 
         AWSIoTPythonSDK.MQTTLib.AWSIoTMQTTClient object
 
-        """        
+        """
         # Return the internal AWSIoTMQTTClient instance
         return self._AWSIoTMQTTClient
 

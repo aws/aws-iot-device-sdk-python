@@ -131,7 +131,7 @@ corresponding API:
 Credentials
 ___________
 
-The SDK supports two types of credentials that correspond to the two connection 
+The SDK supports two types of credentials that correspond to the two connection
 types:
 
 -  X.509 certificate
@@ -140,7 +140,7 @@ types:
    type.
    Download the `AWS IoT root
    CA <https://www.symantec.com/content/en/us/enterprise/verisign/roots/VeriSign-Class%203-Public-Primary-Certification-Authority-G5.pem>`__.
-   Use the AWS IoT console to create and download the certificate and private key. You must specify the location of these files 
+   Use the AWS IoT console to create and download the certificate and private key. You must specify the location of these files
    when you initialize the client.
 
 -  IAM credentials
@@ -159,7 +159,7 @@ types:
       .. code-block:: python
 
           # AWS IoT MQTT Client
-          AWSIoTPythonSDK.MQTTLib.AWSIoTMQTTClient.configureIAMCredentials(obtainedAccessKeyID, obtainedSecretAccessKey, obtainedSessionToken)        
+          AWSIoTPythonSDK.MQTTLib.AWSIoTMQTTClient.configureIAMCredentials(obtainedAccessKeyID, obtainedSecretAccessKey, obtainedSessionToken)
           # AWS IoT MQTT Shadow Client
           AWSIoTPythonSDK.MQTTLib.AWSIoTMQTTShadowClient.configureIAMCredentials(obtainedAccessKeyID, obtainedSecretAccessKey, obtainedSessionToken)
 
@@ -181,7 +181,7 @@ types:
       The secret key for your AWS account.
 
       ``AWS_SESSION_TOKEN``
-      
+
       The session key for your AWS account. This is required only when
       you are using temporary credentials. For more information, see
       `here <http://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_temp.html>`__.
@@ -253,11 +253,10 @@ For basic MQTT operations, your script will look like this:
 .. code-block:: python
 
     ...
-    myMQTTClient.connect()
-    myMQTTClient.publish("myTopic", "myPayload", 0)
-    myMQTTClient.subscribe("myTopic", 1, customCallback)
-    myMQTTClient.unsubscribe("myTopic")
-    myMQTTClient.disconnect()
+    with myMQTTClient:
+        myMQTTClient.publish("myTopic", "myPayload", 0)
+        myMQTTClient.subscribe("myTopic", 1, customCallback)
+        myMQTTClient.unsubscribe("myTopic")
     ...
 
 AWSIoTShadowClient
@@ -421,7 +420,7 @@ default configuration for backoff timing will be performed on initialization:
 Offline Requests Queueing with Draining
 _______________________________________
 
-If the client is temporarily offline and disconnected due to 
+If the client is temporarily offline and disconnected due to
 network failure, publish/subscribe/unsubscribe requests will be added to an internal
 queue until the number of queued-up requests reaches the size limit
 of the queue. This functionality is for plain MQTT operations. Shadow
@@ -526,7 +525,7 @@ ______________________________________
 
 Device shadow operations are built on top of the publish/subscribe model
 for the MQTT protocol, which provides an asynchronous request/response workflow. Shadow operations (Get, Update, Delete) are
-sent as requests to AWS IoT. The registered callback will 
+sent as requests to AWS IoT. The registered callback will
 be executed after a response is returned. In order to receive
 responses, the client must subscribe to the corresponding shadow
 response topics. After the responses are received, the client might want
