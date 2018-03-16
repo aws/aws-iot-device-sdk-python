@@ -18,20 +18,23 @@ import time
 from threading import Lock
 
 class _jobAction:
-    _actionType = ["get", "update", "delete", "delta"]
+    _actionType = ["get", "start-next", "update", "notify", "notify-next"]
 
-    def __init__(self, srcJobName, srcActionName):
+    def __init__(self, srcThingName, srcActionName, srcJobId=None):
         if srcActionName is None or srcActionName not in self._actionType:
             raise TypeError("Unsupported job action.")
-        self._jobName = srcJobName
+        if srcJobId is None and srcActionName == "update":
+            raise TypeError("Unsupported job action.")
+        if srcJobId is not None and srcActionName not in ["get", "update"]:
+            raise TypeError("Unsupported job action.")
+        self._thingName = srcThingName
         self._actionName = srcActionName
-        self.isDelta = srcActionName == "delta"
-        if self.isDelta:
-            self._topicDelta = "$aws/things/" + str(self._jobName) + "/jobs/update/delta"
-        else:
-            self._topicGeneral = "$aws/things/" + str(self._jobName) + "/jobs/" + str(self._actionName)
-            self._topicAccept = "$aws/things/" + str(self._jobName) + "/jobs/" + str(self._actionName) + "/accepted"
-            self._topicReject = "$aws/things/" + str(self._jobName) + "/jobs/" + str(self._actionName) + "/rejected"
+        # Add srcJobId to get and update actions if required
+        if srcJobId is not None and self._actionName in ["get", "update"]:
+            self._actionName = srcJobId + "/" + self._actionName
+        self._topicGeneral = "$aws/things/" + str(self._thingName) + "/jobs/" + str(self._actionName)
+        self._topicAccept = "$aws/things/" + str(self._thingName) + "/jobs/" + str(self._actionName) + "/accepted"
+        self._topicReject = "$aws/things/" + str(self._thingName) + "/jobs/" + str(self._actionName) + "/rejected"
 
     def getTopicGeneral(self):
         return self._topicGeneral
@@ -41,9 +44,6 @@ class _jobAction:
 
     def getTopicReject(self):
         return self._topicReject
-
-    def getTopicDelta(self):
-        return self._topicDelta
 
 
 class jobManager:
@@ -57,27 +57,21 @@ class jobManager:
         self._mqttCoreHandler = srcMQTTCore
         self._jobSubUnsubOperationLock = Lock()
 
-    def basicJobPublish(self, srcJobName, srcJobAction, srcPayload):
-        currentJobAction = _jobAction(srcJobName, srcJobAction)
+    def basicJobPublish(self, srcThingName, srcJobAction, srcPayload, srcJobId=None):
+        currentJobAction = _jobAction(srcThingName, srcJobAction, srcJobId=srcJobId)
         self._mqttCoreHandler.publish(currentJobAction.getTopicGeneral(), srcPayload, 0, False)
 
-    def basicJobSubscribe(self, srcJobName, srcJobAction, srcCallback):
+    def basicJobSubscribe(self, srcThingName, srcJobAction, srcCallback, srcJobId=None):
         with self._jobSubUnsubOperationLock:
-            currentJobAction = _jobAction(srcJobName, srcJobAction)
-            if currentJobAction.isDelta:
-                self._mqttCoreHandler.subscribe(currentJobAction.getTopicDelta(), 0, srcCallback)
-            else:
-                self._mqttCoreHandler.subscribe(currentJobAction.getTopicAccept(), 0, srcCallback)
-                self._mqttCoreHandler.subscribe(currentJobAction.getTopicReject(), 0, srcCallback)
+            currentJobAction = _jobAction(srcThingName, srcJobAction, srcJobId=srcJobId)
+            self._mqttCoreHandler.subscribe(currentJobAction.getTopicAccept(), 0, srcCallback)
+            self._mqttCoreHandler.subscribe(currentJobAction.getTopicReject(), 0, srcCallback)
             time.sleep(2)
 
-    def basicJobUnsubscribe(self, srcJobName, srcJobAction):
+    def basicJobUnsubscribe(self, srcThingName, srcJobAction, srcJobId=None):
         with self._jobSubUnsubOperationLock:
-            currentJobAction = _jobAction(srcJobName, srcJobAction)
-            if currentJobAction.isDelta:
-                self._mqttCoreHandler.unsubscribe(currentJobAction.getTopicDelta())
-            else:
-                self._logger.debug(currentJobAction.getTopicAccept())
-                self._mqttCoreHandler.unsubscribe(currentJobAction.getTopicAccept())
-                self._logger.debug(currentJobAction.getTopicReject())
-                self._mqttCoreHandler.unsubscribe(currentJobAction.getTopicReject())
+            currentJobAction = _jobAction(srcThingName, srcJobAction, srcJobId=srcJobId)
+            self._logger.debug(currentJobAction.getTopicAccept())
+            self._mqttCoreHandler.unsubscribe(currentJobAction.getTopicAccept())
+            self._logger.debug(currentJobAction.getTopicReject())
+            self._mqttCoreHandler.unsubscribe(currentJobAction.getTopicReject())
