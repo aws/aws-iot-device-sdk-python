@@ -19,7 +19,7 @@ import uuid
 from threading import Timer, Lock, Thread
 
 
-class _shadowRequestToken:
+class _jobRequestToken:
 
     URN_PREFIX_LENGTH = 9
 
@@ -50,16 +50,16 @@ class _basicJSONParser:
         return True
 
 
-class deviceShadow:
+class deviceJob:
     _logger = logging.getLogger(__name__)
 
-    def __init__(self, srcShadowName, srcIsPersistentSubscribe, srcShadowManager):
+    def __init__(self, srcJobName, srcIsPersistentSubscribe, srcJobManager):
         """
 
-        The class that denotes a local/client-side device shadow instance.
+        The class that denotes a local/client-side device job instance.
 
-        Users can perform shadow operations on this instance to retrieve and modify the 
-        corresponding shadow JSON document in AWS IoT Cloud. The following shadow operations 
+        Users can perform job operations on this instance to retrieve and modify the 
+        corresponding job JSON document in AWS IoT Cloud. The following job operations 
         are available:
 
         - Get
@@ -72,38 +72,38 @@ class deviceShadow:
 
         - Cancel listening on delta
 
-        This is returned from :code:`AWSIoTPythonSDK.MQTTLib.AWSIoTMQTTShadowClient.createShadowWithName` function call. 
+        This is returned from :code:`AWSIoTPythonSDK.MQTTLib.AWSIoTMQTTJobClient.createJobWithName` function call. 
         No need to call directly from user scripts.
 
         """
-        if srcShadowName is None or srcIsPersistentSubscribe is None or srcShadowManager is None:
+        if srcJobName is None or srcIsPersistentSubscribe is None or srcJobManager is None:
             raise TypeError("None type inputs detected.")
-        self._shadowName = srcShadowName
+        self._jobName = srcJobName
         # Tool handler
-        self._shadowManagerHandler = srcShadowManager
+        self._jobManagerHandler = srcJobManager
         self._basicJSONParserHandler = _basicJSONParser()
-        self._tokenHandler = _shadowRequestToken()
+        self._tokenHandler = _jobRequestToken()
         # Properties
         self._isPersistentSubscribe = srcIsPersistentSubscribe
         self._lastVersionInSync = -1  # -1 means not initialized
         self._isGetSubscribed = False
         self._isUpdateSubscribed = False
         self._isDeleteSubscribed = False
-        self._shadowSubscribeCallbackTable = dict()
-        self._shadowSubscribeCallbackTable["get"] = None
-        self._shadowSubscribeCallbackTable["delete"] = None
-        self._shadowSubscribeCallbackTable["update"] = None
-        self._shadowSubscribeCallbackTable["delta"] = None
-        self._shadowSubscribeStatusTable = dict()
-        self._shadowSubscribeStatusTable["get"] = 0
-        self._shadowSubscribeStatusTable["delete"] = 0
-        self._shadowSubscribeStatusTable["update"] = 0
+        self._jobSubscribeCallbackTable = dict()
+        self._jobSubscribeCallbackTable["get"] = None
+        self._jobSubscribeCallbackTable["delete"] = None
+        self._jobSubscribeCallbackTable["update"] = None
+        self._jobSubscribeCallbackTable["delta"] = None
+        self._jobSubscribeStatusTable = dict()
+        self._jobSubscribeStatusTable["get"] = 0
+        self._jobSubscribeStatusTable["delete"] = 0
+        self._jobSubscribeStatusTable["update"] = 0
         self._tokenPool = dict()
         self._dataStructureLock = Lock()
 
     def _doNonPersistentUnsubscribe(self, currentAction):
-        self._shadowManagerHandler.basicShadowUnsubscribe(self._shadowName, currentAction)
-        self._logger.info("Unsubscribed to " + currentAction + " accepted/rejected topics for deviceShadow: " + self._shadowName)
+        self._jobManagerHandler.basicJobUnsubscribe(self._jobName, currentAction)
+        self._logger.info("Unsubscribed to " + currentAction + " accepted/rejected topics for deviceJob: " + self._jobName)
 
     def generalCallback(self, client, userdata, message):
         # In Py3.x, message.payload comes in as a bytes(string)
@@ -120,7 +120,7 @@ class deviceShadow:
                 if self._basicJSONParserHandler.validateJSON():  # Filter out invalid JSON
                     currentToken = self._basicJSONParserHandler.getAttributeValue(u"clientToken")
                     if currentToken is not None:
-                        self._logger.debug("shadow message clientToken: " + currentToken)
+                        self._logger.debug("job message clientToken: " + currentToken)
                     if currentToken is not None and currentToken in self._tokenPool.keys():  # Filter out JSON without the desired token
                         # Sync local version when it is an accepted response
                         self._logger.debug("Token is in the pool. Type: " + currentType)
@@ -136,18 +136,18 @@ class deviceShadow:
                         self._tokenPool[currentToken].cancel()
                         del self._tokenPool[currentToken]
                         # Need to unsubscribe?
-                        self._shadowSubscribeStatusTable[currentAction] -= 1
-                        if not self._isPersistentSubscribe and self._shadowSubscribeStatusTable.get(currentAction) <= 0:
-                            self._shadowSubscribeStatusTable[currentAction] = 0
+                        self._jobSubscribeStatusTable[currentAction] -= 1
+                        if not self._isPersistentSubscribe and self._jobSubscribeStatusTable.get(currentAction) <= 0:
+                            self._jobSubscribeStatusTable[currentAction] = 0
                             processNonPersistentUnsubscribe = Thread(target=self._doNonPersistentUnsubscribe, args=[currentAction])
                             processNonPersistentUnsubscribe.start()
                         # Custom callback
-                        if self._shadowSubscribeCallbackTable.get(currentAction) is not None:
-                            processCustomCallback = Thread(target=self._shadowSubscribeCallbackTable[currentAction], args=[payloadUTF8String, currentType, currentToken])
+                        if self._jobSubscribeCallbackTable.get(currentAction) is not None:
+                            processCustomCallback = Thread(target=self._jobSubscribeCallbackTable[currentAction], args=[payloadUTF8String, currentType, currentToken])
                             processCustomCallback.start()
             # delta: Watch for version
             else:
-                currentType += "/" + self._parseTopicShadowName(currentTopic)
+                currentType += "/" + self._parseTopicJobName(currentTopic)
                 # Sync local version
                 self._basicJSONParserHandler.setString(payloadUTF8String)
                 if self._basicJSONParserHandler.validateJSON():  # Filter out JSON without version
@@ -155,8 +155,8 @@ class deviceShadow:
                     if incomingVersion is not None and incomingVersion > self._lastVersionInSync:
                         self._lastVersionInSync = incomingVersion
                         # Custom callback
-                        if self._shadowSubscribeCallbackTable.get(currentAction) is not None:
-                            processCustomCallback = Thread(target=self._shadowSubscribeCallbackTable[currentAction], args=[payloadUTF8String, currentType, None])
+                        if self._jobSubscribeCallbackTable.get(currentAction) is not None:
+                            processCustomCallback = Thread(target=self._jobSubscribeCallbackTable[currentAction], args=[payloadUTF8String, currentType, None])
                             processCustomCallback.start()
 
     def _parseTopicAction(self, srcTopic):
@@ -172,7 +172,7 @@ class deviceShadow:
         fragments = srcTopic.split('/')
         return fragments[5]
 
-    def _parseTopicShadowName(self, srcTopic):
+    def _parseTopicJobName(self, srcTopic):
         fragments = srcTopic.split('/')
         return fragments[2]
 
@@ -185,22 +185,22 @@ class deviceShadow:
             # Remove the token
             del self._tokenPool[srcToken]
             # Need to unsubscribe?
-            self._shadowSubscribeStatusTable[srcActionName] -= 1
-            if not self._isPersistentSubscribe and self._shadowSubscribeStatusTable.get(srcActionName) <= 0:
-                self._shadowSubscribeStatusTable[srcActionName] = 0
-                self._shadowManagerHandler.basicShadowUnsubscribe(self._shadowName, srcActionName)
+            self._jobSubscribeStatusTable[srcActionName] -= 1
+            if not self._isPersistentSubscribe and self._jobSubscribeStatusTable.get(srcActionName) <= 0:
+                self._jobSubscribeStatusTable[srcActionName] = 0
+                self._jobManagerHandler.basicJobUnsubscribe(self._jobName, srcActionName)
             # Notify time-out issue
-            if self._shadowSubscribeCallbackTable.get(srcActionName) is not None:
-                self._logger.info("Shadow request with token: " + str(srcToken) + " has timed out.")
-                self._shadowSubscribeCallbackTable[srcActionName]("REQUEST TIME OUT", "timeout", srcToken)
+            if self._jobSubscribeCallbackTable.get(srcActionName) is not None:
+                self._logger.info("Job request with token: " + str(srcToken) + " has timed out.")
+                self._jobSubscribeCallbackTable[srcActionName]("REQUEST TIME OUT", "timeout", srcToken)
 
-    def shadowGet(self, srcCallback, srcTimeout):
+    def jobGet(self, srcCallback, srcTimeout):
         """
         **Description**
 
-        Retrieve the device shadow JSON document from AWS IoT by publishing an empty JSON document to the 
-        corresponding shadow topics. Shadow response topics will be subscribed to receive responses from 
-        AWS IoT regarding the result of the get operation. Retrieved shadow JSON document will be available 
+        Retrieve the device job JSON document from AWS IoT by publishing an empty JSON document to the 
+        corresponding job topics. Job response topics will be subscribed to receive responses from 
+        AWS IoT regarding the result of the get operation. Retrieved job JSON document will be available 
         in the registered callback. If no response is received within the provided timeout, a timeout 
         notification will be passed into the registered callback.
 
@@ -208,12 +208,12 @@ class deviceShadow:
 
         .. code:: python
 
-          # Retrieve the shadow JSON document from AWS IoT, with a timeout set to 5 seconds
-          BotShadow.shadowGet(customCallback, 5)
+          # Retrieve the job JSON document from AWS IoT, with a timeout set to 5 seconds
+          BotJob.jobGet(customCallback, 5)
 
         **Parameters**
 
-        *srcCallback* - Function to be called when the response for this shadow request comes back. Should 
+        *srcCallback* - Function to be called when the response for this job request comes back. Should 
         be in form :code:`customCallback(payload, responseStatus, token)`, where :code:`payload` is the 
         JSON document returned, :code:`responseStatus` indicates whether the request has been accepted, 
         rejected or is a delta message, :code:`token` is the token used for tracing in this request.
@@ -223,14 +223,14 @@ class deviceShadow:
 
         **Returns**
 
-        The token used for tracing in this shadow request.
+        The token used for tracing in this job request.
 
         """
         with self._dataStructureLock:
             # Update callback data structure
-            self._shadowSubscribeCallbackTable["get"] = srcCallback
+            self._jobSubscribeCallbackTable["get"] = srcCallback
             # Update number of pending feedback
-            self._shadowSubscribeStatusTable["get"] += 1
+            self._jobSubscribeStatusTable["get"] += 1
             # clientToken
             currentToken = self._tokenHandler.getNextToken()
             self._tokenPool[currentToken] = Timer(srcTimeout, self._timerHandler, ["get", currentToken])
@@ -240,21 +240,21 @@ class deviceShadow:
             currentPayload = self._basicJSONParserHandler.regenerateString()
         # Two subscriptions
         if not self._isPersistentSubscribe or not self._isGetSubscribed:
-            self._shadowManagerHandler.basicShadowSubscribe(self._shadowName, "get", self.generalCallback)
+            self._jobManagerHandler.basicJobSubscribe(self._jobName, "get", self.generalCallback)
             self._isGetSubscribed = True
-            self._logger.info("Subscribed to get accepted/rejected topics for deviceShadow: " + self._shadowName)
+            self._logger.info("Subscribed to get accepted/rejected topics for deviceJob: " + self._jobName)
         # One publish
-        self._shadowManagerHandler.basicShadowPublish(self._shadowName, "get", currentPayload)
+        self._jobManagerHandler.basicJobPublish(self._jobName, "get", currentPayload)
         # Start the timer
         self._tokenPool[currentToken].start()
         return currentToken
 
-    def shadowDelete(self, srcCallback, srcTimeout):
+    def jobDelete(self, srcCallback, srcTimeout):
         """
         **Description**
 
-        Delete the device shadow from AWS IoT by publishing an empty JSON document to the corresponding 
-        shadow topics. Shadow response topics will be subscribed to receive responses from AWS IoT 
+        Delete the device job from AWS IoT by publishing an empty JSON document to the corresponding 
+        job topics. Job response topics will be subscribed to receive responses from AWS IoT 
         regarding the result of the get operation. Responses will be available in the registered callback. 
         If no response is received within the provided timeout, a timeout notification will be passed into 
         the registered callback.
@@ -263,12 +263,12 @@ class deviceShadow:
 
         .. code:: python
 
-          # Delete the device shadow from AWS IoT, with a timeout set to 5 seconds
-          BotShadow.shadowDelete(customCallback, 5)
+          # Delete the device job from AWS IoT, with a timeout set to 5 seconds
+          BotJob.jobDelete(customCallback, 5)
 
         **Parameters**
 
-        *srcCallback* - Function to be called when the response for this shadow request comes back. Should 
+        *srcCallback* - Function to be called when the response for this job request comes back. Should 
         be in form :code:`customCallback(payload, responseStatus, token)`, where :code:`payload` is the 
         JSON document returned, :code:`responseStatus` indicates whether the request has been accepted, 
         rejected or is a delta message, :code:`token` is the token used for tracing in this request.
@@ -278,14 +278,14 @@ class deviceShadow:
 
         **Returns**
 
-        The token used for tracing in this shadow request.
+        The token used for tracing in this job request.
 
         """
         with self._dataStructureLock:
             # Update callback data structure
-            self._shadowSubscribeCallbackTable["delete"] = srcCallback
+            self._jobSubscribeCallbackTable["delete"] = srcCallback
             # Update number of pending feedback
-            self._shadowSubscribeStatusTable["delete"] += 1
+            self._jobSubscribeStatusTable["delete"] += 1
             # clientToken
             currentToken = self._tokenHandler.getNextToken()
             self._tokenPool[currentToken] = Timer(srcTimeout, self._timerHandler, ["delete", currentToken])
@@ -295,21 +295,21 @@ class deviceShadow:
             currentPayload = self._basicJSONParserHandler.regenerateString()
         # Two subscriptions
         if not self._isPersistentSubscribe or not self._isDeleteSubscribed:
-            self._shadowManagerHandler.basicShadowSubscribe(self._shadowName, "delete", self.generalCallback)
+            self._jobManagerHandler.basicJobSubscribe(self._jobName, "delete", self.generalCallback)
             self._isDeleteSubscribed = True
-            self._logger.info("Subscribed to delete accepted/rejected topics for deviceShadow: " + self._shadowName)
+            self._logger.info("Subscribed to delete accepted/rejected topics for deviceJob: " + self._jobName)
         # One publish
-        self._shadowManagerHandler.basicShadowPublish(self._shadowName, "delete", currentPayload)
+        self._jobManagerHandler.basicJobPublish(self._jobName, "delete", currentPayload)
         # Start the timer
         self._tokenPool[currentToken].start()
         return currentToken
 
-    def shadowUpdate(self, srcJSONPayload, srcCallback, srcTimeout):
+    def jobUpdate(self, srcJSONPayload, srcCallback, srcTimeout):
         """
         **Description**
 
-        Update the device shadow JSON document string from AWS IoT by publishing the provided JSON 
-        document to the corresponding shadow topics. Shadow response topics will be subscribed to 
+        Update the device job JSON document string from AWS IoT by publishing the provided JSON 
+        document to the corresponding job topics. Job response topics will be subscribed to 
         receive responses from AWS IoT regarding the result of the get operation. Response will be 
         available in the registered callback. If no response is received within the provided timeout, 
         a timeout notification will be passed into the registered callback.
@@ -318,14 +318,14 @@ class deviceShadow:
 
         .. code:: python
 
-          # Update the shadow JSON document from AWS IoT, with a timeout set to 5 seconds
-          BotShadow.shadowUpdate(newShadowJSONDocumentString, customCallback, 5)
+          # Update the job JSON document from AWS IoT, with a timeout set to 5 seconds
+          BotJob.jobUpdate(newJobJSONDocumentString, customCallback, 5)
 
         **Parameters**
 
-        *srcJSONPayload* - JSON document string used to update shadow JSON document in AWS IoT.
+        *srcJSONPayload* - JSON document string used to update job JSON document in AWS IoT.
 
-        *srcCallback* - Function to be called when the response for this shadow request comes back. Should 
+        *srcCallback* - Function to be called when the response for this job request comes back. Should 
         be in form :code:`customCallback(payload, responseStatus, token)`, where :code:`payload` is the 
         JSON document returned, :code:`responseStatus` indicates whether the request has been accepted, 
         rejected or is a delta message, :code:`token` is the token used for tracing in this request.
@@ -335,7 +335,7 @@ class deviceShadow:
 
         **Returns**
 
-        The token used for tracing in this shadow request.
+        The token used for tracing in this job request.
 
         """
         # Validate JSON
@@ -348,27 +348,27 @@ class deviceShadow:
                 self._basicJSONParserHandler.setAttributeValue("clientToken", currentToken)
                 JSONPayloadWithToken = self._basicJSONParserHandler.regenerateString()
                 # Update callback data structure
-                self._shadowSubscribeCallbackTable["update"] = srcCallback
+                self._jobSubscribeCallbackTable["update"] = srcCallback
                 # Update number of pending feedback
-                self._shadowSubscribeStatusTable["update"] += 1
+                self._jobSubscribeStatusTable["update"] += 1
             # Two subscriptions
             if not self._isPersistentSubscribe or not self._isUpdateSubscribed:
-                self._shadowManagerHandler.basicShadowSubscribe(self._shadowName, "update", self.generalCallback)
+                self._jobManagerHandler.basicJobSubscribe(self._jobName, "update", self.generalCallback)
                 self._isUpdateSubscribed = True
-                self._logger.info("Subscribed to update accepted/rejected topics for deviceShadow: " + self._shadowName)
+                self._logger.info("Subscribed to update accepted/rejected topics for deviceJob: " + self._jobName)
             # One publish
-            self._shadowManagerHandler.basicShadowPublish(self._shadowName, "update", JSONPayloadWithToken)
+            self._jobManagerHandler.basicJobPublish(self._jobName, "update", JSONPayloadWithToken)
             # Start the timer
             self._tokenPool[currentToken].start()
         else:
             raise ValueError("Invalid JSON file.")
         return currentToken
 
-    def shadowRegisterDeltaCallback(self, srcCallback):
+    def jobRegisterDeltaCallback(self, srcCallback):
         """
         **Description**
 
-        Listen on delta topics for this device shadow by subscribing to delta topics. Whenever there 
+        Listen on delta topics for this device job by subscribing to delta topics. Whenever there 
         is a difference between the desired and reported state, the registered callback will be called 
         and the delta payload will be available in the callback.
 
@@ -376,12 +376,12 @@ class deviceShadow:
 
         .. code:: python
 
-          # Listen on delta topics for BotShadow
-          BotShadow.shadowRegisterDeltaCallback(customCallback)
+          # Listen on delta topics for BotJob
+          BotJob.jobRegisterDeltaCallback(customCallback)
 
         **Parameters**
 
-        *srcCallback* - Function to be called when the response for this shadow request comes back. Should 
+        *srcCallback* - Function to be called when the response for this job request comes back. Should 
         be in form :code:`customCallback(payload, responseStatus, token)`, where :code:`payload` is the 
         JSON document returned, :code:`responseStatus` indicates whether the request has been accepted, 
         rejected or is a delta message, :code:`token` is the token used for tracing in this request.
@@ -393,16 +393,16 @@ class deviceShadow:
         """
         with self._dataStructureLock:
             # Update callback data structure
-            self._shadowSubscribeCallbackTable["delta"] = srcCallback
+            self._jobSubscribeCallbackTable["delta"] = srcCallback
         # One subscription
-        self._shadowManagerHandler.basicShadowSubscribe(self._shadowName, "delta", self.generalCallback)
-        self._logger.info("Subscribed to delta topic for deviceShadow: " + self._shadowName)
+        self._jobManagerHandler.basicJobSubscribe(self._jobName, "delta", self.generalCallback)
+        self._logger.info("Subscribed to delta topic for deviceJob: " + self._jobName)
 
-    def shadowUnregisterDeltaCallback(self):
+    def jobUnregisterDeltaCallback(self):
         """
         **Description**
 
-        Cancel listening on delta topics for this device shadow by unsubscribing to delta topics. There will 
+        Cancel listening on delta topics for this device job by unsubscribing to delta topics. There will 
         be no delta messages received after this API call even though there is a difference between the 
         desired and reported state.
 
@@ -410,8 +410,8 @@ class deviceShadow:
 
         .. code:: python
 
-          # Cancel listening on delta topics for BotShadow
-          BotShadow.shadowUnregisterDeltaCallback()
+          # Cancel listening on delta topics for BotJob
+          BotJob.jobUnregisterDeltaCallback()
 
         **Parameters**
 
@@ -424,7 +424,7 @@ class deviceShadow:
         """
         with self._dataStructureLock:
             # Update callback data structure
-            del self._shadowSubscribeCallbackTable["delta"]
+            del self._jobSubscribeCallbackTable["delta"]
         # One unsubscription
-        self._shadowManagerHandler.basicShadowUnsubscribe(self._shadowName, "delta")
-        self._logger.info("Unsubscribed to delta topics for deviceShadow: " + self._shadowName)
+        self._jobManagerHandler.basicJobUnsubscribe(self._jobName, "delta")
+        self._logger.info("Unsubscribed to delta topics for deviceJob: " + self._jobName)

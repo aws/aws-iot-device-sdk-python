@@ -17,21 +17,21 @@ import logging
 import time
 from threading import Lock
 
-class _shadowAction:
+class _jobAction:
     _actionType = ["get", "update", "delete", "delta"]
 
-    def __init__(self, srcShadowName, srcActionName):
+    def __init__(self, srcJobName, srcActionName):
         if srcActionName is None or srcActionName not in self._actionType:
-            raise TypeError("Unsupported shadow action.")
-        self._shadowName = srcShadowName
+            raise TypeError("Unsupported job action.")
+        self._jobName = srcJobName
         self._actionName = srcActionName
         self.isDelta = srcActionName == "delta"
         if self.isDelta:
-            self._topicDelta = "$aws/things/" + str(self._shadowName) + "/shadow/update/delta"
+            self._topicDelta = "$aws/things/" + str(self._jobName) + "/jobs/update/delta"
         else:
-            self._topicGeneral = "$aws/things/" + str(self._shadowName) + "/shadow/" + str(self._actionName)
-            self._topicAccept = "$aws/things/" + str(self._shadowName) + "/shadow/" + str(self._actionName) + "/accepted"
-            self._topicReject = "$aws/things/" + str(self._shadowName) + "/shadow/" + str(self._actionName) + "/rejected"
+            self._topicGeneral = "$aws/things/" + str(self._jobName) + "/jobs/" + str(self._actionName)
+            self._topicAccept = "$aws/things/" + str(self._jobName) + "/jobs/" + str(self._actionName) + "/accepted"
+            self._topicReject = "$aws/things/" + str(self._jobName) + "/jobs/" + str(self._actionName) + "/rejected"
 
     def getTopicGeneral(self):
         return self._topicGeneral
@@ -46,7 +46,7 @@ class _shadowAction:
         return self._topicDelta
 
 
-class shadowManager:
+class jobManager:
 
     _logger = logging.getLogger(__name__)
 
@@ -55,29 +55,29 @@ class shadowManager:
         if srcMQTTCore is None:
             raise TypeError("None type inputs detected.")
         self._mqttCoreHandler = srcMQTTCore
-        self._shadowSubUnsubOperationLock = Lock()
+        self._jobSubUnsubOperationLock = Lock()
 
-    def basicShadowPublish(self, srcShadowName, srcShadowAction, srcPayload):
-        currentShadowAction = _shadowAction(srcShadowName, srcShadowAction)
-        self._mqttCoreHandler.publish(currentShadowAction.getTopicGeneral(), srcPayload, 0, False)
+    def basicJobPublish(self, srcJobName, srcJobAction, srcPayload):
+        currentJobAction = _jobAction(srcJobName, srcJobAction)
+        self._mqttCoreHandler.publish(currentJobAction.getTopicGeneral(), srcPayload, 0, False)
 
-    def basicShadowSubscribe(self, srcShadowName, srcShadowAction, srcCallback):
-        with self._shadowSubUnsubOperationLock:
-            currentShadowAction = _shadowAction(srcShadowName, srcShadowAction)
-            if currentShadowAction.isDelta:
-                self._mqttCoreHandler.subscribe(currentShadowAction.getTopicDelta(), 0, srcCallback)
+    def basicJobSubscribe(self, srcJobName, srcJobAction, srcCallback):
+        with self._jobSubUnsubOperationLock:
+            currentJobAction = _jobAction(srcJobName, srcJobAction)
+            if currentJobAction.isDelta:
+                self._mqttCoreHandler.subscribe(currentJobAction.getTopicDelta(), 0, srcCallback)
             else:
-                self._mqttCoreHandler.subscribe(currentShadowAction.getTopicAccept(), 0, srcCallback)
-                self._mqttCoreHandler.subscribe(currentShadowAction.getTopicReject(), 0, srcCallback)
+                self._mqttCoreHandler.subscribe(currentJobAction.getTopicAccept(), 0, srcCallback)
+                self._mqttCoreHandler.subscribe(currentJobAction.getTopicReject(), 0, srcCallback)
             time.sleep(2)
 
-    def basicShadowUnsubscribe(self, srcShadowName, srcShadowAction):
-        with self._shadowSubUnsubOperationLock:
-            currentShadowAction = _shadowAction(srcShadowName, srcShadowAction)
-            if currentShadowAction.isDelta:
-                self._mqttCoreHandler.unsubscribe(currentShadowAction.getTopicDelta())
+    def basicJobUnsubscribe(self, srcJobName, srcJobAction):
+        with self._jobSubUnsubOperationLock:
+            currentJobAction = _jobAction(srcJobName, srcJobAction)
+            if currentJobAction.isDelta:
+                self._mqttCoreHandler.unsubscribe(currentJobAction.getTopicDelta())
             else:
-                self._logger.debug(currentShadowAction.getTopicAccept())
-                self._mqttCoreHandler.unsubscribe(currentShadowAction.getTopicAccept())
-                self._logger.debug(currentShadowAction.getTopicReject())
-                self._mqttCoreHandler.unsubscribe(currentShadowAction.getTopicReject())
+                self._logger.debug(currentJobAction.getTopicAccept())
+                self._mqttCoreHandler.unsubscribe(currentJobAction.getTopicAccept())
+                self._logger.debug(currentJobAction.getTopicReject())
+                self._mqttCoreHandler.unsubscribe(currentJobAction.getTopicReject())
