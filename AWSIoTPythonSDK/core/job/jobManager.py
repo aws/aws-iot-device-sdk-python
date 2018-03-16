@@ -29,12 +29,16 @@ class _jobAction:
             raise TypeError("Unsupported job action.")
         self._thingName = srcThingName
         self._actionName = srcActionName
+        self.isNotify = self._actionName in ["notify", "notify-next"]
         # Add srcJobId to get and update actions if required
         if srcJobId is not None and self._actionName in ["get", "update"]:
             self._actionName = srcJobId + "/" + self._actionName
-        self._topicGeneral = "$aws/things/" + str(self._thingName) + "/jobs/" + str(self._actionName)
-        self._topicAccept = "$aws/things/" + str(self._thingName) + "/jobs/" + str(self._actionName) + "/accepted"
-        self._topicReject = "$aws/things/" + str(self._thingName) + "/jobs/" + str(self._actionName) + "/rejected"
+        if self.isNotify:
+            self._topicNotify = "$aws/things/" + str(self._thingName) + "/jobs/" + str(self._actionName)
+        else:
+            self._topicGeneral = "$aws/things/" + str(self._thingName) + "/jobs/" + str(self._actionName)
+            self._topicAccept = "$aws/things/" + str(self._thingName) + "/jobs/" + str(self._actionName) + "/accepted"
+            self._topicReject = "$aws/things/" + str(self._thingName) + "/jobs/" + str(self._actionName) + "/rejected"
 
     def getTopicGeneral(self):
         return self._topicGeneral
@@ -44,6 +48,9 @@ class _jobAction:
 
     def getTopicReject(self):
         return self._topicReject
+
+    def getTopicNotify(self):
+        return self._topicNotify
 
 
 class jobManager:
@@ -64,14 +71,20 @@ class jobManager:
     def basicJobSubscribe(self, srcThingName, srcJobAction, srcCallback, srcJobId=None):
         with self._jobSubUnsubOperationLock:
             currentJobAction = _jobAction(srcThingName, srcJobAction, srcJobId=srcJobId)
-            self._mqttCoreHandler.subscribe(currentJobAction.getTopicAccept(), 0, srcCallback)
-            self._mqttCoreHandler.subscribe(currentJobAction.getTopicReject(), 0, srcCallback)
+            if currentJobAction.isNotify:
+                self._mqttCoreHandler.unsubscribe(currentJobAction.getTopicNotify())
+            else:
+                self._mqttCoreHandler.subscribe(currentJobAction.getTopicAccept(), 0, srcCallback)
+                self._mqttCoreHandler.subscribe(currentJobAction.getTopicReject(), 0, srcCallback)
             time.sleep(2)
 
     def basicJobUnsubscribe(self, srcThingName, srcJobAction, srcJobId=None):
         with self._jobSubUnsubOperationLock:
             currentJobAction = _jobAction(srcThingName, srcJobAction, srcJobId=srcJobId)
-            self._logger.debug(currentJobAction.getTopicAccept())
-            self._mqttCoreHandler.unsubscribe(currentJobAction.getTopicAccept())
-            self._logger.debug(currentJobAction.getTopicReject())
-            self._mqttCoreHandler.unsubscribe(currentJobAction.getTopicReject())
+            if currentJobAction.isNotify:
+                self._mqttCoreHandler.unsubscribe(currentJobAction.getTopicNotify())
+            else:
+                self._logger.debug(currentJobAction.getTopicAccept())
+                self._mqttCoreHandler.unsubscribe(currentJobAction.getTopicAccept())
+                self._logger.debug(currentJobAction.getTopicReject())
+                self._mqttCoreHandler.unsubscribe(currentJobAction.getTopicReject())
