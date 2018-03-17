@@ -20,6 +20,8 @@ from AWSIoTPythonSDK.core.util.providers import EndpointProvider
 from AWSIoTPythonSDK.core.protocol.mqtt_core import MqttCore
 import AWSIoTPythonSDK.core.shadow.shadowManager as shadowManager
 import AWSIoTPythonSDK.core.shadow.deviceShadow as deviceShadow
+import AWSIoTPythonSDK.core.job.jobManager as jobManager
+import AWSIoTPythonSDK.core.job.deviceJob as deviceJob
 
 
 # Constants
@@ -885,6 +887,8 @@ class AWSIoTMQTTShadowClient:
         self._AWSIoTMQTTClient.configureDrainingFrequency(10)
         # Now retrieve the configured mqttCore and init a shadowManager instance
         self._shadowManager = shadowManager.shadowManager(self._AWSIoTMQTTClient._mqtt_core)
+        # Now retrieve the configured mqttCore and init a jobManager instance
+        self._jobManager = jobManager.jobManager(self._AWSIoTMQTTClient._mqtt_core)
 
     # Configuration APIs
     def configureLastWill(self, topic, payload, QoS):
@@ -1281,6 +1285,17 @@ class AWSIoTMQTTShadowClient:
         # deviceShadow.shadowDelete
         # deviceShadow.shadowRegisterDelta
         # deviceShadow.shadowUnregisterDelta
+
+    # Job management API
+    def createJobHandlerWithName(self, shadowName, isPersistentSubscribe):
+        # Create and return a deviceJob instance
+        return deviceJob.deviceJob(shadowName, isPersistentSubscribe, self._jobManager)
+        # Job APIs are accessible in deviceJob instance:
+        ###
+        # deviceShadow.jobStartNext
+        # deviceShadow.jobUpdate
+        # deviceShadow.jobRegisterNotifyNextCallback
+        # deviceShadow.jobUnregisterNotifyNextCallback
 
     # MQTT connection management API
     def getMQTTConnection(self):
