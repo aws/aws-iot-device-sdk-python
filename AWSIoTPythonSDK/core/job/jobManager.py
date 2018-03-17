@@ -18,21 +18,22 @@ import time
 from threading import Lock
 
 class _jobAction:
-    _actionType = ["get", "start-next", "update", "notify", "notify-next"]
+    _actionType = ["start-next", "update", "notify-next"]
 
     def __init__(self, srcThingName, srcActionName, srcJobId=None):
         if srcActionName is None or srcActionName not in self._actionType:
             raise TypeError("Unsupported job action.")
         if srcJobId is None and srcActionName == "update":
             raise TypeError("Unsupported job action.")
-        if srcJobId is not None and srcActionName not in ["get", "update"]:
+        if srcJobId is not None and srcActionName != "update":
             raise TypeError("Unsupported job action.")
         self._thingName = srcThingName
         self._actionName = srcActionName
-        self.isNotify = self._actionName in ["notify", "notify-next"]
-        # Add srcJobId to get and update actions if required
-        if srcJobId is not None and self._actionName in ["get", "update"]:
+        self.isNotify = self._actionName == "notify-next"
+        # Add srcJobId to update action
+        if self._actionName == "update":
             self._actionName = srcJobId + "/" + self._actionName
+        # Construct topics
         if self.isNotify:
             self._topicNotify = "$aws/things/" + str(self._thingName) + "/jobs/" + str(self._actionName)
         else:
