@@ -19,6 +19,14 @@ import uuid
 from threading import Timer, Lock, Thread
 
 
+# Flow:
+# 1. Listen to notify or notify-next to trigger the next job
+# 2. Call a function to get the next job to be executed and set its status to IN_PROGRESS
+# 3. Set self._jobId accordingly
+# 4. Pass the job description to the callback
+# 5. Run job-handling logic
+# 6. Call a function to update the job status to FAILED, SUCCESS, or REJECTED
+
 class _jobRequestToken:
 
     URN_PREFIX_LENGTH = 9
@@ -53,32 +61,10 @@ class _basicJSONParser:
 class deviceJob:
     _logger = logging.getLogger(__name__)
 
-    def __init__(self, srcJobName, srcIsPersistentSubscribe, srcJobManager):
-        """
-
-        The class that denotes a local/client-side device job instance.
-
-        Users can perform job operations on this instance to retrieve and modify the 
-        corresponding job JSON document in AWS IoT Cloud. The following job operations 
-        are available:
-
-        - Get
-        
-        - Update
-
-        - Delete
-
-        - Listen on delta
-
-        - Cancel listening on delta
-
-        This is returned from :code:`AWSIoTPythonSDK.MQTTLib.AWSIoTMQTTJobClient.createJobWithName` function call. 
-        No need to call directly from user scripts.
-
-        """
-        if srcJobName is None or srcIsPersistentSubscribe is None or srcJobManager is None:
+    def __init__(self, srcThingName, srcIsPersistentSubscribe, srcJobManager):
+        if srcThingName is None or srcIsPersistentSubscribe is None or srcJobManager is None:
             raise TypeError("None type inputs detected.")
-        self._jobName = srcJobName
+        self._thingName = srcThingName
         # Tool handler
         self._jobManagerHandler = srcJobManager
         self._basicJSONParserHandler = _basicJSONParser()
@@ -86,35 +72,34 @@ class deviceJob:
         # Properties
         self._isPersistentSubscribe = srcIsPersistentSubscribe
         self._lastVersionInSync = -1  # -1 means not initialized
-        self._isGetSubscribed = False
+        self._isStartNextSubscribed = False
         self._isUpdateSubscribed = False
-        self._isDeleteSubscribed = False
+        self._currentJobId = None
         self._jobSubscribeCallbackTable = dict()
-        self._jobSubscribeCallbackTable["get"] = None
-        self._jobSubscribeCallbackTable["delete"] = None
         self._jobSubscribeCallbackTable["update"] = None
-        self._jobSubscribeCallbackTable["delta"] = None
+        self._jobSubscribeCallbackTable["start-next"] = None
+        self._jobSubscribeCallbackTable["notify"] = None
+        self._jobSubscribeCallbackTable["notify-next"] = None
         self._jobSubscribeStatusTable = dict()
-        self._jobSubscribeStatusTable["get"] = 0
-        self._jobSubscribeStatusTable["delete"] = 0
         self._jobSubscribeStatusTable["update"] = 0
+        self._jobSubscribeStatusTable["start-next"] = 0
         self._tokenPool = dict()
         self._dataStructureLock = Lock()
 
     def _doNonPersistentUnsubscribe(self, currentAction):
-        self._jobManagerHandler.basicJobUnsubscribe(self._jobName, currentAction)
-        self._logger.info("Unsubscribed to " + currentAction + " accepted/rejected topics for deviceJob: " + self._jobName)
+        self._jobManagerHandler.basicJobUnsubscribe(self._thingName, currentAction)
+        self._logger.info("Unsubscribed to " + currentAction + " accepted/rejected topics for device: " + self._thingName)
 
     def generalCallback(self, client, userdata, message):
         # In Py3.x, message.payload comes in as a bytes(string)
         # json.loads needs a string input
         with self._dataStructureLock:
             currentTopic = message.topic
-            currentAction = self._parseTopicAction(currentTopic)  # get/delete/update/delta
-            currentType = self._parseTopicType(currentTopic)  # accepted/rejected/delta
+            currentAction = self._parseTopicAction(currentTopic)  # start-next/update/notify-next
+            currentType = self._parseTopicType(currentTopic)  # accepted/rejected/notify-next
             payloadUTF8String = message.payload.decode('utf-8')
-            # get/delete/update: Need to deal with token, timer and unsubscribe
-            if currentAction in ["get", "delete", "update"]:
+            # start-next/update: Need to deal with token, timer and unsubscribe
+            if currentAction in ["start-next", "update"]:
                 # Check for token
                 self._basicJSONParserHandler.setString(payloadUTF8String)
                 if self._basicJSONParserHandler.validateJSON():  # Filter out invalid JSON
@@ -125,13 +110,20 @@ class deviceJob:
                         # Sync local version when it is an accepted response
                         self._logger.debug("Token is in the pool. Type: " + currentType)
                         if currentType == "accepted":
-                            incomingVersion = self._basicJSONParserHandler.getAttributeValue(u"version")
-                            # If it is get/update accepted response, we need to sync the local version
-                            if incomingVersion is not None and incomingVersion > self._lastVersionInSync and currentAction != "delete":
-                                self._lastVersionInSync = incomingVersion
-                            # If it is a delete accepted, we need to reset the version
+                            if currentAction == "start-next":
+                                incomingExecution = self._basicJSONParserHandler.getAttributeValue(u"execution")
+                                self._currentJobId = incomingExecution[u"jobId"]
                             else:
-                                self._lastVersionInSync = -1  # The version will always be synced for the next incoming delta/GU-accepted response
+                                incomingExecution = self._basicJSONParserHandler.getAttributeValue(u"executionState")
+                            incomingVersion = incomingExecution[u"versionNumber"]
+                            incomingStatus = incomingExecution[u"status"]
+                            # If it is accepted response, we need to sync the local version and jobId
+                            if incomingVersion > self._lastVersionInSync:
+                                self._lastVersionInSync = incomingVersion
+                            # Reset version and jobId if job is finished
+                            if incomingStatus in ["FAILED", "SUCCESS", "REJECTED"]:
+                                self._lastVersionInSync = -1  # The version will always be synced for the next incoming accepted response
+                                self._currentJobId = None
                         # Cancel the timer and clear the token
                         self._tokenPool[currentToken].cancel()
                         del self._tokenPool[currentToken]
@@ -145,15 +137,14 @@ class deviceJob:
                         if self._jobSubscribeCallbackTable.get(currentAction) is not None:
                             processCustomCallback = Thread(target=self._jobSubscribeCallbackTable[currentAction], args=[payloadUTF8String, currentType, currentToken])
                             processCustomCallback.start()
-            # delta: Watch for version
+            # notify-next: Watch execution data
             else:
-                currentType += "/" + self._parseTopicJobName(currentTopic)
+                currentType += "/" + self._parseTopicThingName(currentTopic)
                 # Sync local version
                 self._basicJSONParserHandler.setString(payloadUTF8String)
-                if self._basicJSONParserHandler.validateJSON():  # Filter out JSON without version
-                    incomingVersion = self._basicJSONParserHandler.getAttributeValue(u"version")
-                    if incomingVersion is not None and incomingVersion > self._lastVersionInSync:
-                        self._lastVersionInSync = incomingVersion
+                if self._basicJSONParserHandler.validateJSON():  # Filter out JSON without execution
+                    incomingExecution = self._basicJSONParserHandler.getAttributeValue(u"execution")
+                    if incomingExecution is not None:
                         # Custom callback
                         if self._jobSubscribeCallbackTable.get(currentAction) is not None:
                             processCustomCallback = Thread(target=self._jobSubscribeCallbackTable[currentAction], args=[payloadUTF8String, currentType, None])
@@ -162,17 +153,21 @@ class deviceJob:
     def _parseTopicAction(self, srcTopic):
         ret = None
         fragments = srcTopic.split('/')
-        if fragments[5] == "delta":
-            ret = "delta"
+        if fragments[-1] in ["accepted", "rejected"]:
+            ret = fragments[-2]
         else:
-            ret = fragments[4]
+            ret = fragments[-1]
         return ret
+
+    def _parseTopicJobId(self, srcTopic):
+        fragments = srcTopic.split('/')
+        return fragments[4]
 
     def _parseTopicType(self, srcTopic):
         fragments = srcTopic.split('/')
-        return fragments[5]
+        return fragments[-1]
 
-    def _parseTopicJobName(self, srcTopic):
+    def _parseTopicThingName(self, srcTopic):
         fragments = srcTopic.split('/')
         return fragments[2]
 
@@ -180,7 +175,7 @@ class deviceJob:
         with self._dataStructureLock:
             # Don't crash if we try to remove an unknown token
             if srcToken not in self._tokenPool:
-                self._logger.warn('Tried to remove non-existent token from pool: %s' % str(srcToken))
+                self._logger.warning('Tried to remove non-existent token from pool: %s' % str(srcToken))
                 return
             # Remove the token
             del self._tokenPool[srcToken]
@@ -188,243 +183,79 @@ class deviceJob:
             self._jobSubscribeStatusTable[srcActionName] -= 1
             if not self._isPersistentSubscribe and self._jobSubscribeStatusTable.get(srcActionName) <= 0:
                 self._jobSubscribeStatusTable[srcActionName] = 0
-                self._jobManagerHandler.basicJobUnsubscribe(self._jobName, srcActionName)
+                self._jobManagerHandler.basicJobUnsubscribe(self._thingName, srcActionName)
             # Notify time-out issue
             if self._jobSubscribeCallbackTable.get(srcActionName) is not None:
                 self._logger.info("Job request with token: " + str(srcToken) + " has timed out.")
                 self._jobSubscribeCallbackTable[srcActionName]("REQUEST TIME OUT", "timeout", srcToken)
 
-    def jobGet(self, srcCallback, srcTimeout):
-        """
-        **Description**
-
-        Retrieve the device job JSON document from AWS IoT by publishing an empty JSON document to the 
-        corresponding job topics. Job response topics will be subscribed to receive responses from 
-        AWS IoT regarding the result of the get operation. Retrieved job JSON document will be available 
-        in the registered callback. If no response is received within the provided timeout, a timeout 
-        notification will be passed into the registered callback.
-
-        **Syntax**
-
-        .. code:: python
-
-          # Retrieve the job JSON document from AWS IoT, with a timeout set to 5 seconds
-          BotJob.jobGet(customCallback, 5)
-
-        **Parameters**
-
-        *srcCallback* - Function to be called when the response for this job request comes back. Should 
-        be in form :code:`customCallback(payload, responseStatus, token)`, where :code:`payload` is the 
-        JSON document returned, :code:`responseStatus` indicates whether the request has been accepted, 
-        rejected or is a delta message, :code:`token` is the token used for tracing in this request.
-
-        *srcTimeout* - Timeout to determine whether the request is invalid. When a request gets timeout, 
-        a timeout notification will be generated and put into the registered callback to notify users.
-
-        **Returns**
-
-        The token used for tracing in this job request.
-
-        """
+    def jobStartNext(self, srcCallback, srcTimeout):
         with self._dataStructureLock:
             # Update callback data structure
-            self._jobSubscribeCallbackTable["get"] = srcCallback
+            self._jobSubscribeCallbackTable["start-next"] = srcCallback
             # Update number of pending feedback
-            self._jobSubscribeStatusTable["get"] += 1
+            self._jobSubscribeStatusTable["start-next"] += 1
             # clientToken
             currentToken = self._tokenHandler.getNextToken()
-            self._tokenPool[currentToken] = Timer(srcTimeout, self._timerHandler, ["get", currentToken])
+            self._tokenPool[currentToken] = Timer(srcTimeout, self._timerHandler, ["start-next", currentToken])
             self._basicJSONParserHandler.setString("{}")
             self._basicJSONParserHandler.validateJSON()
             self._basicJSONParserHandler.setAttributeValue("clientToken", currentToken)
             currentPayload = self._basicJSONParserHandler.regenerateString()
         # Two subscriptions
-        if not self._isPersistentSubscribe or not self._isGetSubscribed:
-            self._jobManagerHandler.basicJobSubscribe(self._jobName, "get", self.generalCallback)
-            self._isGetSubscribed = True
-            self._logger.info("Subscribed to get accepted/rejected topics for deviceJob: " + self._jobName)
+        if not self._isPersistentSubscribe or not self._isStartNextSubscribed:
+            self._jobManagerHandler.basicJobSubscribe(self._thingName, "start-next", self.generalCallback)
+            self._isStartNextSubscribed = True
+            self._logger.info("Subscribed to start-next accepted/rejected topics for device: " + self._thingName)
         # One publish
-        self._jobManagerHandler.basicJobPublish(self._jobName, "get", currentPayload)
+        self._jobManagerHandler.basicJobPublish(self._thingName, "start-next", currentPayload)
         # Start the timer
         self._tokenPool[currentToken].start()
         return currentToken
 
-    def jobDelete(self, srcCallback, srcTimeout):
-        """
-        **Description**
-
-        Delete the device job from AWS IoT by publishing an empty JSON document to the corresponding 
-        job topics. Job response topics will be subscribed to receive responses from AWS IoT 
-        regarding the result of the get operation. Responses will be available in the registered callback. 
-        If no response is received within the provided timeout, a timeout notification will be passed into 
-        the registered callback.
-
-        **Syntax**
-
-        .. code:: python
-
-          # Delete the device job from AWS IoT, with a timeout set to 5 seconds
-          BotJob.jobDelete(customCallback, 5)
-
-        **Parameters**
-
-        *srcCallback* - Function to be called when the response for this job request comes back. Should 
-        be in form :code:`customCallback(payload, responseStatus, token)`, where :code:`payload` is the 
-        JSON document returned, :code:`responseStatus` indicates whether the request has been accepted, 
-        rejected or is a delta message, :code:`token` is the token used for tracing in this request.
-
-        *srcTimeout* - Timeout to determine whether the request is invalid. When a request gets timeout, 
-        a timeout notification will be generated and put into the registered callback to notify users.
-
-        **Returns**
-
-        The token used for tracing in this job request.
-
-        """
+    def jobUpdate(self, srcStatus, srcCallback, srcTimeout):
+        if srcStatus not in ["FAILED", "SUCCESS", "REJECTED"]:
+            raise TypeError("Invalid job status.")
+        if self._currentJobId is None:
+            raise TypeError("No job in progress to update.")
         with self._dataStructureLock:
             # Update callback data structure
-            self._jobSubscribeCallbackTable["delete"] = srcCallback
+            self._jobSubscribeCallbackTable["update"] = srcCallback
             # Update number of pending feedback
-            self._jobSubscribeStatusTable["delete"] += 1
+            self._jobSubscribeStatusTable["update"] += 1
             # clientToken
             currentToken = self._tokenHandler.getNextToken()
-            self._tokenPool[currentToken] = Timer(srcTimeout, self._timerHandler, ["delete", currentToken])
+            self._tokenPool[currentToken] = Timer(srcTimeout, self._timerHandler, ["update", currentToken])
             self._basicJSONParserHandler.setString("{}")
             self._basicJSONParserHandler.validateJSON()
+            self._basicJSONParserHandler.setAttributeValue("status", srcStatus)
+            self._basicJSONParserHandler.setAttributeValue("expectedVersion", self._lastVersionInSync)
+            self._basicJSONParserHandler.setAttributeValue("includeJobExecutionState", True)
             self._basicJSONParserHandler.setAttributeValue("clientToken", currentToken)
             currentPayload = self._basicJSONParserHandler.regenerateString()
         # Two subscriptions
-        if not self._isPersistentSubscribe or not self._isDeleteSubscribed:
-            self._jobManagerHandler.basicJobSubscribe(self._jobName, "delete", self.generalCallback)
-            self._isDeleteSubscribed = True
-            self._logger.info("Subscribed to delete accepted/rejected topics for deviceJob: " + self._jobName)
+        if not self._isPersistentSubscribe or not self._isUpdateSubscribed:
+            self._jobManagerHandler.basicJobSubscribe(self._thingName, "update", self.generalCallback)
+            self._isUpdateSubscribed = True
+            self._logger.info("Subscribed to update accepted/rejected topics for device/job: " + self._thingName + "/" + self._currentJobId)
         # One publish
-        self._jobManagerHandler.basicJobPublish(self._jobName, "delete", currentPayload)
+        self._jobManagerHandler.basicJobPublish(self._thingName, "update", currentPayload)
         # Start the timer
         self._tokenPool[currentToken].start()
         return currentToken
 
-    def jobUpdate(self, srcJSONPayload, srcCallback, srcTimeout):
-        """
-        **Description**
-
-        Update the device job JSON document string from AWS IoT by publishing the provided JSON 
-        document to the corresponding job topics. Job response topics will be subscribed to 
-        receive responses from AWS IoT regarding the result of the get operation. Response will be 
-        available in the registered callback. If no response is received within the provided timeout, 
-        a timeout notification will be passed into the registered callback.
-
-        **Syntax**
-
-        .. code:: python
-
-          # Update the job JSON document from AWS IoT, with a timeout set to 5 seconds
-          BotJob.jobUpdate(newJobJSONDocumentString, customCallback, 5)
-
-        **Parameters**
-
-        *srcJSONPayload* - JSON document string used to update job JSON document in AWS IoT.
-
-        *srcCallback* - Function to be called when the response for this job request comes back. Should 
-        be in form :code:`customCallback(payload, responseStatus, token)`, where :code:`payload` is the 
-        JSON document returned, :code:`responseStatus` indicates whether the request has been accepted, 
-        rejected or is a delta message, :code:`token` is the token used for tracing in this request.
-
-        *srcTimeout* - Timeout to determine whether the request is invalid. When a request gets timeout, 
-        a timeout notification will be generated and put into the registered callback to notify users.
-
-        **Returns**
-
-        The token used for tracing in this job request.
-
-        """
-        # Validate JSON
-        self._basicJSONParserHandler.setString(srcJSONPayload)
-        if self._basicJSONParserHandler.validateJSON():
-            with self._dataStructureLock:
-                # clientToken
-                currentToken = self._tokenHandler.getNextToken()
-                self._tokenPool[currentToken] = Timer(srcTimeout, self._timerHandler, ["update", currentToken])
-                self._basicJSONParserHandler.setAttributeValue("clientToken", currentToken)
-                JSONPayloadWithToken = self._basicJSONParserHandler.regenerateString()
-                # Update callback data structure
-                self._jobSubscribeCallbackTable["update"] = srcCallback
-                # Update number of pending feedback
-                self._jobSubscribeStatusTable["update"] += 1
-            # Two subscriptions
-            if not self._isPersistentSubscribe or not self._isUpdateSubscribed:
-                self._jobManagerHandler.basicJobSubscribe(self._jobName, "update", self.generalCallback)
-                self._isUpdateSubscribed = True
-                self._logger.info("Subscribed to update accepted/rejected topics for deviceJob: " + self._jobName)
-            # One publish
-            self._jobManagerHandler.basicJobPublish(self._jobName, "update", JSONPayloadWithToken)
-            # Start the timer
-            self._tokenPool[currentToken].start()
-        else:
-            raise ValueError("Invalid JSON file.")
-        return currentToken
-
-    def jobRegisterDeltaCallback(self, srcCallback):
-        """
-        **Description**
-
-        Listen on delta topics for this device job by subscribing to delta topics. Whenever there 
-        is a difference between the desired and reported state, the registered callback will be called 
-        and the delta payload will be available in the callback.
-
-        **Syntax**
-
-        .. code:: python
-
-          # Listen on delta topics for BotJob
-          BotJob.jobRegisterDeltaCallback(customCallback)
-
-        **Parameters**
-
-        *srcCallback* - Function to be called when the response for this job request comes back. Should 
-        be in form :code:`customCallback(payload, responseStatus, token)`, where :code:`payload` is the 
-        JSON document returned, :code:`responseStatus` indicates whether the request has been accepted, 
-        rejected or is a delta message, :code:`token` is the token used for tracing in this request.
-
-        **Returns**
-
-        None
-
-        """
+    def jobRegisterNotifyNextCallback(self, srcCallback):
         with self._dataStructureLock:
             # Update callback data structure
-            self._jobSubscribeCallbackTable["delta"] = srcCallback
+            self._jobSubscribeCallbackTable["notify-next"] = srcCallback
         # One subscription
-        self._jobManagerHandler.basicJobSubscribe(self._jobName, "delta", self.generalCallback)
-        self._logger.info("Subscribed to delta topic for deviceJob: " + self._jobName)
+        self._jobManagerHandler.basicJobSubscribe(self._thingName, "notify-next", self.generalCallback)
+        self._logger.info("Subscribed to notify-next topic for device: " + self._thingName)
 
-    def jobUnregisterDeltaCallback(self):
-        """
-        **Description**
-
-        Cancel listening on delta topics for this device job by unsubscribing to delta topics. There will 
-        be no delta messages received after this API call even though there is a difference between the 
-        desired and reported state.
-
-        **Syntax**
-
-        .. code:: python
-
-          # Cancel listening on delta topics for BotJob
-          BotJob.jobUnregisterDeltaCallback()
-
-        **Parameters**
-
-        None
-
-        **Returns**
-
-        None
-
-        """
+    def jobUnregisterNotifyNextCallback(self):
         with self._dataStructureLock:
             # Update callback data structure
-            del self._jobSubscribeCallbackTable["delta"]
+            del self._jobSubscribeCallbackTable["notify-next"]
         # One unsubscription
-        self._jobManagerHandler.basicJobUnsubscribe(self._jobName, "delta")
-        self._logger.info("Unsubscribed to delta topics for deviceJob: " + self._jobName)
+        self._jobManagerHandler.basicJobUnsubscribe(self._thingName, "notify-next")
+        self._logger.info("Unsubscribed from notify-next topic for device: " + self._thingName)
