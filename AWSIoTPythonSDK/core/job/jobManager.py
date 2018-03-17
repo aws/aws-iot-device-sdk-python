@@ -67,16 +67,16 @@ class jobManager:
 
     def basicJobPublish(self, srcThingName, srcJobAction, srcPayload, srcJobId=None):
         currentJobAction = _jobAction(srcThingName, srcJobAction, srcJobId=srcJobId)
-        self._mqttCoreHandler.publish(currentJobAction.getTopicGeneral(), srcPayload, 0, False)
+        self._mqttCoreHandler.publish(currentJobAction.getTopicGeneral(), srcPayload, 2, False)
 
     def basicJobSubscribe(self, srcThingName, srcJobAction, srcCallback, srcJobId=None):
         with self._jobSubUnsubOperationLock:
             currentJobAction = _jobAction(srcThingName, srcJobAction, srcJobId=srcJobId)
             if currentJobAction.isNotify:
-                self._mqttCoreHandler.unsubscribe(currentJobAction.getTopicNotify())
+                self._mqttCoreHandler.subscribe(currentJobAction.getTopicNotify(), 2, srcCallback)
             else:
-                self._mqttCoreHandler.subscribe(currentJobAction.getTopicAccept(), 0, srcCallback)
-                self._mqttCoreHandler.subscribe(currentJobAction.getTopicReject(), 0, srcCallback)
+                self._mqttCoreHandler.subscribe(currentJobAction.getTopicAccept(), 2, srcCallback)
+                self._mqttCoreHandler.subscribe(currentJobAction.getTopicReject(), 2, srcCallback)
             time.sleep(2)
 
     def basicJobUnsubscribe(self, srcThingName, srcJobAction, srcJobId=None):
