@@ -235,11 +235,11 @@ class deviceJob:
             currentPayload = self._basicJSONParserHandler.regenerateString()
         # Two subscriptions
         if not self._isPersistentSubscribe or not self._isUpdateSubscribed:
-            self._jobManagerHandler.basicJobSubscribe(self._thingName, "update", self.generalCallback)
+            self._jobManagerHandler.basicJobSubscribe(self._thingName, "update", self.generalCallback, srcJobId=self._currentJobId)
             self._isUpdateSubscribed = True
             self._logger.info("Subscribed to update accepted/rejected topics for device/job: " + self._thingName + "/" + self._currentJobId)
         # One publish
-        self._jobManagerHandler.basicJobPublish(self._thingName, "update", currentPayload)
+        self._jobManagerHandler.basicJobPublish(self._thingName, "update", currentPayload, srcJobId=self._currentJobId)
         # Start the timer
         self._tokenPool[currentToken].start()
         return currentToken
