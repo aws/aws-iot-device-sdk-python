@@ -25,7 +25,7 @@ from threading import Timer, Lock, Thread
 # 3. Set self._jobId accordingly
 # 4. Pass the job description to the callback
 # 5. Run job-handling logic
-# 6. Call a function to update the job status to FAILED, SUCCESS, or REJECTED
+# 6. Call a function to update the job status to FAILED, SUCCEEDED, or REJECTED
 
 class _jobRequestToken:
 
@@ -60,6 +60,8 @@ class _basicJSONParser:
 
 class deviceJob:
     _logger = logging.getLogger(__name__)
+    _statusType = ["IN_PROGRESS", "QUEUED", "FAILED", "SUCCEEDED", "CANCELED", "REJECTED", "REMOVED"]
+    _finishedStatusType = ["FAILED", "SUCCEEDED", "CANCELED", "REJECTED", "REMOVED"]
 
     def __init__(self, srcThingName, srcIsPersistentSubscribe, srcJobManager):
         if srcThingName is None or srcIsPersistentSubscribe is None or srcJobManager is None:
@@ -112,18 +114,22 @@ class deviceJob:
                         if currentType == "accepted":
                             if currentAction == "start-next":
                                 incomingExecution = self._basicJSONParserHandler.getAttributeValue(u"execution")
-                                self._currentJobId = incomingExecution[u"jobId"]
                             else:
                                 incomingExecution = self._basicJSONParserHandler.getAttributeValue(u"executionState")
-                            incomingVersion = incomingExecution[u"versionNumber"]
-                            incomingStatus = incomingExecution[u"status"]
-                            # If it is accepted response, we need to sync the local version and jobId
-                            if incomingVersion > self._lastVersionInSync:
-                                self._lastVersionInSync = incomingVersion
-                            # Reset version and jobId if job is finished
-                            if incomingStatus in ["FAILED", "SUCCESS", "REJECTED"]:
-                                self._lastVersionInSync = -1  # The version will always be synced for the next incoming accepted response
-                                self._currentJobId = None
+                            if incomingExecution is not None:
+                                # If it is accepted response, we need to sync the local version and jobId
+                                if u"jobId" in incomingExecution.keys():
+                                    self._currentJobId = incomingExecution[u"jobId"]
+                                if u"versionNumber" in incomingExecution.keys():
+                                    incomingVersion = incomingExecution[u"versionNumber"]
+                                    if incomingVersion > self._lastVersionInSync:
+                                        self._lastVersionInSync = incomingVersion
+                                # Reset version and jobId if job is finished
+                                if u"status" in incomingExecution.keys():
+                                    incomingStatus = incomingExecution[u"status"]
+                                    if incomingStatus in self._finishedStatusType:
+                                        self._lastVersionInSync = -1  # The version will always be synced for the next incoming accepted response
+                                        self._currentJobId = None
                         # Cancel the timer and clear the token
                         self._tokenPool[currentToken].cancel()
                         del self._tokenPool[currentToken]
@@ -139,16 +145,14 @@ class deviceJob:
                             processCustomCallback.start()
             # notify-next: Watch execution data
             else:
-                currentType += "/" + self._parseTopicThingName(currentTopic)
+                # currentType += "/" + self._parseTopicThingName(currentTopic)
                 # Sync local version
                 self._basicJSONParserHandler.setString(payloadUTF8String)
-                if self._basicJSONParserHandler.validateJSON():  # Filter out JSON without execution
-                    incomingExecution = self._basicJSONParserHandler.getAttributeValue(u"execution")
-                    if incomingExecution is not None:
-                        # Custom callback
-                        if self._jobSubscribeCallbackTable.get(currentAction) is not None:
-                            processCustomCallback = Thread(target=self._jobSubscribeCallbackTable[currentAction], args=[payloadUTF8String, currentType, None])
-                            processCustomCallback.start()
+                if self._basicJSONParserHandler.validateJSON():  # Filter out invalid JSON
+                    # Custom callback
+                    if self._jobSubscribeCallbackTable.get(currentAction) is not None:
+                        processCustomCallback = Thread(target=self._jobSubscribeCallbackTable[currentAction], args=[payloadUTF8String, currentType, None])
+                        processCustomCallback.start()
 
     def _parseTopicAction(self, srcTopic):
         ret = None
@@ -214,7 +218,7 @@ class deviceJob:
         return currentToken
 
     def jobUpdate(self, srcStatus, srcCallback, srcTimeout):
-        if srcStatus not in ["FAILED", "SUCCESS", "REJECTED"]:
+        if srcStatus not in self._statusType:
             raise TypeError("Invalid job status.")
         if self._currentJobId is None:
             raise TypeError("No job in progress to update.")
