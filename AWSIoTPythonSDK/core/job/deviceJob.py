@@ -95,6 +95,8 @@ class deviceJob:
     def generalCallback(self, client, userdata, message):
         # In Py3.x, message.payload comes in as a bytes(string)
         # json.loads needs a string input
+        self._logger.debug("job message topic: " + message.topic)
+        self._logger.debug("job message payload: " + message.payload)
         with self._dataStructureLock:
             currentTopic = message.topic
             currentAction = self._parseTopicAction(currentTopic)  # start-next/update/notify-next
@@ -206,16 +208,16 @@ class deviceJob:
             self._basicJSONParserHandler.validateJSON()
             self._basicJSONParserHandler.setAttributeValue("clientToken", currentToken)
             currentPayload = self._basicJSONParserHandler.regenerateString()
-        # Two subscriptions
-        if not self._isPersistentSubscribe or not self._isStartNextSubscribed:
-            self._jobManagerHandler.basicJobSubscribe(self._thingName, "start-next", self.generalCallback)
-            self._isStartNextSubscribed = True
-            self._logger.info("Subscribed to start-next accepted/rejected topics for device: " + self._thingName)
-        # One publish
-        self._jobManagerHandler.basicJobPublish(self._thingName, "start-next", currentPayload)
-        # Start the timer
-        self._tokenPool[currentToken].start()
-        return currentToken
+            # Two subscriptions
+            if not self._isPersistentSubscribe or not self._isStartNextSubscribed:
+                self._jobManagerHandler.basicJobSubscribe(self._thingName, "start-next", self.generalCallback)
+                self._isStartNextSubscribed = True
+                self._logger.info("Subscribed to start-next accepted/rejected topics for device: " + self._thingName)
+            # One publish
+            self._jobManagerHandler.basicJobPublish(self._thingName, "start-next", currentPayload)
+            # Start the timer
+            self._tokenPool[currentToken].start()
+            return currentToken
 
     def jobUpdate(self, srcStatus, srcCallback, srcTimeout):
         if srcStatus not in self._statusType:
@@ -237,16 +239,16 @@ class deviceJob:
             self._basicJSONParserHandler.setAttributeValue("includeJobExecutionState", True)
             self._basicJSONParserHandler.setAttributeValue("clientToken", currentToken)
             currentPayload = self._basicJSONParserHandler.regenerateString()
-        # Two subscriptions
-        if not self._isPersistentSubscribe or not self._isUpdateSubscribed:
-            self._jobManagerHandler.basicJobSubscribe(self._thingName, "update", self.generalCallback, srcJobId=self._currentJobId)
-            self._isUpdateSubscribed = True
-            self._logger.info("Subscribed to update accepted/rejected topics for device/job: " + self._thingName + "/" + self._currentJobId)
-        # One publish
-        self._jobManagerHandler.basicJobPublish(self._thingName, "update", currentPayload, srcJobId=self._currentJobId)
-        # Start the timer
-        self._tokenPool[currentToken].start()
-        return currentToken
+            # Two subscriptions
+            if not self._isPersistentSubscribe or not self._isUpdateSubscribed:
+                self._jobManagerHandler.basicJobSubscribe(self._thingName, "update", self.generalCallback, srcJobId=self._currentJobId)
+                self._isUpdateSubscribed = True
+                self._logger.info("Subscribed to update accepted/rejected topics for device/job: " + self._thingName + "/" + self._currentJobId)
+            # One publish
+            self._jobManagerHandler.basicJobPublish(self._thingName, "update", currentPayload, srcJobId=self._currentJobId)
+            # Start the timer
+            self._tokenPool[currentToken].start()
+            return currentToken
 
     def jobRegisterNotifyNextCallback(self, srcCallback):
         with self._dataStructureLock:
