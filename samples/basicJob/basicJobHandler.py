@@ -5,7 +5,7 @@ import time
 import json
 import argparse
 
-timeout = 10
+timeout = 5
 pendingJob = True
 runningJobLock = Lock()
 
@@ -33,13 +33,13 @@ def customJobCallback_Update(payload, responseStatus, token):
     # payload is a JSON string ready to be parsed using json.loads(...)
     # in both Py2.x and Py3.x
     print(responseStatus)
+    # Release the job execution lock regardless of status (Publish QoS=1)
+    runningJobLock.release()
     if responseStatus != "timeout":
         payloadDict = json.loads(payload)
         print("\n\n+++++++UPDATE++++++\n"
               + json.dumps(payloadDict, indent=4, sort_keys=True)
               + "\n+++++++++++++++++++++++\n\n")
-        # Release the job execution lock
-        runningJobLock.release()
 
 
 # Custom job notify-next callback
@@ -116,7 +116,7 @@ else:
 # AWSIoTMQTTShadowClient configuration
 myAWSIoTMQTTShadowClient.configureAutoReconnectBackoffTime(1, 32, 20)
 myAWSIoTMQTTShadowClient.configureConnectDisconnectTimeout(10)  # 10 sec
-myAWSIoTMQTTShadowClient.configureMQTTOperationTimeout(timeout)  # 10 sec
+myAWSIoTMQTTShadowClient.configureMQTTOperationTimeout(5)  # 5 sec
 
 # Connect to AWS IoT
 myAWSIoTMQTTShadowClient.connect()
