@@ -72,7 +72,7 @@ class AWSIoTMQTTClient:
 
         *clientID* - String that denotes the client identifier used to connect to AWS IoT.
         If empty string were provided, client id for this connection will be randomly generated 
-        n server side.
+        on server side.
 
         *protocolType* - MQTT version in use for this connection. Could be :code:`AWSIoTPythonSDK.MQTTLib.MQTTv3_1` or :code:`AWSIoTPythonSDK.MQTTLib.MQTTv3_1_1`
 
