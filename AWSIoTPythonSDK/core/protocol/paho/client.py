@@ -503,9 +503,7 @@ class Client(object):
         self._tls_insecure = False
         self._useSecuredWebsocket = useSecuredWebsocket  # Do we enable secured websocket
         self._backoffCore = ProgressiveBackOffCore()  # Init the backoffCore using default configuration
-        self._AWSAccessKeyIDCustomConfig = ""
-        self._AWSSecretAccessKeyCustomConfig = ""
-        self._AWSSessionTokenCustomConfig = ""
+        self._iam_credentials_provider = None
 
     def __del__(self):
         pass
@@ -521,16 +519,12 @@ class Client(object):
         """
         self._backoffCore.configTime(srcBaseReconnectTimeSecond, srcMaximumReconnectTimeSecond, srcMinimumConnectTimeSecond)
 
-    def configIAMCredentials(self, srcAWSAccessKeyID, srcAWSSecretAccessKey, srcAWSSessionToken):
+    def configIAMCredentialsProvider(self, provider):
         """
-        Make custom settings for IAM credentials for websocket connection
-        srcAWSAccessKeyID - AWS IAM access key
-        srcAWSSecretAccessKey - AWS IAM secret key
-        srcAWSSessionToken - AWS Session Token
+        Set provider to make custom settings for IAM credentials for websocket connection
+        provider - extended IAMCredentialsProvider
         """
-        self._AWSAccessKeyIDCustomConfig = srcAWSAccessKeyID
-        self._AWSSecretAccessKeyCustomConfig = srcAWSSecretAccessKey
-        self._AWSSessionTokenCustomConfig = srcAWSSessionToken
+        self._iam_credentials_provider = provider
 
     def reinitialise(self, client_id="", clean_session=True, userdata=None):
         if self._ssl:
@@ -784,7 +778,11 @@ class Client(object):
                 # Non-None value for ._ssl will allow ops before wss-MQTT connection is established
                 rawSSL = ssl.wrap_socket(sock, ca_certs=self._tls_ca_certs, cert_reqs=ssl.CERT_REQUIRED)  # Add server certificate verification
                 rawSSL.setblocking(0)  # Non-blocking socket
-                self._ssl = SecuredWebSocketCore(rawSSL, self._host, self._port, self._AWSAccessKeyIDCustomConfig, self._AWSSecretAccessKeyCustomConfig, self._AWSSessionTokenCustomConfig)  # Overeride the _ssl socket
+
+                aws_access_key = self._iam_credentials_provider.get_access_key_id()
+                aws_secret_access_key = self._iam_credentials_provider.get_secret_access_key()
+                aws_session_token = self._iam_credentials_provider.get_session_token()
+                self._ssl = SecuredWebSocketCore(rawSSL, self._host, self._port, aws_access_key, aws_secret_access_key, aws_session_token)  # Overeride the _ssl socket
                 # self._ssl.enableDebug()
             else:
                 self._ssl = ssl.wrap_socket(

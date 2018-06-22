@@ -201,6 +201,36 @@ class AWSIoTMQTTClient:
         iam_credentials_provider.set_access_key_id(AWSAccessKeyID)
         iam_credentials_provider.set_secret_access_key(AWSSecretAccessKey)
         iam_credentials_provider.set_session_token(AWSSessionToken)
+        self.configureIAMCredentialsProvider(iam_credentials_provider)
+
+    def configureIAMCredentialsProvider(self, iam_credentials_provider):
+        """
+        **Description**
+
+        Used to configure/update the custom IAM credentials provider for Websocket SigV4 connection to
+        AWS IoT. Should be called before connect.
+
+        **Syntax**
+
+        .. code:: python
+
+          myAWSIoTMQTTClient.configureIAMCredentialsProvider(extendedIAMCredentialsProvider)
+
+        .. note::
+
+          Hard-coding credentials into custom script is NOT recommended. Please use AWS Cognito identity service
+          or other credential provider.
+
+        **Parameters**
+
+        *iam_credentials_provider* - IAMCredentialsProvider which can provide AWS Access Key, AWS Secret Access Key and
+                                     AWS Session Token from IAM credentials.
+
+        **Returns**
+
+        None
+
+        """
         self._mqtt_core.configure_iam_credentials(iam_credentials_provider)
 
     def configureCredentials(self, CAFilePath, KeyPath="", CertificatePath=""):  # Should be good for MutualAuth certs config and Websocket rootCA config

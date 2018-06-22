@@ -17,6 +17,8 @@
 
 import boto3
 from AWSIoTPythonSDK.MQTTLib import AWSIoTMQTTClient
+from AWSIoTPythonSDK.core.util.providers import IAMCredentialsProvider
+from datetime import datetime, timedelta
 import logging
 import time
 import argparse
@@ -57,19 +59,46 @@ streamHandler.setFormatter(formatter)
 logger.addHandler(streamHandler)
 
 # Cognito auth
-identityPoolID = cognitoIdentityPoolID
+class CognitoIdentityProvider(IAMCredentialsProvider):
+    def __init__(self, identityPoolID, region):
+        IAMCredentialsProvider.__init__(self)
+
+        self.identityPoolID = identityPoolID
+        self.region = region
+
+        self.updated_at = datetime.min
+
+    def _refresh_credentials(self):
+        if datetime.now() - self.updated_at < timedelta(hours=1):
+            return
+
+        self.updated_at = datetime.now()
+
+        cognitoIdentityClient = boto3.client('cognito-identity', region_name=self.region)
+
+        temporaryIdentityId = cognitoIdentityClient.get_id(IdentityPoolId=self.identityPoolID)
+        identityID = temporaryIdentityId["IdentityId"]
+
+        temporaryCredentials = cognitoIdentityClient.get_credentials_for_identity(IdentityId=identityID)
+        self._aws_access_key_id = temporaryCredentials["Credentials"]["AccessKeyId"]
+        self._aws_secret_access_key = temporaryCredentials["Credentials"]["SecretKey"]
+        self._aws_session_token = temporaryCredentials["Credentials"]["SessionToken"]
+
+    def get_access_key_id(self):
+        self._refresh_credentials()
+        return self._aws_access_key_id
+
+    def get_secret_access_key(self):
+        self._refresh_credentials()
+        return self._aws_secret_access_key
+
+    def get_session_token(self):
+        self._refresh_credentials()
+        return self._aws_session_token
+
+
 region = host.split('.')[2]
-cognitoIdentityClient = boto3.client('cognito-identity', region_name=region)
-# identityPoolInfo = cognitoIdentityClient.describe_identity_pool(IdentityPoolId=identityPoolID)
-# print identityPoolInfo
-
-temporaryIdentityId = cognitoIdentityClient.get_id(IdentityPoolId=identityPoolID)
-identityID = temporaryIdentityId["IdentityId"]
-
-temporaryCredentials = cognitoIdentityClient.get_credentials_for_identity(IdentityId=identityID)
-AccessKeyId = temporaryCredentials["Credentials"]["AccessKeyId"]
-SecretKey = temporaryCredentials["Credentials"]["SecretKey"]
-SessionToken = temporaryCredentials["Credentials"]["SessionToken"]
+credentials_provider = CognitoIdentityProvider(cognitoIdentityPoolID, region)
 
 # Init AWSIoTMQTTClient
 myAWSIoTMQTTClient = AWSIoTMQTTClient(clientId, useWebsocket=True)
@@ -77,7 +106,7 @@ myAWSIoTMQTTClient = AWSIoTMQTTClient(clientId, useWebsocket=True)
 # AWSIoTMQTTClient configuration
 myAWSIoTMQTTClient.configureEndpoint(host, 443)
 myAWSIoTMQTTClient.configureCredentials(rootCAPath)
-myAWSIoTMQTTClient.configureIAMCredentials(AccessKeyId, SecretKey, SessionToken)
+myAWSIoTMQTTClient.configureIAMCredentialsProvider(credentials_provider)
 myAWSIoTMQTTClient.configureAutoReconnectBackoffTime(1, 32, 20)
 myAWSIoTMQTTClient.configureOfflinePublishQueueing(-1)  # Infinite offline Publish queueing
 myAWSIoTMQTTClient.configureDrainingFrequency(2)  # Draining: 2 Hz

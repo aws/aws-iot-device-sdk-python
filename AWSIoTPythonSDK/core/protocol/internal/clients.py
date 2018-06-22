@@ -84,9 +84,7 @@ class InternalAsyncMqttClient(object):
                                       cert_reqs=ssl.CERT_REQUIRED, tls_version=ssl.PROTOCOL_SSLv23)
 
     def set_iam_credentials_provider(self, iam_credentials_provider):
-        self._paho_client.configIAMCredentials(iam_credentials_provider.get_access_key_id(),
-                                               iam_credentials_provider.get_secret_access_key(),
-                                               iam_credentials_provider.get_session_token())
+        self._paho_client.configIAMCredentialsProvider(iam_credentials_provider)
 
     def set_endpoint_provider(self, endpoint_provider):
         self._endpoint_provider = endpoint_provider
