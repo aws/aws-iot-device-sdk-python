@@ -2,6 +2,17 @@
 CHANGELOG
 =========
 
+1.4.0
+=====
+* bugfix:Issue `#136 <https://github.com/aws/aws-iot-device-sdk-python/issues/136>`
+* bugfix:Issue:`#124 <https://github.com/aws/aws-iot-device-sdk-python/issues/124>`
+* improvement:Expose the missing getpeercert() from SecuredWebsocket class
+* improvement:Enforce sending host header in the outbound discovery request
+* improvement:Ensure credentials non error are properly handled and communicated to application level when creating wss endpoint
+* feature:Add support for ALPN, along with API docs, sample and updated README
+* feature:Add support for IoT Jobs, along with API docs, sample and updated README
+* feature:Add command line option to allow port number override
+
 1.3.1
 =====
 * bugfix:Issue:`#67 <https://github.com/aws/aws-iot-device-sdk-python/issues/67>`__

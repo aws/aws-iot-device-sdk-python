@@ -26,6 +26,7 @@ from AWSIoTPythonSDK.core.protocol.internal.requests import QueueableRequest
 from AWSIoTPythonSDK.core.protocol.internal.defaults import DEFAULT_CONNECT_DISCONNECT_TIMEOUT_SEC
 from AWSIoTPythonSDK.core.protocol.internal.defaults import DEFAULT_OPERATION_TIMEOUT_SEC
 from AWSIoTPythonSDK.core.protocol.internal.defaults import METRICS_PREFIX
+from AWSIoTPythonSDK.core.protocol.internal.defaults import ALPN_PROTCOLS
 from AWSIoTPythonSDK.core.protocol.internal.events import FixedEventMids
 from AWSIoTPythonSDK.core.protocol.paho.client import MQTT_ERR_SUCCESS
 from AWSIoTPythonSDK.exception.AWSIoTExceptions import connectError
@@ -62,6 +63,7 @@ class MqttCore(object):
     _logger = logging.getLogger(__name__)
 
     def __init__(self, client_id, clean_session, protocol, use_wss):
+        self._use_wss = use_wss
         self._username = ""
         self._password = None
         self._enable_metrics_collection = True
@@ -110,6 +112,9 @@ class MqttCore(object):
     def _start_workers(self):
         self._event_consumer.start()
 
+    def use_wss(self):
+        return self._use_wss
+
     # Used for general message event reception
     def on_message(self, message):
         pass
@@ -148,6 +153,10 @@ class MqttCore(object):
         self._logger.info("Max quiet time: %f sec" % max_reconnect_quiet_sec)
         self._logger.info("Stable connection time: %f sec" % stable_connection_sec)
         self._internal_async_client.configure_reconnect_back_off(base_reconnect_quiet_sec, max_reconnect_quiet_sec, stable_connection_sec)
+
+    def configure_alpn_protocols(self):
+        self._logger.info("Configuring alpn protocols...")
+        self._internal_async_client.configure_alpn_protocols([ALPN_PROTCOLS])
 
     def configure_last_will(self, topic, payload, qos, retain=False):
         self._logger.info("Configuring last will...")
@@ -192,11 +201,23 @@ class MqttCore(object):
         self._start_workers()
         self._load_callbacks()
         self._load_username_password()
-        self._client_status.set_status(ClientStatus.CONNECT)
-        rc = self._internal_async_client.connect(keep_alive_sec, ack_callback)
-        if MQTT_ERR_SUCCESS != rc:
-            self._logger.error("Connect error: %d", rc)
-            raise connectError(rc)
+
+        try:
+            self._client_status.set_status(ClientStatus.CONNECT)
+            rc = self._internal_async_client.connect(keep_alive_sec, ack_callback)
+            if MQTT_ERR_SUCCESS != rc:
+                self._logger.error("Connect error: %d", rc)
+                raise connectError(rc)
+        except Exception as e:
+            # Provided any error in connect, we should clean up the threads that have been created
+            self._event_consumer.stop()
+            if not self._event_consumer.wait_until_it_stops(self._connect_disconnect_timeout_sec):
+                self._logger.error("Time out in waiting for event consumer to stop")
+            else:
+                self._logger.debug("Event consumer stopped")
+            self._client_status.set_status(ClientStatus.IDLE)
+            raise e
+
         return FixedEventMids.CONNACK_MID
 
     def _load_callbacks(self):

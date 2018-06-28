@@ -39,7 +39,9 @@ class DiscoveryInfoProvider(object):
 
     REQUEST_TYPE_PREFIX = "GET "
     PAYLOAD_PREFIX = "/greengrass/discover/thing/"
-    PAYLOAD_SUFFIX = " HTTP/1.1\r\n\r\n" # Space in the front
+    PAYLOAD_SUFFIX = " HTTP/1.1\r\n" # Space in the front
+    HOST_PREFIX = "Host: "
+    HOST_SUFFIX = "\r\n\r\n"
     HTTP_PROTOCOL = r"HTTP/1.1 "
     CONTENT_LENGTH = r"content-length: "
     CONTENT_LENGTH_PATTERN = CONTENT_LENGTH + r"([0-9]+)\r\n"
@@ -311,7 +313,10 @@ class DiscoveryInfoProvider(object):
         request = self.REQUEST_TYPE_PREFIX + \
                   self.PAYLOAD_PREFIX + \
                   thing_name + \
-                  self.PAYLOAD_SUFFIX
+                  self.PAYLOAD_SUFFIX + \
+                  self.HOST_PREFIX + \
+                  self._host + ":" + str(self._port) + \
+                  self.HOST_SUFFIX
         self._logger.debug("Sending discover request: " + request)
 
         start_time = time.time()

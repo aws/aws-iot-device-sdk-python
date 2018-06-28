@@ -46,6 +46,7 @@ parser.add_argument("-e", "--endpoint", action="store", required=True, dest="hos
 parser.add_argument("-r", "--rootCA", action="store", required=True, dest="rootCAPath", help="Root CA file path")
 parser.add_argument("-c", "--cert", action="store", dest="certificatePath", help="Certificate file path")
 parser.add_argument("-k", "--key", action="store", dest="privateKeyPath", help="Private key file path")
+parser.add_argument("-p", "--port", action="store", dest="port", type=int, help="Port number override")
 parser.add_argument("-w", "--websocket", action="store_true", dest="useWebsocket", default=False,
                     help="Use MQTT over WebSocket")
 parser.add_argument("-n", "--thingName", action="store", dest="thingName", default="Bot", help="Targeted thing name")
@@ -57,6 +58,7 @@ host = args.host
 rootCAPath = args.rootCAPath
 certificatePath = args.certificatePath
 privateKeyPath = args.privateKeyPath
+port = args.port
 useWebsocket = args.useWebsocket
 thingName = args.thingName
 clientId = args.clientId
@@ -68,6 +70,12 @@ if args.useWebsocket and args.certificatePath and args.privateKeyPath:
 if not args.useWebsocket and (not args.certificatePath or not args.privateKeyPath):
     parser.error("Missing credentials for authentication.")
     exit(2)
+
+# Port defaults
+if args.useWebsocket and not args.port:  # When no port override for WebSocket, default to 443
+    port = 443
+if not args.useWebsocket and not args.port:  # When no port override for non-WebSocket, default to 8883
+    port = 8883
 
 # Configure logging
 logger = logging.getLogger("AWSIoTPythonSDK.core")
@@ -81,11 +89,11 @@ logger.addHandler(streamHandler)
 myAWSIoTMQTTShadowClient = None
 if useWebsocket:
     myAWSIoTMQTTShadowClient = AWSIoTMQTTShadowClient(clientId, useWebsocket=True)
-    myAWSIoTMQTTShadowClient.configureEndpoint(host, 443)
+    myAWSIoTMQTTShadowClient.configureEndpoint(host, port)
     myAWSIoTMQTTShadowClient.configureCredentials(rootCAPath)
 else:
     myAWSIoTMQTTShadowClient = AWSIoTMQTTShadowClient(clientId)
-    myAWSIoTMQTTShadowClient.configureEndpoint(host, 8883)
+    myAWSIoTMQTTShadowClient.configureEndpoint(host, port)
     myAWSIoTMQTTShadowClient.configureCredentials(rootCAPath, privateKeyPath, certificatePath)
 
 # AWSIoTMQTTShadowClient configuration

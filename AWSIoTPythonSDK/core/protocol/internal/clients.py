@@ -94,6 +94,9 @@ class InternalAsyncMqttClient(object):
     def configure_last_will(self, topic, payload, qos, retain=False):
         self._paho_client.will_set(topic, payload, qos, retain)
 
+    def configure_alpn_protocols(self, alpn_protocols):
+        self._paho_client.config_alpn_protocols(alpn_protocols)
+
     def clear_last_will(self):
         self._paho_client.will_clear()
 

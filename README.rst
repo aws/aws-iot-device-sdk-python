@@ -40,8 +40,9 @@ IoT:
 -  MQTT (over TLS 1.2) with X.509 certificate-based mutual
    authentication.
 -  MQTT over the WebSocket protocol with AWS Signature Version 4 authentication.
+-  MQTT (over TLS 1.2) with X.509 certificate-based mutual authentication with TLS ALPN extension.
 
-For MQTT over TLS (port 8883), a valid certificate and a private key are
+For MQTT over TLS (port 8883 and port 443), a valid certificate and a private key are
 required for authentication. For MQTT over the WebSocket protocol (port 443),
 a valid AWS Identity and Access Management (IAM) access key ID and secret access key pair are required for
 authentication.
@@ -66,7 +67,9 @@ Installation
 Minimum Requirements
 ____________________
 
--  Python 2.7+ or Python 3.3+
+-  Python 2.7+ or Python 3.3+ for X.509 certificate-based mutual authentication via port 8883
+   and MQTT over WebSocket protocol with AWS Signature Version 4 authentication
+-  Python 2.7.10+ or Python 3.5+ for X.509 certificate-based mutual authentication via port 443
 -  OpenSSL version 1.0.1+ (TLS version 1.2) compiled with the Python executable for
    X.509 certificate-based mutual authentication
 
@@ -239,6 +242,8 @@ You can initialize and configure the client like this:
     myMQTTClient.configureEndpoint("YOUR.ENDPOINT", 8883)
     # For Websocket
     # myMQTTClient.configureEndpoint("YOUR.ENDPOINT", 443)
+    # For TLS mutual authentication with TLS ALPN extension
+    # myMQTTClient.configureEndpoint("YOUR.ENDPOINT", 443)
     myMQTTClient.configureCredentials("YOUR/ROOT/CA/PATH", "PRIVATE/KEY/PATH", "CERTIFICATE/PATH")
     # For Websocket, we only need to configure the root CA
     # myMQTTClient.configureCredentials("YOUR/ROOT/CA/PATH")
@@ -279,6 +284,8 @@ You can initialize and configure the client like this:
     myShadowClient.configureEndpoint("YOUR.ENDPOINT", 8883)
     # For Websocket
     # myShadowClient.configureEndpoint("YOUR.ENDPOINT", 443)
+    # For TLS mutual authentication with TLS ALPN extension
+    # myShadowClient.configureEndpoint("YOUR.ENDPOINT", 443)
     myShadowClient.configureCredentials("YOUR/ROOT/CA/PATH", "PRIVATE/KEY/PATH", "CERTIFICATE/PATH")
     # For Websocket, we only need to configure the root CA
     # myShadowClient.configureCredentials("YOUR/ROOT/CA/PATH")
@@ -308,6 +315,57 @@ MQTT operations along with shadow operations:
 .. code-block:: python
 
     myMQTTClient = myShadowClient.getMQTTConnection()
+    myMQTTClient.publish("plainMQTTTopic", "Payload", 1)
+
+AWSIoTMQTTThingJobsClient
+__________________
+
+This is the client class used for jobs operations with AWS IoT. See docs here:
+https://docs.aws.amazon.com/iot/latest/developerguide/iot-jobs.html
+You can initialize and configure the client like this:
+
+.. code-block:: python
+
+    from AWSIoTPythonSDK.MQTTLib import AWSIoTMQTTThingJobsClient
+
+    # For certificate based connection
+    myJobsClient = AWSIoTMQTTThingJobsClient("myClientID", "myThingName")
+    # For Websocket connection
+    # myJobsClient = AWSIoTMQTTThingJobsClient("myClientID", "myThingName", useWebsocket=True)
+    # Configurations
+    # For TLS mutual authentication
+    myJobsClient.configureEndpoint("YOUR.ENDPOINT", 8883)
+    # For Websocket
+    # myJobsClient.configureEndpoint("YOUR.ENDPOINT", 443)
+    myJobsClient.configureCredentials("YOUR/ROOT/CA/PATH", "PRIVATE/KEY/PATH", "CERTIFICATE/PATH")
+    # For Websocket, we only need to configure the root CA
+    # myJobsClient.configureCredentials("YOUR/ROOT/CA/PATH")
+    myJobsClient.configureConnectDisconnectTimeout(10)  # 10 sec
+    myJobsClient.configureMQTTOperationTimeout(5)  # 5 sec
+    ...
+
+For job operations, your script will look like this:
+
+.. code-block:: python
+
+    ...
+    myJobsClient.connect()
+    # Create a subsciption for $notify-next topic
+    myJobsClient.createJobSubscription(notifyNextCallback, jobExecutionTopicType.JOB_NOTIFY_NEXT_TOPIC)
+    # Create a subscription for update-job-execution accepted response topic
+    myJobsClient.createJobSubscription(updateSuccessfulCallback, jobExecutionTopicType.JOB_UPDATE_TOPIC, jobExecutionTopicReplyType.JOB_ACCEPTED_REPLY_TYPE, '+')
+    # Send a message to start the next pending job (if any)
+    myJobsClient.sendJobsStartNext(statusDetailsDict)
+    # Send a message to update a successfully completed job
+    myJobsClient.sendJobsUpdate(jobId, jobExecutionStatus.JOB_EXECUTION_SUCCEEDED, statusDetailsDict)
+    ...
+
+You can also retrieve the MQTTClient(MQTT connection) to perform plain
+MQTT operations along with shadow operations:
+
+.. code-block:: python
+
+    myMQTTClient = myJobsClient.getMQTTConnection()
     myMQTTClient.publish("plainMQTTTopic", "Payload", 1)
 
 DiscoveryInfoProvider
@@ -600,6 +658,8 @@ Run the example like this:
     python basicPubSub.py -e <endpoint> -r <rootCAFilePath> -c <certFilePath> -k <privateKeyFilePath> -id <clientId> -t <topic>
     # Customize the message
     python basicPubSub.py -e <endpoint> -r <rootCAFilePath> -c <certFilePath> -k <privateKeyFilePath> -id <clientId> -t <topic> -M <message>
+    # Customize the port number
+    python basicPubSub.py -e <endpoint> -r <rootCAFilePath> -c <certFilePath> -k <privateKeyFilePath> -p <portNumber>
     # change the run mode to subscribe or publish only (see python basicPubSub.py -h for the available options)
     python basicPubSub.py -e <endpoint> -r <rootCAFilePath> -c <certFilePath> -k <privateKeyFilePath> -m <mode>
 
@@ -666,6 +726,8 @@ Run the example like this:
     python basicPubSubAsync.py -e <endpoint> -r <rootCAFilePath> -w
     # Customize client id and topic
     python basicPubSubAsync.py -e <endpoint> -r <rootCAFilePath> -c <certFilePath> -k <privateKeyFilePath> -id <clientId> -t <topic>
+    # Customize the port number
+    python basicPubSubAsync.py -e <endpoint> -r <rootCAFilePath> -c <certFilePath> -k <privateKeyFilePath> -p <portNumber>
 
 Source
 ******
@@ -697,6 +759,8 @@ Run the example like this:
     python basicPubSub_APICallInCallback.py -e <endpoint> -r <rootCAFilePath> -w
     # Customize client id and topic
     python basicPubSub_APICallInCallback.py -e <endpoint> -r <rootCAFilePath> -c <certFilePath> -k <privateKeyFilePath> -id <clientId> -t <topic>
+    # Customize the port number
+    python basicPubSub_APICallInCallback.py -e <endpoint> -r <rootCAFilePath> -c <certFilePath> -k <privateKeyFilePath> -p <portNumber>
 
 Source
 ******
@@ -735,6 +799,8 @@ First, start the basicShadowDeltaListener:
     python basicShadowDeltaListener.py -e <endpoint> -r <rootCAFilePath> -c <certFilePath> -k <privateKeyFilePath>
     # MQTT over WebSocket
     python basicShadowDeltaListener.py -e <endpoint> -r <rootCAFilePath> -w
+    # Customize the port number
+    python basicShadowDeltaListener.py -e <endpoint> -r <rootCAFilePath> -c <certFilePath> -k <privateKeyFilePath> -p <portNumber>
 
 
 Then, start the basicShadowUpdater:
@@ -745,6 +811,8 @@ Then, start the basicShadowUpdater:
     python basicShadowUpdater.py -e <endpoint> -r <rootCAFilePath> -c <certFilePath> -k <privateKeyFilePath>
     # MQTT over WebSocket
     python basicShadowUpdater.py -e <endpoint> -r <rootCAFilePath> -w
+    # Customize the port number
+    python basicShadowUpdater.py -e <endpoint> -r <rootCAFilePath> -c <certFilePath> -k <privateKeyFilePath> -p <portNumber>
 
 
 After the basicShadowUpdater starts sending shadow update requests, you
@@ -780,6 +848,8 @@ Run the example like this:
     python ThingShadowEcho.py -e <endpoint> -r <rootCAFilePath> -w
     # Customize client Id and thing name
     python ThingShadowEcho.py -e <endpoint> -r <rootCAFilePath> -c <certFilePath> -k <privateKeyFilePath> -id <clientId> -n <thingName>
+    # Customize the port number
+    python ThingShadowEcho.py -e <endpoint> -r <rootCAFilePath> -c <certFilePath> -k <privateKeyFilePath> -p <portNumber>
 
 Now use the `AWS IoT console <https://console.aws.amazon.com/iot/>`__ or other MQTT
 client to update the shadow desired state only. You should be able to see the reported state is updated to match
@@ -789,6 +859,42 @@ Source
 ******
 
 The example is available in ``samples/ThingShadowEcho/``.
+
+JobsSample
+__________
+
+This example demonstrates how a device communicates with AWS IoT while
+also taking advantage of AWS IoT Jobs functionality. It shows how to
+subscribe to Jobs topics in order to recieve Job documents on your
+device. It also shows how to process those Jobs so that you can see in
+the `AWS IoT console <https://console.aws.amazon.com/iot/>`__ which of your devices have received and processed
+which Jobs. See the AWS IoT Device Management documentation `here <https://aws.amazon.com/documentation/iot-device-management/>`__
+for more information on creating and deploying Jobs to your fleet of
+devices to facilitate management tasks such deploying software updates
+and running diagnostics.
+
+Instructions
+************
+
+First use the `AWS IoT console <https://console.aws.amazon.com/iot/>`__ to create and deploy Jobs to your fleet of devices.
+
+Then run the example like this:
+
+.. code-block:: python
+
+    # Certificate based mutual authentication
+    python jobsSample.py -e <endpoint> -r <rootCAFilePath> -c <certFilePath> -k <privateKeyFilePath> -n <thingName>
+    # MQTT over WebSocket
+    python jobsSample.py -e <endpoint> -r <rootCAFilePath> -w -n <thingName>
+    # Customize client Id and thing name
+    python jobsSample.py -e <endpoint> -r <rootCAFilePath> -c <certFilePath> -k <privateKeyFilePath> -id <clientId> -n <thingName>
+    # Customize the port number
+    python jobsSample.py -e <endpoint> -r <rootCAFilePath> -c <certFilePath> -k <privateKeyFilePath> -n <thingName> -p <portNumber>
+
+Source
+******
+
+The example is available in ``samples/jobs/``.
 
 BasicDiscovery
 ______________
