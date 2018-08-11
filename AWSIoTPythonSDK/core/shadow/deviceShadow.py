@@ -159,7 +159,7 @@ class deviceShadow:
                             processCustomCallback = Thread(target=self._shadowSubscribeCallbackTable[currentAction], args=[payloadUTF8String, currentType, None])
                             processCustomCallback.start()
                     else:
-                        self._logger.debug("Incomming version %s is older than lastVersionInSync %i", incomingVersion, self._lastVersionInSync)
+                        self._logger.debug("incomingVersion version %i is older than lastVersionInSync %i", incomingVersion, self._lastVersionInSync)
 
     def _parseTopicAction(self, srcTopic):
         ret = None
