@@ -482,11 +482,11 @@ class SecuredWebSocketCore:
 
     def _handShake(self, hostAddress, portNumber):
         CRLF = "\r\n"
-        IOT_ENDPOINT_PATTERN = r"^[0-9a-zA-Z]+\.iot\.(.*)\.amazonaws\..*"
+        IOT_ENDPOINT_PATTERN = r"^[0-9a-zA-Z]+(\-ats)*\.iot\.(.*)\.amazonaws\..*"
         matched = re.compile(IOT_ENDPOINT_PATTERN).match(hostAddress)
         if not matched:
             raise ClientError("Invalid endpoint pattern for wss: %s" % hostAddress)
-        region = matched.group(1)
+        region = matched.group(2)
         signedURL = self._sigV4Handler.createWebsocketEndpoint(hostAddress, portNumber, region, "GET", "iotdata", "/mqtt")
         # Now we got a signedURL
         path = signedURL[signedURL.index("/mqtt"):]
