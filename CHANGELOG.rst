@@ -2,6 +2,14 @@
 CHANGELOG
 =========
 
+1.4.2
+=====
+* bugfix: Websocket handshake supports Amazon Trust Store (ats) endpoints
+* bugfix: Remove default port number in samples, which prevented WebSocket mode from using 443
+* bugfix: jobsSample print statements compatible with Python 3.x
+* improvement: Small fixes to IoT Jobs documentation
+
+
 1.4.0
 =====
 * bugfix:Issue `#136 <https://github.com/aws/aws-iot-device-sdk-python/issues/136>`

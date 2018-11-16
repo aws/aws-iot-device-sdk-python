@@ -1498,13 +1498,14 @@ class AWSIoTMQTTThingJobsClient(_AWSIoTMQTTDelegatingClient):
         **Syntax**
 
         .. code:: python
+
           #Subscribe to notify-next topic to monitor change in job referred to by $next
           myAWSIoTMQTTJobsClient.createJobSubscription(callback, jobExecutionTopicType.JOB_NOTIFY_NEXT_TOPIC)
           #Subscribe to notify topic to monitor changes to jobs in pending list
           myAWSIoTMQTTJobsClient.createJobSubscription(callback, jobExecutionTopicType.JOB_NOTIFY_TOPIC)
-          #Subscribe to recieve messages for job execution updates
+          #Subscribe to receive messages for job execution updates
           myAWSIoTMQTTJobsClient.createJobSubscription(callback, jobExecutionTopicType.JOB_UPDATE_TOPIC, jobExecutionTopicReplyType.JOB_ACCEPTED_REPLY_TYPE)
-          #Subscribe to recieve messages for describing a job execution
+          #Subscribe to receive messages for describing a job execution
           myAWSIoTMQTTJobsClient.createJobSubscription(callback, jobExecutionTopicType.JOB_DESCRIBE_TOPIC, jobExecutionTopicReplyType.JOB_ACCEPTED_REPLY_TYPE, jobId)
 
         **Parameters**
@@ -1541,13 +1542,14 @@ class AWSIoTMQTTThingJobsClient(_AWSIoTMQTTDelegatingClient):
         **Syntax**
 
         .. code:: python
+
           #Subscribe to notify-next topic to monitor change in job referred to by $next
           myAWSIoTMQTTJobsClient.createJobSubscriptionAsync(callback, jobExecutionTopicType.JOB_NOTIFY_NEXT_TOPIC)
           #Subscribe to notify topic to monitor changes to jobs in pending list
           myAWSIoTMQTTJobsClient.createJobSubscriptionAsync(callback, jobExecutionTopicType.JOB_NOTIFY_TOPIC)
-          #Subscribe to recieve messages for job execution updates
+          #Subscribe to receive messages for job execution updates
           myAWSIoTMQTTJobsClient.createJobSubscriptionAsync(callback, jobExecutionTopicType.JOB_UPDATE_TOPIC, jobExecutionTopicReplyType.JOB_ACCEPTED_REPLY_TYPE)
-          #Subscribe to recieve messages for describing a job execution
+          #Subscribe to receive messages for describing a job execution
           myAWSIoTMQTTJobsClient.createJobSubscriptionAsync(callback, jobExecutionTopicType.JOB_DESCRIBE_TOPIC, jobExecutionTopicReplyType.JOB_ACCEPTED_REPLY_TYPE, jobId)
 
         **Parameters**
@@ -1588,6 +1590,7 @@ class AWSIoTMQTTThingJobsClient(_AWSIoTMQTTDelegatingClient):
         **Syntax**
 
         .. code:: python
+
           #send a request to describe the next job
           myAWSIoTMQTTJobsClient.sendJobsQuery(jobExecutionTopicType.JOB_DESCRIBE_TOPIC, '$next')
           #send a request to get list of pending jobs
@@ -1619,6 +1622,7 @@ class AWSIoTMQTTThingJobsClient(_AWSIoTMQTTDelegatingClient):
         **Syntax**
 
         .. code:: python
+
           #Start next job (set status to IN_PROGRESS) and update with optional statusDetails
           myAWSIoTMQTTJobsClient.sendJobsStartNext({'StartedBy': 'myClientId'})
 
@@ -1645,6 +1649,7 @@ class AWSIoTMQTTThingJobsClient(_AWSIoTMQTTDelegatingClient):
         **Syntax**
 
         .. code:: python
+
           #Update job with id 'jobId123' to succeeded state, specifying new status details, with expectedVersion=1, executionNumber=2.
           #For the response, include job execution state and not the job document
           myAWSIoTMQTTJobsClient.sendJobsUpdate('jobId123', jobExecutionStatus.JOB_EXECUTION_SUCCEEDED, statusDetailsMap, 1, 2, True, False)
@@ -1670,7 +1675,7 @@ class AWSIoTMQTTThingJobsClient(_AWSIoTMQTTDelegatingClient):
 
         *includeJobExecutionState* - When included and set to True, the response contains the JobExecutionState field. The default is False.
 
-        *includeJobDocument - When included and set to True, the response contains the JobDocument. The default is False.
+        *includeJobDocument* - When included and set to True, the response contains the JobDocument. The default is False.
 
         **Returns**
 
@@ -1690,6 +1695,7 @@ class AWSIoTMQTTThingJobsClient(_AWSIoTMQTTDelegatingClient):
         **Syntax**
 
         .. code:: python
+
           #Describe job with id 'jobId1' of any executionNumber, job document will be included in response
           myAWSIoTMQTTJobsClient.sendJobsDescribe('jobId1')
 
