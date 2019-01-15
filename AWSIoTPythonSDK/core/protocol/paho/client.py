@@ -802,7 +802,6 @@ class Client(object):
                 # SSLContext is required to enable ALPN support
                 # Assuming Python 2.7.10+/3.5+ till the end of this elif branch
                 ssl_context = SSLContextBuilder()\
-                    .with_protocol(self._tls_version)\
                     .with_ca_certs(self._tls_ca_certs)\
                     .with_cert_key_pair(self._tls_certfile, self._tls_keyfile)\
                     .with_cert_reqs(self._tls_cert_reqs)\
@@ -2413,7 +2412,7 @@ class Client(object):
                         return
                 if key == 'IP Address':
                     have_san_dns = True
-                    if value.lower() == self._host.lower():
+                    if value.lower().strip() == self._host.lower().strip():
                         return
 
             if have_san_dns:

@@ -34,10 +34,6 @@ class SSLContextBuilder(object):
         if not hasattr(ssl.SSLContext, "set_alpn_protocols"):
             raise NotImplementedError("This platform does not support ALPN as TLS extensions. Python 2.7.10+/3.5+ is required.")
 
-    def with_protocol(self, protocol):
-        self._ssl_context.protocol = protocol
-        return self
-
     def with_ca_certs(self, ca_certs):
         self._ssl_context.load_verify_locations(ca_certs)
         return self

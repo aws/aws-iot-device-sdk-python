@@ -2,6 +2,10 @@
 CHANGELOG
 =========
 
+1.4.3
+=====
+* bugfix: [Issue #150](https://github.com/aws/aws-iot-device-sdk-python/issues/150)Fix for ALPN in Python 3.7
+
 1.4.2
 =====
 * bugfix: Websocket handshake supports Amazon Trust Store (ats) endpoints
