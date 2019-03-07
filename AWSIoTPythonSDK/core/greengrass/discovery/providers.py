@@ -245,12 +245,20 @@ class DiscoveryInfoProvider(object):
 
     def _create_ssl_connection(self, sock):
         self._logger.debug("Creating ssl connection...")
+   
+        ssl_protocol_version = ssl.PROTOCOL_SSLv23
+ 
+        if self._port == 443:
+            ssl.set_alpn_protocols(['x-amzn-http-ca'])
+            #note: ALPN is a TLS 1.2 and later feature
+            
         ssl_sock = ssl.wrap_socket(sock,
                                    certfile=self._cert_path,
                                    keyfile=self._key_path,
                                    ca_certs=self._ca_path,
                                    cert_reqs=ssl.CERT_REQUIRED,
-                                   ssl_version=ssl.PROTOCOL_SSLv23)
+                                   ssl_version=ssl_protocol_version)
+
         self._logger.debug("Matching host name...")
         if sys.version_info[0] < 3 or (sys.version_info[0] == 3 and sys.version_info[1] < 2):
             self._tls_match_hostname(ssl_sock)

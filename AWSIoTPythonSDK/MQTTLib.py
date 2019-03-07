@@ -473,7 +473,8 @@ class AWSIoTMQTTClient:
 
         **Parameters**
 
-        *keepAliveIntervalSecond* - Time in seconds for interval of sending MQTT ping request. 
+        *keepAliveIntervalSecond* - Time in seconds for interval of sending MQTT ping request.
+        A shorter keep-alive interval allows the client to detect disconnects more quickly.
         Default set to 600 seconds.
 
         **Returns**
