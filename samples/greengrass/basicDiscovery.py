@@ -65,6 +65,18 @@ if not args.certificatePath or not args.privateKeyPath:
     parser.error("Missing credentials for authentication.")
     exit(2)
 
+if not os.path.isfile(rootCAPath):
+    parser.error("Root CA path does not exist {}".format(rootCAPath))
+    exit(3)
+
+if not os.path.isfile(certificatePath):
+    parser.error("No certificate found at {}".format(certificatePath))
+    exit(3)
+
+if not os.path.isfile(privateKeyPath):
+    parser.error("No private key found at {}".format(privateKeyPath))
+    exit(3)
+
 # Configure logging
 logger = logging.getLogger("AWSIoTPythonSDK.core")
 logger.setLevel(logging.DEBUG)
