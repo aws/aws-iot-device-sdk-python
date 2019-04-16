@@ -2,6 +2,10 @@
 CHANGELOG
 =========
 
+1.4.5
+=====
+* improvement: Added validation to mTLS arguments in basicDiscovery
+
 1.4.3
 =====
 * bugfix: [Issue #150](https://github.com/aws/aws-iot-device-sdk-python/issues/150)Fix for ALPN in Python 3.7
