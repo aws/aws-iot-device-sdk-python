@@ -2,6 +2,10 @@
 CHANGELOG
 =========
 
+1.4.6
+=====
+* bugfix: Use non-deprecated ssl API to specify ALPN when doing Greengrass discovery 
+
 1.4.5
 =====
 * improvement: Added validation to mTLS arguments in basicDiscovery

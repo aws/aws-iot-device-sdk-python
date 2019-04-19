@@ -21,6 +21,7 @@ from AWSIoTPythonSDK.exception.AWSIoTExceptions import DiscoveryThrottlingExcept
 from AWSIoTPythonSDK.exception.AWSIoTExceptions import DiscoveryTimeoutException
 from AWSIoTPythonSDK.exception.AWSIoTExceptions import DiscoveryFailure
 from AWSIoTPythonSDK.core.greengrass.discovery.models import DiscoveryInfo
+from AWSIoTPythonSDK.core.protocol.connection.alpn import SSLContextBuilder
 import re
 import sys
 import ssl
@@ -249,15 +250,23 @@ class DiscoveryInfoProvider(object):
         ssl_protocol_version = ssl.PROTOCOL_SSLv23
  
         if self._port == 443:
-            ssl.set_alpn_protocols(['x-amzn-http-ca'])
-            #note: ALPN is a TLS 1.2 and later feature
-            
-        ssl_sock = ssl.wrap_socket(sock,
-                                   certfile=self._cert_path,
-                                   keyfile=self._key_path,
-                                   ca_certs=self._ca_path,
-                                   cert_reqs=ssl.CERT_REQUIRED,
-                                   ssl_version=ssl_protocol_version)
+            ssl_context = SSLContextBuilder()\
+                .with_ca_certs(self._ca_path)\
+                .with_cert_key_pair(self._cert_path, self._key_path)\
+                .with_cert_reqs(ssl.CERT_REQUIRED)\
+                .with_check_hostname(True)\
+                .with_ciphers(None)\
+                .with_alpn_protocols(['x-amzn-http-ca'])\
+                .build()
+            ssl_sock = ssl_context.wrap_socket(sock, server_hostname=self._host, do_handshake_on_connect=False)
+            ssl_sock.do_handshake()
+        else:
+            ssl_sock = ssl.wrap_socket(sock,
+                                       certfile=self._cert_path,
+                                       keyfile=self._key_path,
+                                       ca_certs=self._ca_path,
+                                       cert_reqs=ssl.CERT_REQUIRED,
+                                       ssl_version=ssl_protocol_version)
 
         self._logger.debug("Matching host name...")
         if sys.version_info[0] < 3 or (sys.version_info[0] == 3 and sys.version_info[1] < 2):
