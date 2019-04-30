@@ -103,6 +103,12 @@ myAWSIoTMQTTClient.configureDrainingFrequency(2)  # Draining: 2 Hz
 myAWSIoTMQTTClient.configureConnectDisconnectTimeout(10)  # 10 sec
 myAWSIoTMQTTClient.configureMQTTOperationTimeout(5)  # 5 sec
 
+# AWSIoTMQTTClient proxy configuration
+### proxy configuration uses PySocks to configure the socket communication and
+### must be installed with pip in order to use the proxy
+# proxy = {"proxy_addr":"<my-proxy-address>", "proxy_port":<my-proxy-port>, "proxy_type":<proxy-type>}
+# myAWSIoTMQTTClient.configureProxy(proxy)
+
 # Connect and subscribe to AWS IoT
 myAWSIoTMQTTClient.connect()
 if args.mode == 'both' or args.mode == 'subscribe':

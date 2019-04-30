@@ -171,6 +171,10 @@ class MqttCore(object):
         self._username = username
         self._password = password
 
+    def configure_proxy(self, proxy_config):
+        self._logger.info("Configuring proxy...")
+        self._internal_async_client.set_proxy(proxy_config)
+
     def enable_metrics_collection(self):
         self._enable_metrics_collection = True
 
