@@ -21,7 +21,7 @@ import platform
 import random
 import select
 import socket
-import socks
+
 HAVE_SSL = True
 try:
     import ssl
@@ -49,6 +49,7 @@ else:
 from AWSIoTPythonSDK.core.protocol.connection.cores import ProgressiveBackOffCore
 from AWSIoTPythonSDK.core.protocol.connection.cores import SecuredWebSocketCore
 from AWSIoTPythonSDK.core.protocol.connection.alpn import SSLContextBuilder
+from AWSIoTPythonSDK.core.protocol.pysocks import socks
 
 VERSION_MAJOR=1
 VERSION_MINOR=0
