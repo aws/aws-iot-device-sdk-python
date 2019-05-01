@@ -8,7 +8,7 @@ setup(
     name = 'AWSIoTPythonSDK',
     packages=['AWSIoTPythonSDK', 'AWSIoTPythonSDK.core',
               'AWSIoTPythonSDK.core.util', 'AWSIoTPythonSDK.core.shadow', 'AWSIoTPythonSDK.core.protocol',
-              'AWSIoTPythonSDK.core.jobs', 'AWSIoTPythonSDK.core.protocol.pysocks',
+              'AWSIoTPythonSDK.core.jobs',
               'AWSIoTPythonSDK.core.protocol.paho', 'AWSIoTPythonSDK.core.protocol.internal',
               'AWSIoTPythonSDK.core.protocol.connection', 'AWSIoTPythonSDK.core.greengrass',
               'AWSIoTPythonSDK.core.greengrass.discovery', 'AWSIoTPythonSDK.exception'],

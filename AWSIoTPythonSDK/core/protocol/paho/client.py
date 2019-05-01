@@ -49,7 +49,6 @@ else:
 from AWSIoTPythonSDK.core.protocol.connection.cores import ProgressiveBackOffCore
 from AWSIoTPythonSDK.core.protocol.connection.cores import SecuredWebSocketCore
 from AWSIoTPythonSDK.core.protocol.connection.alpn import SSLContextBuilder
-from AWSIoTPythonSDK.core.protocol.pysocks import socks
 
 VERSION_MAJOR=1
 VERSION_MINOR=0
@@ -485,7 +484,7 @@ class Client(object):
         self._host = ""
         self._port = 1883
         self._bind_address = ""
-        self._proxy = {}
+        self._socket_factory = None
         self._in_callback = False
         self._strict_protocol = False
         self._callback_mutex = threading.Lock()
@@ -783,13 +782,12 @@ class Client(object):
         self._messages_reconnect_reset()
 
         try:
-            if (sys.version_info[0] == 2 and sys.version_info[1] < 7) or (sys.version_info[0] == 3 and sys.version_info[1] < 2):
+            if self._socket_factory:
+                sock = self._socket_factory()
+            elif (sys.version_info[0] == 2 and sys.version_info[1] < 7) or (sys.version_info[0] == 3 and sys.version_info[1] < 2):
                 sock = socket.create_connection((self._host, self._port))
             else:
-                if self._proxy:
-                    sock = socks.create_connection((self._host, self._port), **self._proxy, source_address=(self._bind_address, 0))
-                else:
-                    sock = socket.create_connection((self._host, self._port), source_address=(self._bind_address, 0))
+                sock = socket.create_connection((self._host, self._port), source_address=(self._bind_address, 0))
         except socket.error as err:
             if err.errno != errno.EINPROGRESS and err.errno != errno.EWOULDBLOCK and err.errno != EAGAIN:
                 raise
@@ -1020,28 +1018,15 @@ class Client(object):
         self._username = username.encode('utf-8')
         self._password = password
 
-    def proxy_set(self, **proxy_args):
-        """Configure proxying of MQTT connection. Enables support for SOCKS or
-        HTTP proxies.
-        Proxying is done through the PySocks library. Brief descriptions of the
-        proxy_args parameters are below; see the PySocks docs for more info.
-        (Required)
-        proxy_type: One of {socks.HTTP, socks.SOCKS4, or socks.SOCKS5}
-        proxy_addr: IP address or DNS name of proxy server
-        (Optional)
-        proxy_rdns: boolean indicating whether proxy lookup should be performed
-            remotely (True, default) or locally (False)
-        proxy_username: username for SOCKS5 proxy, or userid for SOCKS4 proxy
-        proxy_password: password for SOCKS5 proxy
-        Must be called before connect() or connect_async()."""
-        print(type(proxy_args))
-        if socks is None:
-            raise ValueError("PySocks must be installed for proxy support.")
-        elif not self._proxy_is_valid(proxy_args):
-            raise ValueError("proxy_type and/or proxy_addr are invalid.")
-        else:
-            self._proxy = proxy_args
+    def socket_factory_set(self, socket_factory):
+        """Set a socket factory to custom configure a different socket type for
+        mqtt connection.
 
+        Must be called before connect() to have any effect.
+
+        socket_factory: create_connection function which creates a socket to user's specification
+        """
+        self._socket_factory = socket_factory
 
     def disconnect(self):
         """Disconnect a connected client from the broker."""
@@ -1480,52 +1465,6 @@ class Client(object):
     # ============================================================
     # Private functions
     # ============================================================
-
-    def _proxy_is_valid(self, p):
-        def check(t, a):
-            return (t in set([socks.HTTP, socks.SOCKS4, socks.SOCKS5]) and a)
-
-        if isinstance(p, dict):
-            return check(p.get("proxy_type"), p.get("proxy_addr"))
-        elif isinstance(p, (list, tuple)):
-            return len(p) == 6 and check(p[0], p[1])
-        else:
-            return False
-
-    def _get_proxy(self):
-        if socks is None:
-            return None
-
-        # First, check if the user explicitly passed us a proxy to use
-        if self._proxy_is_valid(self._proxy):
-            return self._proxy
-
-        # Finally, check if the user has monkeypatched the PySocks library with
-        # a default proxy
-        socks_default = socks.get_default_proxy()
-        if self._proxy_is_valid(socks_default):
-            proxy_keys = ("proxy_type", "proxy_addr", "proxy_port",
-                          "proxy_rdns", "proxy_username", "proxy_password")
-            return dict(zip(proxy_keys, socks_default))
-
-        # If we didn't find a proxy through any of the above methods, return
-        # None to indicate that the connection should be handled normally
-        return None
-
-    def _create_socket_connection(self):
-        proxy = self._get_proxy()
-        addr = (self._host, self._port)
-        source = (self._bind_address, 0)
-
-        if sys.version_info < (2, 7) or (3, 0) < sys.version_info < (3, 2):
-            # Have to short-circuit here because of unsupported source_address
-            # param in earlier Python versions.
-            return socket.create_connection(addr)
-
-        if proxy:
-            return socks.create_connection(addr, source_address=source, **proxy)
-        else:
-            return socket.create_connection(addr, source_address=source)
 
     def _loop_rc_handle(self, rc):
         if rc:

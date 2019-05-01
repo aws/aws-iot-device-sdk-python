@@ -103,8 +103,8 @@ class InternalAsyncMqttClient(object):
     def set_username_password(self, username, password=None):
         self._paho_client.username_pw_set(username, password)
 
-    def set_proxy(self, proxy_config):
-        self._paho_client.proxy_set(**proxy_config)
+    def set_socket_factory(self, socket_factory):
+        self._paho_client.socket_factory_set(socket_factory)
 
     def configure_reconnect_back_off(self, base_reconnect_quiet_sec, max_reconnect_quiet_sec, stable_connection_sec):
         self._paho_client.setBackoffTiming(base_reconnect_quiet_sec, max_reconnect_quiet_sec, stable_connection_sec)

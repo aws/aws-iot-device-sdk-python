@@ -103,6 +103,17 @@ myAWSIoTMQTTClient.configureDrainingFrequency(2)  # Draining: 2 Hz
 myAWSIoTMQTTClient.configureConnectDisconnectTimeout(10)  # 10 sec
 myAWSIoTMQTTClient.configureMQTTOperationTimeout(5)  # 5 sec
 
+# AWSIoTMQTTClient socket configuration
+# import pysocks to help us build a socket that supports a proxy configuration
+import socks
+
+# set proxy arguments (for SOCKS5 proxy: proxy_type=2, for HTTP proxy: proxy_type=3)
+proxy_config = {"proxy_addr":<proxy_addr>, "proxy_port":<proxy_port>, "proxy_type":<proxy_type>}
+
+# create anonymous function to handle socket creation
+socket_factory = lambda: socks.create_connection((host, port), **proxy_config)
+myAWSIoTMQTTClient.configureSocketFactory(socket_factory)
+
 # Connect and subscribe to AWS IoT
 myAWSIoTMQTTClient.connect()
 if args.mode == 'both' or args.mode == 'subscribe':
