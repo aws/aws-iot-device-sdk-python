@@ -37,6 +37,7 @@ _EXEXCUTION_NUMBER_KEY = 'executionNumber'
 _INCLUDE_JOB_EXECUTION_STATE_KEY = 'includeJobExecutionState'
 _INCLUDE_JOB_DOCUMENT_KEY = 'includeJobDocument'
 _CLIENT_TOKEN_KEY = 'clientToken'
+_STEP_TIMEOUT_IN_MINUTES_KEY = 'stepTimeoutInMinutes'
 
 #The type of job topic.
 class jobExecutionTopicType(object):
@@ -112,7 +113,7 @@ class thingJobManager:
         else:
             return '{0}{1}/jobs/{2}{3}'.format(_BASE_THINGS_TOPIC, self._thingName, srcJobExecTopicType[_JOB_OPERATION_INDEX], srcJobExecTopicReplyType[_JOB_SUFFIX_INDEX])
 
-    def serializeJobExecutionUpdatePayload(self, status, statusDetails=None, expectedVersion=0, executionNumber=0, includeJobExecutionState=False, includeJobDocument=False):
+    def serializeJobExecutionUpdatePayload(self, status, statusDetails=None, expectedVersion=0, executionNumber=0, includeJobExecutionState=False, includeJobDocument=False, stepTimeoutInMinutes=None):
         executionStatus = _getExecutionStatus(status)
         if executionStatus is None:
             return None
@@ -129,6 +130,8 @@ class thingJobManager:
             payload[_INCLUDE_JOB_DOCUMENT_KEY] = True
         if self._clientToken is not None:
             payload[_CLIENT_TOKEN_KEY] = self._clientToken
+        if stepTimeoutInMinutes is not None:
+            payload[_STEP_TIMEOUT_IN_MINUTES_KEY] = stepTimeoutInMinutes
         return json.dumps(payload)
 
     def serializeDescribeJobExecutionPayload(self, executionNumber=0, includeJobDocument=True):
@@ -139,12 +142,14 @@ class thingJobManager:
             payload[_CLIENT_TOKEN_KEY] = self._clientToken
         return json.dumps(payload)
 
-    def serializeStartNextPendingJobExecutionPayload(self, statusDetails=None):
+    def serializeStartNextPendingJobExecutionPayload(self, statusDetails=None, stepTimeoutInMinutes=None):
         payload = {}
         if self._clientToken is not None:
             payload[_CLIENT_TOKEN_KEY] = self._clientToken
         if statusDetails is not None:
             payload[_STATUS_DETAILS_KEY] = statusDetails
+        if stepTimeoutInMinutes is not None:
+            payload[_STEP_TIMEOUT_IN_MINUTES_KEY] = stepTimeoutInMinutes
         return json.dumps(payload)
 
     def serializeClientTokenPayload(self):

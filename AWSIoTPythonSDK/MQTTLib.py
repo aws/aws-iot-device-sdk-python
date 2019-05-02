@@ -1613,7 +1613,7 @@ class AWSIoTMQTTThingJobsClient(_AWSIoTMQTTDelegatingClient):
         payload = self._thingJobManager.serializeClientTokenPayload()
         return self._AWSIoTMQTTClient.publish(topic, payload, self._QoS)
 
-    def sendJobsStartNext(self, statusDetails=None):
+    def sendJobsStartNext(self, statusDetails=None, stepTimeoutInMinutes=None):
         """
         **Description**
 
@@ -1631,16 +1631,18 @@ class AWSIoTMQTTThingJobsClient(_AWSIoTMQTTDelegatingClient):
 
         *statusDetails* - Dictionary containing the key value pairs to use for the status details of the job execution
 
+        *stepTimeoutInMinutes - Specifies the amount of time this device has to finish execution of this job. 
+
         **Returns**
 
         True if the publish request has been sent to paho. False if the request did not reach paho.
 
         """
         topic = self._thingJobManager.getJobTopic(jobExecutionTopicType.JOB_START_NEXT_TOPIC, jobExecutionTopicReplyType.JOB_REQUEST_TYPE)
-        payload = self._thingJobManager.serializeStartNextPendingJobExecutionPayload(statusDetails)
+        payload = self._thingJobManager.serializeStartNextPendingJobExecutionPayload(statusDetails, stepTimeoutInMinutes)
         return self._AWSIoTMQTTClient.publish(topic, payload, self._QoS)
 
-    def sendJobsUpdate(self, jobId, status, statusDetails=None, expectedVersion=0, executionNumber=0, includeJobExecutionState=False, includeJobDocument=False):
+    def sendJobsUpdate(self, jobId, status, statusDetails=None, expectedVersion=0, executionNumber=0, includeJobExecutionState=False, includeJobDocument=False, stepTimeoutInMinutes=None):
         """
         **Description**
 
@@ -1678,13 +1680,15 @@ class AWSIoTMQTTThingJobsClient(_AWSIoTMQTTDelegatingClient):
 
         *includeJobDocument* - When included and set to True, the response contains the JobDocument. The default is False.
 
+        *stepTimeoutInMinutes - Specifies the amount of time this device has to finish execution of this job. 
+
         **Returns**
 
         True if the publish request has been sent to paho. False if the request did not reach paho.
 
         """
         topic = self._thingJobManager.getJobTopic(jobExecutionTopicType.JOB_UPDATE_TOPIC, jobExecutionTopicReplyType.JOB_REQUEST_TYPE, jobId)
-        payload = self._thingJobManager.serializeJobExecutionUpdatePayload(status, statusDetails, expectedVersion, executionNumber, includeJobExecutionState, includeJobDocument)
+        payload = self._thingJobManager.serializeJobExecutionUpdatePayload(status, statusDetails, expectedVersion, executionNumber, includeJobExecutionState, includeJobDocument, stepTimeoutInMinutes)
         return self._AWSIoTMQTTClient.publish(topic, payload, self._QoS)
 
     def sendJobsDescribe(self, jobId, executionNumber=0, includeJobDocument=True):
