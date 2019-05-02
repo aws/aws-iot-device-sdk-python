@@ -1161,34 +1161,32 @@ class _AWSIoTMQTTDelegatingClient(object):
         """
         self._AWSIoTMQTTClient.configureUsernamePassword(username, password)
 
-    def configureProxy(self, proxy_config):
+    def configureSocketFactory(self, socket_factory):
         """
         **Description**
 
-        Configure proxying of MQTT connection. Enables support for SOCKS or HTTP proxies.
-
-        Proxying is done through the PySocks library. Brief descriptions of the
-        proxy_args parameters are below; see the PySocks docs for more info.
+        Configure a socket factory to custom configure a different socket type for
+        mqtt connection. Creating a custom socket allows for configuration of a proxy
 
         **Syntax**
 
         .. code:: python
 
-          # Configure user proxy address, port, and type
-          myAWSIoTMQTTClient.configureProxy("proxyAddress", "proxyPort", proxyType)
+          # Configure socket factory
+          custom_args = {"arg1": "val1", "arg2": "val2"}
+          socket_factory = lambda: custom.create_connection((host, port), **custom_args)
+          myAWSIoTMQTTClient.configureSocketFactory(socket_factory)
 
         **Parameters**
 
-        *proxy_type* - One of {socks.HTTP, socks.SOCKS4, or socks.SOCKS5}.
-
-        *proxy_addr* - IP address or DNS name of proxy server.
+        *socket_factory* - Anonymous function which creates a custom socket to spec.
 
         **Returns**
 
         None
 
         """
-        self._AWSIoTMQTTClient.configureProxy(proxy_config)
+        self._AWSIoTMQTTClient.configureSocketFactory(socket_factory)
 
     def enableMetricsCollection(self):
         """
