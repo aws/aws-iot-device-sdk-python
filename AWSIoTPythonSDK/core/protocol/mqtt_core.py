@@ -171,6 +171,10 @@ class MqttCore(object):
         self._username = username
         self._password = password
 
+    def configure_socket_factory(self, socket_factory):
+        self._logger.info("Configuring socket factory...")
+        self._internal_async_client.set_socket_factory(socket_factory)
+        
     def enable_metrics_collection(self):
         self._enable_metrics_collection = True
 

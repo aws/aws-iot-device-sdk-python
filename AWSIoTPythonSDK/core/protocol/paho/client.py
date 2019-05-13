@@ -483,6 +483,7 @@ class Client(object):
         self._host = ""
         self._port = 1883
         self._bind_address = ""
+        self._socket_factory = None
         self._in_callback = False
         self._strict_protocol = False
         self._callback_mutex = threading.Lock()
@@ -780,7 +781,9 @@ class Client(object):
         self._messages_reconnect_reset()
 
         try:
-            if (sys.version_info[0] == 2 and sys.version_info[1] < 7) or (sys.version_info[0] == 3 and sys.version_info[1] < 2):
+            if self._socket_factory:
+                sock = self._socket_factory()
+            elif (sys.version_info[0] == 2 and sys.version_info[1] < 7) or (sys.version_info[0] == 3 and sys.version_info[1] < 2):
                 sock = socket.create_connection((self._host, self._port))
             else:
                 sock = socket.create_connection((self._host, self._port), source_address=(self._bind_address, 0))
@@ -1014,6 +1017,14 @@ class Client(object):
         self._username = username.encode('utf-8')
         self._password = password
 
+    def socket_factory_set(self, socket_factory):
+        """Set a socket factory to custom configure a different socket type for
+        mqtt connection.
+        Must be called before connect() to have any effect.
+        socket_factory: create_connection function which creates a socket to user's specification
+        """
+        self._socket_factory = socket_factory
+        
     def disconnect(self):
         """Disconnect a connected client from the broker."""
         self._state_mutex.acquire()
