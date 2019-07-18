@@ -78,7 +78,7 @@ class JobsMessageProcessor(object):
         self._attemptStartNextJob()
 
     def startNextRejected(self, client, userdata, message):
-        printf('Start next rejected:' + message.payload.decode('utf-8'))
+        print('Start next rejected:' + message.payload.decode('utf-8'))
         self.jobsRejected += 1
 
     def updateJobSuccessful(self, client, userdata, message):
