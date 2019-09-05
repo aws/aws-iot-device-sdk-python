@@ -242,15 +242,15 @@ class EventConsumer(object):
         self._logger.debug("Processed offline publish request")
 
     def _handle_offline_subscribe(self, request):
-        topic, qos, message_callback = request.data
+        topic, qos, message_callback, ack_callback = request.data
         self._subscription_manager.add_record(topic, qos, message_callback)
-        self._internal_async_client.subscribe(topic, qos)
+        self._internal_async_client.subscribe(topic, qos, ack_callback)
         self._logger.debug("Processed offline subscribe request")
 
     def _handle_offline_unsubscribe(self, request):
-        topic = request.data
+        topic, ack_callback = request.data
         self._subscription_manager.remove_record(topic)
-        self._internal_async_client.unsubscribe(topic)
+        self._internal_async_client.unsubscribe(topic, ack_callback)
         self._logger.debug("Processed offline unsubscribe request")
 
 
