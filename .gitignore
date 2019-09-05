@@ -1,0 +1,4 @@
+.pyenv/
+.vscode/
+build/
+*.pyc
