@@ -2,6 +2,10 @@
 CHANGELOG
 =========
 
+1.4.8
+=====
+* improvement: Added support for subscription acknowledgement callbacks while offline or resubscribing
+  
 1.4.7
 =====
 * improvement: Added connection establishment control through client socket factory option
