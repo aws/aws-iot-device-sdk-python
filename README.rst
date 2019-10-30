@@ -142,7 +142,7 @@ types:
    For the certificate-based mutual authentication connection
    type.
    Download the `AWS IoT root
-   CA <https://www.symantec.com/content/en/us/enterprise/verisign/roots/VeriSign-Class%203-Public-Primary-Certification-Authority-G5.pem>`__.
+   CA <https://docs.aws.amazon.com/iot/latest/developerguide/managing-device-certs.html#server-authentication>`__.
    Use the AWS IoT console to create and download the certificate and private key. You must specify the location of these files 
    when you initialize the client.
 
@@ -151,8 +151,8 @@ types:
    For the Websocket with Signature Version 4 authentication type. You will need IAM credentials: an access key ID, a secret access
    key, and an optional session token. You must  also
    download the `AWS IoT root
-   CA <https://www.symantec.com/content/en/us/enterprise/verisign/roots/VeriSign-Class%203-Public-Primary-Certification-Authority-G5.pem>`__.
-   You can specify the IAM credentails by:
+   CA <https://docs.aws.amazon.com/iot/latest/developerguide/managing-device-certs.html#server-authentication>`__.
+   You can specify the IAM credentials by:
 
    -  Passing method parameters
 
