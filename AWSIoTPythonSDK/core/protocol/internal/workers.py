@@ -237,8 +237,8 @@ class EventConsumer(object):
                     message_callback(None, None, message)  # message_callback(client, userdata, message)
 
     def _handle_offline_publish(self, request):
-        topic, payload, qos, retain = request.data
-        self._internal_async_client.publish(topic, payload, qos, retain)
+        topic, payload, qos, retain, ack_callback, queuedMsgId = request.data
+        self._internal_async_client.publish(topic, payload, qos, retain, ack_callback, queuedMsgId)
         self._logger.debug("Processed offline publish request")
 
     def _handle_offline_subscribe(self, request):

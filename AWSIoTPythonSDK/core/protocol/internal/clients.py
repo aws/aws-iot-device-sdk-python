@@ -58,6 +58,7 @@ class InternalAsyncMqttClient(object):
         self._use_wss = use_wss
         self._event_callback_map_lock = Lock()
         self._event_callback_map = dict()
+        self._queued_msg_id_map = dict()
 
     def _create_paho_client(self, client_id, clean_session, user_data, protocol, use_wss):
         self._logger.debug("Initializing MQTT layer...")
@@ -173,12 +174,22 @@ class InternalAsyncMqttClient(object):
     def on_message(self, message):
         pass
 
-    def publish(self, topic, payload, qos, retain=False, ack_callback=None):
+    def _bridge_ack_callback(self, mid):
+        _queuedMsgId, _ack_callback = self._queued_msg_id_map[mid]
+        self._queued_msg_id_map.pop(mid)
+        _ack_callback(_queuedMsgId)
+
+    def publish(self, topic, payload, qos, retain=False, ack_callback=None, queuedMsgId=None):
         with self._event_callback_map_lock:
             rc, mid = self._paho_client.publish(topic, payload, qos, retain)
             if MQTT_ERR_SUCCESS == rc and qos > 0 and ack_callback:
                 self._logger.debug("Filling in custom puback (QoS>0) event callback...")
-                self._event_callback_map[mid] = ack_callback
+                if queuedMsgId != None:
+                    self._logger.debug("The message was queued, id assigned when queued: {} - id assigned when sent: {}".format(queuedMsgId,mid))
+                    self._queued_msg_id_map[mid] = (queuedMsgId, ack_callback)
+                    self._event_callback_map[mid] = self._bridge_ack_callback
+                else:
+                    self._event_callback_map[mid] = ack_callback
             return rc, mid
 
     def subscribe(self, topic, qos, ack_callback=None):

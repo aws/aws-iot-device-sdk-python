@@ -88,6 +88,7 @@ class MqttCore(object):
         self._logger.info("Client id: %s" % client_id)
         self._logger.info("Protocol version: %s" % ("MQTTv3.1" if protocol == MQTTv31 else "MQTTv3.1.1"))
         self._logger.info("Authentication type: %s" % ("SigV4 WebSocket" if use_wss else "TLSv1.2 certificate based Mutual Auth."))
+        self._queuedMsgId = 0
 
     def _init_offline_request_exceptions(self):
         self._offline_request_queue_disabled_exceptions = {
@@ -279,8 +280,9 @@ class MqttCore(object):
     def publish_async(self, topic, payload, qos, retain=False, ack_callback=None):
         self._logger.info("Performing async publish...")
         if ClientStatus.STABLE != self._client_status.get_status():
-            self._handle_offline_request(RequestTypes.PUBLISH, (topic, payload, qos, retain))
-            return FixedEventMids.QUEUED_MID
+            self._queuedMsgId -= 1
+            self._handle_offline_request(RequestTypes.PUBLISH, (topic, payload, qos, retain, ack_callback, self._queuedMsgId))
+            return self._queuedMsgId
         else:
             rc, mid = self._publish_async(topic, payload, qos, retain, ack_callback)
             return mid
