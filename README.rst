@@ -1,6 +1,8 @@
-## New Version Available in Developer Preview
+## New Version Available
 
-A preview of the new AWS IoT Device SDK is [now available](https://github.com/awslabs/aws-iot-device-sdk-python-v2). It is a complete rework, built to improve reliability, performance, and security. We invite your feedback!
+A new AWS IoT Device SDK is [now available](https://github.com/awslabs/aws-iot-device-sdk-python-v2). It is a complete rework, built to improve reliability, performance, and security. We invite your feedback!
+
+This SDK will no longer receive feature updates, but will receive security updates.
 
 AWS IoT Device SDK for Python
 =============================
