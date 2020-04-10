@@ -174,7 +174,7 @@ class MqttCore(object):
     def configure_socket_factory(self, socket_factory):
         self._logger.info("Configuring socket factory...")
         self._internal_async_client.set_socket_factory(socket_factory)
-        
+
     def enable_metrics_collection(self):
         self._enable_metrics_collection = True
 
@@ -190,13 +190,16 @@ class MqttCore(object):
         self._logger.info("Configuring offline requests queue draining interval: %f sec", draining_interval_sec)
         self._event_consumer.update_draining_interval_sec(draining_interval_sec)
 
-    def connect(self, keep_alive_sec):
+    def connect(self, keep_alive_sec, raise_on_timeout=True):
         self._logger.info("Performing sync connect...")
         event = Event()
         self.connect_async(keep_alive_sec, self._create_blocking_ack_callback(event))
         if not event.wait(self._connect_disconnect_timeout_sec):
-            self._logger.error("Connect timed out")
-            raise connectTimeoutException()
+            self._logger.warning("Connect timed out, will try to reconnect")
+            if raise_on_timeout:
+                raise connectTimeoutException()
+            else:
+                return False
         return True
 
     def connect_async(self, keep_alive_sec, ack_callback=None):
