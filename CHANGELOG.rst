@@ -2,6 +2,10 @@
 CHANGELOG
 =========
 
+1.4.9
+=====
+* bugfix: Fixing possible race condition with timer in deviceShadow.
+
 1.4.8
 =====
 * improvement: Added support for subscription acknowledgement callbacks while offline or resubscribing
