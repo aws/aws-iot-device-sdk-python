@@ -23,15 +23,20 @@ class _shadowAction:
     def __init__(self, srcShadowName, srcActionName):
         if srcActionName is None or srcActionName not in self._actionType:
             raise TypeError("Unsupported shadow action.")
-        self._shadowName = srcShadowName
         self._actionName = srcActionName
         self.isDelta = srcActionName == "delta"
-        if self.isDelta:
-            self._topicDelta = "$aws/things/" + str(self._shadowName) + "/shadow/update/delta"
+        if ':' in srcShadowName:
+            self._thingName, self._shadowName = srcShadowName.split(':')
+            shadowStem = self._thingName + "/shadow/name/" + self._shadowName + "/"
         else:
-            self._topicGeneral = "$aws/things/" + str(self._shadowName) + "/shadow/" + str(self._actionName)
-            self._topicAccept = "$aws/things/" + str(self._shadowName) + "/shadow/" + str(self._actionName) + "/accepted"
-            self._topicReject = "$aws/things/" + str(self._shadowName) + "/shadow/" + str(self._actionName) + "/rejected"
+            self._thingName = self._shadowName = srcShadowName
+            shadowStem = srcShadowName + "/shadow/"
+        if self.isDelta:
+            self._topicDelta = "$aws/things/" + shadowStem + "update/delta"
+        else:
+            self._topicGeneral = topic = "$aws/things/" + shadowStem + self._actionName
+            self._topicAccept = topic + "/accepted"
+            self._topicReject = topic + "/rejected"
 
     def getTopicGeneral(self):
         return self._topicGeneral
