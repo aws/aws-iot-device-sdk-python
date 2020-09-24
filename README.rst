@@ -1,8 +1,8 @@
-New Version Available	
+New Version Available
 =============================
-A new AWS IoT Device SDK is [now available](https://github.com/awslabs/aws-iot-device-sdk-python-v2). It is a complete rework, built to improve reliability, performance, and security. We invite your feedback!	
+A new AWS IoT Device SDK is [now available](https://github.com/awslabs/aws-iot-device-sdk-python-v2). It is a complete rework, built to improve reliability, performance, and security. We invite your feedback!
 
-This SDK will no longer receive feature updates, but will receive security updates.	
+This SDK will no longer receive feature updates, but will receive security updates.
 
 AWS IoT Device SDK for Python
 =============================
@@ -140,7 +140,7 @@ corresponding API:
 Credentials
 ___________
 
-The SDK supports two types of credentials that correspond to the two connection 
+The SDK supports two types of credentials that correspond to the two connection
 types:
 
 -  X.509 certificate
@@ -149,7 +149,7 @@ types:
    type.
    Download the `AWS IoT root
    CA <https://docs.aws.amazon.com/iot/latest/developerguide/managing-device-certs.html#server-authentication>`__.
-   Use the AWS IoT console to create and download the certificate and private key. You must specify the location of these files 
+   Use the AWS IoT console to create and download the certificate and private key. You must specify the location of these files
    when you initialize the client.
 
 -  IAM credentials
@@ -168,7 +168,7 @@ types:
       .. code-block:: python
 
           # AWS IoT MQTT Client
-          AWSIoTPythonSDK.MQTTLib.AWSIoTMQTTClient.configureIAMCredentials(obtainedAccessKeyID, obtainedSecretAccessKey, obtainedSessionToken)        
+          AWSIoTPythonSDK.MQTTLib.AWSIoTMQTTClient.configureIAMCredentials(obtainedAccessKeyID, obtainedSecretAccessKey, obtainedSessionToken)
           # AWS IoT MQTT Shadow Client
           AWSIoTPythonSDK.MQTTLib.AWSIoTMQTTShadowClient.configureIAMCredentials(obtainedAccessKeyID, obtainedSecretAccessKey, obtainedSessionToken)
 
@@ -190,7 +190,7 @@ types:
       The secret key for your AWS account.
 
       ``AWS_SESSION_TOKEN``
-      
+
       The session key for your AWS account. This is required only when
       you are using temporary credentials. For more information, see
       `here <http://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_temp.html>`__.
@@ -485,7 +485,7 @@ default configuration for backoff timing will be performed on initialization:
 Offline Requests Queueing with Draining
 _______________________________________
 
-If the client is temporarily offline and disconnected due to 
+If the client is temporarily offline and disconnected due to
 network failure, publish/subscribe/unsubscribe requests will be added to an internal
 queue until the number of queued-up requests reaches the size limit
 of the queue. This functionality is for plain MQTT operations. Shadow
@@ -590,7 +590,7 @@ ______________________________________
 
 Device shadow operations are built on top of the publish/subscribe model
 for the MQTT protocol, which provides an asynchronous request/response workflow. Shadow operations (Get, Update, Delete) are
-sent as requests to AWS IoT. The registered callback will 
+sent as requests to AWS IoT. The registered callback will
 be executed after a response is returned. In order to receive
 responses, the client must subscribe to the corresponding shadow
 response topics. After the responses are received, the client might want
@@ -932,6 +932,20 @@ Run the sample like this:
 
 If the group, GGC, GGAD and group subscription/routes are set up correctly, you should be able to see the sample running
 on your GGAD, receiving messages that get published to GGC by itself.
+
+
+Secure Tunneling
+___________
+
+This example demonstrates how to implement a Destination for Secure Tunneling. In order to use this example, you must first have the `localproxy <https://github.com/aws-samples/aws-iot-securetunneling-localproxy>` built on the device where you will run this example, and available on the system path. To verify that your environment is setup correctly, execute `which localproxy`
+
+
+Run the secure tunneling sample like this:
+
+.. code-block:: python
+
+    python secureTunneling.py -e <endpoint> -r <IoTRootCAFilePath> -c <certFilePath> -k <privateKeyFilePath> -id <ThingName>
+
 
 .. _API_Documentation:
 
