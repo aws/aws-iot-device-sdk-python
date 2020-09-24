@@ -937,7 +937,7 @@ on your GGAD, receiving messages that get published to GGC by itself.
 Secure Tunneling
 ___________
 
-This example demonstrates how to implement a Destination for Secure Tunneling. In order to use this example, you must first have the `localproxy <https://github.com/aws-samples/aws-iot-securetunneling-localproxy>` built on the device where you will run this example, and available on the system path. To verify that your environment is setup correctly, execute `which localproxy`
+This example demonstrates how to implement a Destination for Secure Tunneling. In order to use this example, you must first have the `localproxy <https://github.com/aws-samples/aws-iot-securetunneling-localproxy>__` built on the device where you will run this example, and available on the system path. To verify that your environment is setup correctly, execute `which localproxy`
 
 
 Run the secure tunneling sample like this:
