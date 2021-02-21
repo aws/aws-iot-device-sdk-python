@@ -635,6 +635,18 @@ accepted/rejected topics.
 
 In all SDK examples, PersistentSubscription is used in consideration of its better performance.
 
+SSL Ciphers Setup
+______________________________________
+
+If custom SSL Ciphers are required for the client, they can be set when configuring the client before
+starting the connection.
+
+To setup specific SSL Ciphers:
+
+.. code-block:: python
+
+    myAWSIoTMQTTClient.configureCredentials(rootCAPath, privateKeyPath, certificatePath, Ciphers="AES128-SHA256")
+
 .. _Examples:
 
 Examples
