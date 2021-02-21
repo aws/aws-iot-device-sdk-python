@@ -90,3 +90,30 @@ class EndpointProvider(object):
 
     def get_port(self):
         return self._port
+
+
+class CiphersProvider(object):
+    def __init__(self):
+        self._ciphers = None
+        self.aws_iot_valid_ciphers = [
+            "ECDHE-ECDSA-AES128-GCM-SHA256", "ECDHE-RSA-AES128-GCM-SHA256", "ECDHE-ECDSA-AES128-SHA256",
+            "ECDHE-RSA-AES128-SHA256", "ECDHE-ECDSA-AES128-SHA", "ECDHE-RSA-AES128-SHA",
+            "ECDHE-ECDSA-AES256-GCM-SHA384", "ECDHE-RSA-AES256-GCM-SHA384", "ECDHE-ECDSA-AES256-SHA384",
+            "ECDHE-RSA-AES256-SHA384", "ECDHE-RSA-AES256-SHA", "ECDHE-ECDSA-AES256-SHA",
+            "AES128-GCM-SHA256", "AES128-SHA256", "AES128-SHA", "AES256-GCM-SHA384", "AES256-SHA256", "AES256-SHA"
+        ]
+
+    def set_ciphers(self, ciphers=None):
+        self._ciphers = ciphers
+
+    def get_ciphers(self):
+        return self._ciphers
+
+    # Not in use right now because lack of necessity of validate AWS IoT SSL Ciphers
+    def validate_ciphers(self):
+        # Getting intersection of valid ciphers between ciphers defined by user and AWS IoT valid ciphers.
+        try:
+            self._ciphers = ":".join(list(set(self._ciphers.split(":")) & set(self.aws_iot_valid_ciphers)))
+        except Exception as e:
+            print(e)
+            self._ciphers = None

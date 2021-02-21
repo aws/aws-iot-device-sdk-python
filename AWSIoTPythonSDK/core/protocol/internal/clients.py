@@ -64,7 +64,7 @@ class InternalAsyncMqttClient(object):
         return mqtt.Client(client_id, clean_session, user_data, protocol, use_wss)
 
     #  TODO: Merge credentials providers configuration into one
-    def set_cert_credentials_provider(self, cert_credentials_provider):
+    def set_cert_credentials_provider(self, cert_credentials_provider, ciphers_provider):
         # History issue from Yun SDK where AR9331 embedded Linux only have Python 2.7.3
         # pre-installed. In this version, TLSv1_2 is not even an option.
         # SSLv23 is a work-around which selects the highest TLS version between the client
@@ -75,13 +75,16 @@ class InternalAsyncMqttClient(object):
         # See also: https://docs.python.org/2/library/ssl.html#ssl.PROTOCOL_SSLv23
         if self._use_wss:
             ca_path = cert_credentials_provider.get_ca_path()
-            self._paho_client.tls_set(ca_certs=ca_path, cert_reqs=ssl.CERT_REQUIRED, tls_version=ssl.PROTOCOL_SSLv23)
+            ciphers = ciphers_provider.get_ciphers()
+            self._paho_client.tls_set(ca_certs=ca_path, cert_reqs=ssl.CERT_REQUIRED, tls_version=ssl.PROTOCOL_SSLv23,
+                                      ciphers=ciphers)
         else:
             ca_path = cert_credentials_provider.get_ca_path()
             cert_path = cert_credentials_provider.get_cert_path()
             key_path = cert_credentials_provider.get_key_path()
+            ciphers = ciphers_provider.get_ciphers()
             self._paho_client.tls_set(ca_certs=ca_path,certfile=cert_path, keyfile=key_path,
-                                      cert_reqs=ssl.CERT_REQUIRED, tls_version=ssl.PROTOCOL_SSLv23)
+                                      cert_reqs=ssl.CERT_REQUIRED, tls_version=ssl.PROTOCOL_SSLv23, ciphers=ciphers)
 
     def set_iam_credentials_provider(self, iam_credentials_provider):
         self._paho_client.configIAMCredentials(iam_credentials_provider.get_access_key_id(),

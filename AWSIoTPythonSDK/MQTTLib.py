@@ -15,6 +15,7 @@
 # */
 
 from AWSIoTPythonSDK.core.util.providers import CertificateCredentialsProvider
+from AWSIoTPythonSDK.core.util.providers import CiphersProvider
 from AWSIoTPythonSDK.core.util.providers import IAMCredentialsProvider
 from AWSIoTPythonSDK.core.util.providers import EndpointProvider
 from AWSIoTPythonSDK.core.jobs.thingJobManager import jobExecutionTopicType
@@ -207,7 +208,7 @@ class AWSIoTMQTTClient:
         iam_credentials_provider.set_session_token(AWSSessionToken)
         self._mqtt_core.configure_iam_credentials(iam_credentials_provider)
 
-    def configureCredentials(self, CAFilePath, KeyPath="", CertificatePath=""):  # Should be good for MutualAuth certs config and Websocket rootCA config
+    def configureCredentials(self, CAFilePath, KeyPath="", CertificatePath="", Ciphers=None):  # Should be good for MutualAuth certs config and Websocket rootCA config
         """
         **Description**
 
@@ -227,6 +228,8 @@ class AWSIoTMQTTClient:
 
         *CertificatePath* - Path to read the certificate. Required for X.509 certificate based connection.
 
+        *Ciphers* - String of colon split SSL Ciphers to use. If not passed default ciphers will be used.
+
         **Returns**
 
         None
@@ -236,7 +239,11 @@ class AWSIoTMQTTClient:
         cert_credentials_provider.set_ca_path(CAFilePath)
         cert_credentials_provider.set_key_path(KeyPath)
         cert_credentials_provider.set_cert_path(CertificatePath)
-        self._mqtt_core.configure_cert_credentials(cert_credentials_provider)
+
+        cipher_provider = CiphersProvider()
+        cipher_provider.set_ciphers(Ciphers)
+
+        self._mqtt_core.configure_cert_credentials(cert_credentials_provider, cipher_provider)
 
     def configureAutoReconnectBackoffTime(self, baseReconnectQuietTimeSecond, maxReconnectQuietTimeSecond, stableConnectionTimeSecond):
         """
