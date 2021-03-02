@@ -91,14 +91,14 @@ class MqttCore(object):
 
     def _init_offline_request_exceptions(self):
         self._offline_request_queue_disabled_exceptions = {
-            RequestTypes.PUBLISH : publishQueueDisabledException(),
-            RequestTypes.SUBSCRIBE : subscribeQueueDisabledException(),
-            RequestTypes.UNSUBSCRIBE : unsubscribeQueueDisabledException()
+            RequestTypes.PUBLISH : publishQueueDisabledException,
+            RequestTypes.SUBSCRIBE : subscribeQueueDisabledException,
+            RequestTypes.UNSUBSCRIBE : unsubscribeQueueDisabledException
         }
         self._offline_request_queue_full_exceptions = {
-            RequestTypes.PUBLISH : publishQueueFullException(),
-            RequestTypes.SUBSCRIBE : subscribeQueueFullException(),
-            RequestTypes.UNSUBSCRIBE : unsubscribeQueueFullException()
+            RequestTypes.PUBLISH : publishQueueFullException,
+            RequestTypes.SUBSCRIBE : subscribeQueueFullException,
+            RequestTypes.UNSUBSCRIBE : unsubscribeQueueFullException
         }
 
     def _init_workers(self):
@@ -367,7 +367,7 @@ class MqttCore(object):
         append_result = self._offline_requests_manager.add_one(offline_request)
         if AppendResults.APPEND_FAILURE_QUEUE_DISABLED == append_result:
             self._logger.error("Offline request queue has been disabled")
-            raise self._offline_request_queue_disabled_exceptions[type]
+            raise self._offline_request_queue_disabled_exceptions[type]()
         if AppendResults.APPEND_FAILURE_QUEUE_FULL == append_result:
             self._logger.error("Offline request queue is full")
-            raise self._offline_request_queue_full_exceptions[type]
+            raise self._offline_request_queue_full_exceptions[type]()
