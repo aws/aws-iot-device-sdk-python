@@ -123,13 +123,13 @@ while retryCount != 0:
     except DiscoveryInvalidRequestException as e:
         print("Invalid discovery request detected!")
         print("Type: %s" % str(type(e)))
-        print("Error message: %s" % e.message)
+        print("Error message: %s" % str(e))
         print("Stopping...")
         break
     except BaseException as e:
         print("Error in discovery!")
         print("Type: %s" % str(type(e)))
-        print("Error message: %s" % e.message)
+        print("Error message: %s" % str(e))
         retryCount -= 1
         print("\n%d/%d retries left\n" % (retryCount, MAX_DISCOVERY_RETRIES))
         print("Backing off...\n")
@@ -157,7 +157,7 @@ for connectivityInfo in coreInfo.connectivityInfoList:
     except BaseException as e:
         print("Error in connect!")
         print("Type: %s" % str(type(e)))
-        print("Error message: %s" % e.message)
+        print("Error message: %s" % str(e))
 
 if not connected:
     print("Cannot connect to core %s. Exiting..." % coreInfo.coreThingArn)
