@@ -27,6 +27,14 @@ class _shadowRequestToken:
         return uuid.uuid4().urn[self.URN_PREFIX_LENGTH:]  # We only need the uuid digits, not the urn prefix
 
 
+def _validateJSON(jsonString):
+    try:
+        json.loads(jsonString)
+    except ValueError:
+        return False
+    return True
+
+
 class _basicJSONParser:
 
     def setString(self, srcString):
@@ -343,9 +351,10 @@ class deviceShadow:
 
         """
         # Validate JSON
-        self._basicJSONParserHandler.setString(srcJSONPayload)
-        if self._basicJSONParserHandler.validateJSON():
+        if _validateJSON(srcJSONPayload):
             with self._dataStructureLock:
+                self._basicJSONParserHandler.setString(srcJSONPayload)
+                self._basicJSONParserHandler.validateJSON()
                 # clientToken
                 currentToken = self._tokenHandler.getNextToken()
                 self._tokenPool[currentToken] = Timer(srcTimeout, self._timerHandler, ["update", currentToken])
