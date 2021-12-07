@@ -97,17 +97,6 @@ class TestSigV4Core:
         self.python_os_environ_patcher = patch.dict(os.environ, os_environ_map)
         self.python_os_environ_patcher.start()
 
-    def test_generate_url_with_file_credentials(self):
-        self._use_mock_os_environ({})
-        self._use_mock_configparser()
-        self.mock_configparser.get.side_effect = [DUMMY_ACCESS_KEY_ID,
-                                                  DUMMY_SECRET_ACCESS_KEY,
-                                                  NoOptionError("option", "section")]
-
-        assert self._invoke_create_wss_endpoint_api() == EXPECTED_WSS_URL_WITHOUT_TOKEN
-
-        self._recover_mocks_for_env_config()
-
     def _use_mock_configparser(self):
         self.configparser_patcher = patch(PATCH_MODULE_LOCATION + "ConfigParser", spec=ConfigParser)
         self.mock_configparser_constructor = self.configparser_patcher.start()
