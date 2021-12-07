@@ -90,3 +90,13 @@ class EndpointProvider(object):
 
     def get_port(self):
         return self._port
+
+class CiphersProvider(object):
+    def __init__(self):
+        self._ciphers = None
+
+    def set_ciphers(self, ciphers=None):
+        self._ciphers = ciphers
+
+    def get_ciphers(self):
+        return self._ciphers
