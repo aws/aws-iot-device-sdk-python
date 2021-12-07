@@ -880,7 +880,7 @@ class Client(object):
         # used to check if there are any bytes left in the ssl socket
         pending_bytes = 0
         if self._ssl:
-            pending_bytes = self._ssl.pending()
+            pending_bytes = self.socket().pending()
 
         # if bytes are pending do not wait in select
         if pending_bytes > 0:
