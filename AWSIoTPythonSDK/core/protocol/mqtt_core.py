@@ -127,9 +127,9 @@ class MqttCore(object):
     def on_offline(self):
         pass
 
-    def configure_cert_credentials(self, cert_credentials_provider):
-        self._logger.info("Configuring certificates...")
-        self._internal_async_client.set_cert_credentials_provider(cert_credentials_provider)
+    def configure_cert_credentials(self, cert_credentials_provider, ciphers_provider):
+        self._logger.info("Configuring certificates and ciphers...")
+        self._internal_async_client.set_cert_credentials_provider(cert_credentials_provider, ciphers_provider)
 
     def configure_iam_credentials(self, iam_credentials_provider):
         self._logger.info("Configuring custom IAM credentials...")
