@@ -132,16 +132,6 @@ class TestSigV4Core:
         with pytest.raises(wssNoKeyInEnvironmentError):
             self._invoke_create_wss_endpoint_api()
 
-    def test_generate_url_failure_when_credentials_missing(self):
-        self._configure_mocks_credentials_not_found_in_env_config()
-        with pytest.raises(wssNoKeyInEnvironmentError):
-            self._invoke_create_wss_endpoint_api()
-
-    def test_generate_url_failure_when_credential_keys_exist_with_empty_values(self):
-        self._configure_mocks_credentials_not_found_in_env_config(mode=CREDS_NOT_FOUND_MODE_EMPTY_VALUES)
-        with pytest.raises(wssNoKeyInEnvironmentError):
-            self._invoke_create_wss_endpoint_api()
-
     def _configure_mocks_credentials_not_found_in_env_config(self, mode=CREDS_NOT_FOUND_MODE_NO_KEYS):
         if mode == CREDS_NOT_FOUND_MODE_NO_KEYS:
             self._use_mock_os_environ({})
