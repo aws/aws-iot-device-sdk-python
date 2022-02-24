@@ -970,3 +970,4 @@ If you have technical questions about the AWS IoT Device SDK, use the `AWS
 IoT Forum <https://forums.aws.amazon.com/forum.jspa?forumID=210>`__.
 For any other questions about AWS IoT, contact `AWS
 Support <https://aws.amazon.com/contact-us>`__.
+
