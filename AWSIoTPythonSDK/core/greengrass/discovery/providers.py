@@ -203,7 +203,7 @@ class DiscoveryInfoProvider(object):
         """
 
         **Description**
-        
+
         Perform the discovery request for the given Greengrass aware device thing name.
 
         **Syntax**
@@ -246,9 +246,9 @@ class DiscoveryInfoProvider(object):
 
     def _create_ssl_connection(self, sock):
         self._logger.debug("Creating ssl connection...")
-   
+
         ssl_protocol_version = ssl.PROTOCOL_SSLv23
- 
+
         if self._port == 443:
             ssl_context = SSLContextBuilder()\
                 .with_ca_certs(self._ca_path)\
@@ -366,9 +366,14 @@ class DiscoveryInfoProvider(object):
         start_time = time.time()
         response = bytearray()
         number_bytes_read = 0
+        ssl_sock_tmp = None
         while True:  # Python does not have do-while
             try:
-                response.append(self._convert_to_int_py3(ssl_sock.read(1)))
+                ssl_sock_tmp = self._convert_to_int_py3(ssl_sock.read(1))
+                if ssl_sock_tmp is list:
+                    response.extend(ssl_sock_tmp)
+                else:
+                    response.append(ssl_sock_tmp)
                 number_bytes_read += 1
             except socket.error as err:
                 if err.errno == ssl.SSL_ERROR_WANT_READ or err.errno == ssl.SSL_ERROR_WANT_WRITE:
