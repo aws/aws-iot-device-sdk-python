@@ -1,6 +1,6 @@
 import sys
-sys.path.insert(0, "./configuration/IntegrationTests/TestToolLibrary")
-sys.path.insert(0, "./configuration/IntegrationTests/TestToolLibrary/SDKPackage")
+sys.path.insert(0, "./test-integration/IntegrationTests/TestToolLibrary")
+sys.path.insert(0, "./test-integration/IntegrationTests/TestToolLibrary/SDKPackage")
 
 from TestToolLibrary.SDKPackage.AWSIoTPythonSDK.core.greengrass.discovery.providers import DiscoveryInfoProvider
 from TestToolLibrary.checkInManager import checkInManager
@@ -10,9 +10,9 @@ from TestToolLibrary.skip import ModeIsWebSocket
 
 HOST = "arc9d2oott9lj-ats.iot.us-east-1.amazonaws.com"  # <aws-iot-greengrass-integ-test-drs@amazon.com> 003261610643
 PORT = 8443
-CA = "./configuration/Credentials/rootCA.crt"
-CERT = "./configuration/Credentials/certificate_drs.pem.crt"
-KEY = "./configuration/Credentials/privateKey_drs.pem.key"
+CA = "./test-integration/Credentials/rootCA.crt"
+CERT = "./test-integration/Credentials/certificate_drs.pem.crt"
+KEY = "./test-integration/Credentials/privateKey_drs.pem.key"
 TIME_OUT_SEC = 30
 # This is a pre-generated test data from DRS integration tests
 ID_PREFIX = "Id-"

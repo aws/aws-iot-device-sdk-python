@@ -28,8 +28,8 @@ import time
 from threading import Event
 from threading import Thread
 import sys
-sys.path.insert(0, "./configuration/IntegrationTests/TestToolLibrary")
-sys.path.insert(0, "./configuration/IntegrationTests/TestToolLibrary/SDKPackage")
+sys.path.insert(0, "./test-integration/IntegrationTests/TestToolLibrary")
+sys.path.insert(0, "./test-integration/IntegrationTests/TestToolLibrary/SDKPackage")
 
 from TestToolLibrary.SDKPackage.AWSIoTPythonSDK.core.protocol.internal.clients import ClientStatus
 from TestToolLibrary.checkInManager import checkInManager
@@ -45,9 +45,9 @@ TOPIC_B = "topic/test/offline_sub_unsub/b"
 MESSAGE_PREFIX = "MagicMessage-"
 NUMBER_OF_PUBLISHES = 3
 HOST = "ajje7lpljulm4-ats.iot.us-east-1.amazonaws.com"
-ROOT_CA = "./configuration/Credentials/rootCA.crt"
-CERT = "./configuration/Credentials/certificate.pem.crt"
-KEY = "./configuration/Credentials/privateKey.pem.key"
+ROOT_CA = "./test-integration/Credentials/rootCA.crt"
+CERT = "./test-integration/Credentials/certificate.pem.crt"
+KEY = "./test-integration/Credentials/privateKey.pem.key"
 CLIENT_PUB_ID = "PySdkIntegTest_OfflineSubUnsub_pub"
 CLIENT_SUB_UNSUB_ID = "PySdkIntegTest_OfflineSubUnsub_subunsub"
 KEEP_ALIVE_SEC = 1

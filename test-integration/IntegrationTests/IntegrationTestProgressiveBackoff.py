@@ -28,8 +28,8 @@ import random
 import time
 import threading
 import sys
-sys.path.insert(0, "./configuration/IntegrationTests/TestToolLibrary")
-sys.path.insert(0, "./configuration/IntegrationTests/TestToolLibrary/SDKPackage")
+sys.path.insert(0, "./test-integration/IntegrationTests/TestToolLibrary")
+sys.path.insert(0, "./test-integration/IntegrationTests/TestToolLibrary/SDKPackage")
 
 from TestToolLibrary import simpleThreadManager
 import TestToolLibrary.checkInManager as checkInManager
@@ -221,9 +221,9 @@ myCheckInManager.verify(sys.argv)
 
 #host via describe-endpoint on this OdinMS: com.amazonaws.iot.device.sdk.credentials.testing.websocket
 host = "ajje7lpljulm4-ats.iot.us-east-1.amazonaws.com"
-rootCA = "./configuration/Credentials/rootCA.crt"
-certificate = "./configuration/Credentials/certificate.pem.crt"
-privateKey = "./configuration/Credentials/privateKey.pem.key"
+rootCA = "./test-integration/Credentials/rootCA.crt"
+certificate = "./test-integration/Credentials/certificate.pem.crt"
+privateKey = "./test-integration/Credentials/privateKey.pem.key"
 mode = myCheckInManager.mode
 
 skip_when_match(ModeIsALPN(mode).And(

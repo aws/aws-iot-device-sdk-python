@@ -16,8 +16,8 @@ import random
 import string
 import sys
 import time
-sys.path.insert(0, "./configuration/IntegrationTests/TestToolLibrary")
-sys.path.insert(0, "./configuration/IntegrationTests/TestToolLibrary/SDKPackage")
+sys.path.insert(0, "./test-integration/IntegrationTests/TestToolLibrary")
+sys.path.insert(0, "./test-integration/IntegrationTests/TestToolLibrary/SDKPackage")
 
 import TestToolLibrary.checkInManager as checkInManager
 import TestToolLibrary.MQTTClientManager as MQTTClientManager
@@ -137,9 +137,9 @@ myCheckInManager = checkInManager.checkInManager(1)
 myCheckInManager.verify(sys.argv)
 
 host = "ajje7lpljulm4-ats.iot.us-east-1.amazonaws.com"
-rootCA = "./configuration/Credentials/rootCA.crt"
-certificate = "./configuration/Credentials/certificate.pem.crt"
-privateKey = "./configuration/Credentials/privateKey.pem.key"
+rootCA = "./test-integration/Credentials/rootCA.crt"
+certificate = "./test-integration/Credentials/certificate.pem.crt"
+privateKey = "./test-integration/Credentials/privateKey.pem.key"
 mode = myCheckInManager.mode
 
 skip_when_match(ModeIsALPN(mode).And(

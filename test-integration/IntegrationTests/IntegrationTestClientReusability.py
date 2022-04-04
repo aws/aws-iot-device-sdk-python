@@ -20,8 +20,8 @@
 import uuid
 import time
 import sys
-sys.path.insert(0, "./configuration/IntegrationTests/TestToolLibrary")
-sys.path.insert(0, "./configuration/IntegrationTests/TestToolLibrary/SDKPackage")
+sys.path.insert(0, "./test-integration/IntegrationTests/TestToolLibrary")
+sys.path.insert(0, "./test-integration/IntegrationTests/TestToolLibrary/SDKPackage")
 
 from threading import Event
 from TestToolLibrary.checkInManager import checkInManager
@@ -41,9 +41,9 @@ NUMBER_OF_MESSAGES_PER_LOOP = 3
 NUMBER_OF_LOOPS = 3
 SUB_WAIT_TIME_OUT_SEC = 20
 HOST = "ajje7lpljulm4-ats.iot.us-east-1.amazonaws.com"
-ROOT_CA = "./configuration/Credentials/rootCA.crt"
-CERT = "./configuration/Credentials/certificate.pem.crt"
-KEY = "./configuration/Credentials/privateKey.pem.key"
+ROOT_CA = "./test-integration/Credentials/rootCA.crt"
+CERT = "./test-integration/Credentials/certificate.pem.crt"
+KEY = "./test-integration/Credentials/privateKey.pem.key"
 
 
 class ClientTwins(object):

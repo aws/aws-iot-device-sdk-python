@@ -41,10 +41,10 @@ AWSMutualAuth_TodWorker_certificate="arn:aws:secretsmanager:us-east-1:1231241367
 
 OdinSetForGGDiscovery_TodWorker="com.amazonaws.iot.device.sdk.credentials.testing.gg.discovery.us-east-1"
 OdinSetForWebsocket_TodWorker="com.amazonaws.iot.device.sdk.credentials.testing.websocket"
-RetrieveOdinMaterial="./configuration/Tools/retrieve-material.sh"
-RetrieveAWSKeys="./configuration/Tools/retrieve-key.py"
-CREDENTIAL_DIR="./configuration/Credentials/"
-TEST_DIR="./configuration/IntegrationTests/"
+RetrieveOdinMaterial="./test-integration/Tools/retrieve-material.sh"
+RetrieveAWSKeys="./test-integration/Tools/retrieve-key.py"
+CREDENTIAL_DIR="./test-integration/Credentials/"
+TEST_DIR="./test-integration/IntegrationTests/"
 CA_CERT_URL="https://www.amazontrust.com/repository/AmazonRootCA1.pem"
 CA_CERT_PATH=${CREDENTIAL_DIR}rootCA.crt
 ACCESS_KEY_ID_ARN="arn:aws:secretsmanager:us-east-1:123124136734:secret:V1IotSdkIntegrationTestWebsocketAccessKeyId-1YdB9z"
@@ -136,9 +136,9 @@ else
     	exit 2
     fi
     if [ "$1"x ==  "IoTYunSDK"x ]; then
-        unzip -q ${ZIPLocation} -d ./configuration/IntegrationTests/TestToolLibrary/SDKPackage/
+        unzip -q ${ZIPLocation} -d ./test-integration/IntegrationTests/TestToolLibrary/SDKPackage/
     elif [ "$1"x == "IoTPySDK"x ]; then
-        cp -R ${ZIPLocation} ./configuration/IntegrationTests/TestToolLibrary/SDKPackage/
+        cp -R ${ZIPLocation} ./test-integration/IntegrationTests/TestToolLibrary/SDKPackage/
     else
         echo "Error in getSDKZIP"
         exit 2
@@ -149,7 +149,7 @@ else
         echo "[STEP] Obtain Python executable"
         echo "***************************************************"
         echo "Python version ${iii}.x..."
-        PYTHON=$(./configuration/Tools/getPython.sh ${iii})
+        PYTHON=$(./test-integration/Tools/getPython.sh ${iii})
         if [ $? -eq "-1" ]; then
         	echo "Cannot find Python executable"
         	exit 3

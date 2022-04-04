@@ -31,3 +31,21 @@ jobs:
           pip install mock
           python3 -m pytest test
 
+  integration-tests:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        test-type: [MutualAuth]
+        #[MutualAuth, Websocket, ALPN]
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: '3.6'
+      - name: Integration tests
+        run: |
+          pip install pytest
+          pip install mock
+          pip install boto3
+          .\test-integration\run\run.sh IoTPySDK ${{ matrix.test-type }} 1000 100 7

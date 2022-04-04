@@ -18,8 +18,8 @@ import random
 import string
 import time
 import sys
-sys.path.insert(0, "./configuration/IntegrationTests/TestToolLibrary")
-sys.path.insert(0, "./configuration/IntegrationTests/TestToolLibrary/SDKPackage")
+sys.path.insert(0, "./test-integration/IntegrationTests/TestToolLibrary")
+sys.path.insert(0, "./test-integration/IntegrationTests/TestToolLibrary/SDKPackage")
 
 from TestToolLibrary.checkInManager import checkInManager
 from TestToolLibrary.MQTTClientManager import MQTTClientManager
@@ -33,9 +33,9 @@ TOPIC = "topic/test/async_cb/"
 MESSAGE_PREFIX = "MagicMessage-"
 NUMBER_OF_PUBLISHES = 3
 HOST = "ajje7lpljulm4-ats.iot.us-east-1.amazonaws.com"
-ROOT_CA = "./configuration/Credentials/rootCA.crt"
-CERT = "./configuration/Credentials/certificate.pem.crt"
-KEY = "./configuration/Credentials/privateKey.pem.key"
+ROOT_CA = "./test-integration/Credentials/rootCA.crt"
+CERT = "./test-integration/Credentials/certificate.pem.crt"
+KEY = "./test-integration/Credentials/privateKey.pem.key"
 CLIENT_ID = "PySdkIntegTest_AsyncAPI_Callbacks"
 
 KEY_ON_ONLINE = "OnOnline"
