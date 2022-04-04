@@ -130,7 +130,7 @@ else
     echo ${TestMode}
     echo "[STEP] Obtain ZIP package"
     echo "***************************************************"
-    ZIPLocation="../AWSIoTPythonSDK"
+    ZIPLocation="./AWSIoTPythonSDK"
     if [ $? -eq "-1" ]; then
     	echo "Cannot find SDK ZIP package"
     	exit 2
