@@ -48,4 +48,4 @@ jobs:
           pip install pytest
           pip install mock
           pip install boto3
-          .\test-integration\run\run.sh IoTPySDK ${{ matrix.test-type }} 1000 100 7
+          ./test-integration/run/run.sh IoTPySDK ${{ matrix.test-type }} 1000 100 7
