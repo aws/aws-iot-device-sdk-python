@@ -370,7 +370,7 @@ class DiscoveryInfoProvider(object):
         while True:  # Python does not have do-while
             try:
                 ssl_sock_tmp = self._convert_to_int_py3(ssl_sock.read(1))
-                if type(ssl_sock_tmp) is list:
+                if isinstance(ssl_sock_tmp, list):
                     response.extend(ssl_sock_tmp)
                 else:
                     response.append(ssl_sock_tmp)
