@@ -130,7 +130,7 @@ else
     echo ${TestMode}
     echo "[STEP] Obtain ZIP package"
     echo "***************************************************"
-    ZIPLocation="C:/Iot/workspace/aws-iot-device-sdk-python/AWSIoTPythonSDK"
+    ZIPLocation="../AWSIoTPythonSDK"
     if [ $? -eq "-1" ]; then
     	echo "Cannot find SDK ZIP package"
     	exit 2
@@ -146,17 +146,6 @@ else
 # Obtain Python executable
     for iii in "${pythonExecutableArray[@]}"
     do
-        echo "[STEP] Obtain Python executable"
-        echo "***************************************************"
-        echo "Python version ${iii}.x..."
-        PYTHON=$(./test-integration/Tools/getPython.sh ${iii})
-        if [ $? -eq "-1" ]; then
-        	echo "Cannot find Python executable"
-        	exit 3
-        fi
-    # Start integration test
-    # Loop through the tes directory and execute all available integration tests
-        echo "[STEP] Start integration tests"
         echo "***************************************************"
         for file in `ls ${TEST_DIR}`
         do
