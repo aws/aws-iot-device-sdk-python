@@ -6,7 +6,7 @@ from ssl import SSLError
 import TestToolLibrary.SDKPackage.AWSIoTPythonSDK.core.protocol.paho.client as paho
 from TestToolLibrary.SDKPackage.AWSIoTPythonSDK.MQTTLib import AWSIoTMQTTClient
 from TestToolLibrary.SDKPackage.AWSIoTPythonSDK.core.util.providers import CertificateCredentialsProvider
-# from TestToolLibrary.SDKPackage.AWSIoTPythonSDK.core.util.providers import CiphersProvider
+from TestToolLibrary.SDKPackage.AWSIoTPythonSDK.core.util.providers import CiphersProvider
 from TestToolLibrary.SDKPackage.AWSIoTPythonSDK.core.util.enums import DropBehaviorTypes
 from TestToolLibrary.SDKPackage.AWSIoTPythonSDK.core.util.providers import EndpointProvider
 from TestToolLibrary.SDKPackage.AWSIoTPythonSDK.core.protocol.mqtt_core import MqttCore
@@ -100,12 +100,11 @@ class MQTTClientManager:
             certificate_credentials_provider.set_cert_path(certificate)
             certificate_credentials_provider.set_key_path(private_key)
 
-            # cipher_provider = CiphersProvider()
-            # cipher_provider.set_ciphers(None)
+            cipher_provider = CiphersProvider()
+            cipher_provider.set_ciphers(None)
             
             client.configure_endpoint(endpoint_provider)
-            # client.configure_cert_credentials(certificate_credentials_provider, cipher_provider)
-            client.configure_cert_credentials(certificate_credentials_provider)
+            client.configure_cert_credentials(certificate_credentials_provider, cipher_provider)
             client.configure_connect_disconnect_timeout_sec(10)
             client.configure_operation_timeout_sec(5)
             client.configure_offline_requests_queue(10, DropBehaviorTypes.DROP_NEWEST)
