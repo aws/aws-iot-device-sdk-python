@@ -34,6 +34,7 @@ jobs:
   integration-tests:
     concurrency: 
       group: integration-test
+      cancel-in-progress: false
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
