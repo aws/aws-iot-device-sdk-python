@@ -53,4 +53,4 @@ jobs:
           ./test-integration/run/run.sh MutualAuthT 1000 100 7
           ./test-integration/run/run.sh Websocket 1000 100 7
           ./test-integration/run/run.sh ALPN 1000 100 7
-          ALPNT
+          ./test-integration/run/run.sh ALPNT 1000 100 7
