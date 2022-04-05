@@ -34,12 +34,10 @@ jobs:
   integration-tests:
     concurrency: 
       group: integration-test
-      cancel-in-progress: false
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        test-type: [ MutualAuth, MutualAuthT , Websocket, ALPN, ALPNT]
         python-version: [ '2.x', '3.x' ]
         #[MutualAuth, Websocket, ALPN]
     steps:
@@ -52,4 +50,8 @@ jobs:
           pip install pytest
           pip install mock
           pip install boto3
-          ./test-integration/run/run.sh ${{ matrix.test-type }} 1000 100 7
+          ./test-integration/run/run.sh MutualAuth 1000 100 7
+          ./test-integration/run/run.sh MutualAuthT 1000 100 7
+          ./test-integration/run/run.sh Websocket 1000 100 7
+          ./test-integration/run/run.sh ALPN 1000 100 7
+          ./test-integration/run/run.sh ALPNT 1000 100 7

@@ -11,18 +11,18 @@
 # 4. Start the integration tests and check results
 # 5. Report any status returned.
 # To start the tests as TodWorker:
-# > run.sh <whichSDK> MutualAuth 1000 100 7
+# > run.sh MutualAuth 1000 100 7
 # or
-# > run.sh <which SDK> Websocket 1000 100 7
+# > run.sh Websocket 1000 100 7
 # or
-# > run.sh <which SDK> ALPN 1000 100 7
+# > run.sh ALPN 1000 100 7
 #
 # To start the tests from desktop:
-# > run.sh <which SDK> MutualAuthT 1000 100 7
+# > run.sh MutualAuthT 1000 100 7
 # or
-# > run.sh <which SDK> WebsocketT 1000 100 7
+# > run.sh WebsocketT 1000 100 7
 # or
-# > run.sh <which SDK> ALPNT 1000 100 7
+# > run.sh ALPNT 1000 100 7
 #
 # 1000 MQTT messages, 100 bytes of random string
 # in length and 7 rounds of network failure for 
@@ -47,6 +47,7 @@ AWSSecretForWebsocket_TodWorker_SecretKey="arn:aws:secretsmanager:us-east-1:1231
 AWSSecretForWebsocket_Desktop_KeyId="arn:aws:secretsmanager:us-east-1:123124136734:secret:V1IotSdkIntegrationTestWebsocketAccessKeyId-1YdB9z"
 AWSSecretForWebsocket_Desktop_SecretKey="arn:aws:secretsmanager:us-east-1:123124136734:secret:V1IotSdkIntegrationTestWebsocketSecretAccessKey-MKTSaV"
 
+SDKLocation="./AWSIoTPythonSDK"
 RetrieveAWSKeys="./test-integration/Tools/retrieve-key.py"
 CREDENTIAL_DIR="./test-integration/Credentials/"
 TEST_DIR="./test-integration/IntegrationTests/"
@@ -126,12 +127,7 @@ else
     echo ${TestMode}
     echo "[STEP] Obtain ZIP package"
     echo "***************************************************"
-    ZIPLocation="./AWSIoTPythonSDK"
-    if [ $? -eq "-1" ]; then
-    	echo "Cannot find SDK ZIP package"
-    	exit 2
-    fi
-    cp -R ${ZIPLocation} ./test-integration/IntegrationTests/TestToolLibrary/SDKPackage/
+    cp -R ${SDKLocation} ./test-integration/IntegrationTests/TestToolLibrary/SDKPackage/
 # Obtain Python executable
 
     echo "***************************************************"
@@ -168,7 +164,7 @@ else
             currentTestStatus=$?
             echo "[SUB] Test: ${file} completed. Exiting with status: ${currentTestStatus}"
             if [ ${currentTestStatus} -ne 0 ]; then
-                echo "!!!!!!!!!!!!!Test: ${file} in Python version ${iii}.x failed.!!!!!!!!!!!!!"
+                echo "!!!!!!!!!!!!!Test: ${file} failed.!!!!!!!!!!!!!"
                 exit ${currentTestStatus}
             fi
             echo ""
