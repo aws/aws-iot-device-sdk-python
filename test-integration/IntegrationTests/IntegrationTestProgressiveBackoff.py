@@ -89,6 +89,7 @@ class threadPool:
         while loopCount != 0:
             try:
                 currentMessage = "Message" + str(self._pubCount)
+                print("Test publish to topic : " + self._targetedTopic)
                 self._clientPub.publish(self._targetedTopic, currentMessage, 1, False)
                 print("Thread A: Published new message: " + str(currentMessage))
                 self._publishMessagePool.add(currentMessage)
@@ -106,6 +107,7 @@ class threadPool:
     def threadBRuntime(self):
         # Subscribe to the topic
         try:
+            print("Test subscribe to topic : " + self._targetedTopic)
             self._clientSub.subscribe(self._targetedTopic, 1, self._messageCallback)
         except subscribeTimeoutException:
             print("Subscribe timeout!")
