@@ -40,8 +40,11 @@ from TestToolLibrary.skip import Python2VersionLowerThan
 from TestToolLibrary.skip import Python3VersionLowerThan
 
 
-TOPIC_A = "topic/test/offline_sub_unsub/a"
-TOPIC_B = "topic/test/offline_sub_unsub/b"
+def get_random_string(length):
+    return "".join(random.choice(string.ascii_lowercase) for i in range(length))
+
+TOPIC_A = "topic/test/offline_sub_unsub/a" + get_random_string(4)
+TOPIC_B = "topic/test/offline_sub_unsub/b" + get_random_string(4)
 MESSAGE_PREFIX = "MagicMessage-"
 NUMBER_OF_PUBLISHES = 3
 HOST = "ajje7lpljulm4-ats.iot.us-east-1.amazonaws.com"
@@ -52,10 +55,6 @@ CLIENT_PUB_ID = "PySdkIntegTest_OfflineSubUnsub_pub"
 CLIENT_SUB_UNSUB_ID = "PySdkIntegTest_OfflineSubUnsub_subunsub"
 KEEP_ALIVE_SEC = 1
 EVENT_WAIT_TIME_OUT_SEC = 5
-
-
-def get_random_string(length):
-    return "".join(random.choice(string.ascii_lowercase) for i in range(length))
 
 
 class DualClientRunner(object):
