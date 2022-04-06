@@ -1,0 +1,23 @@
+version: 0.2
+#this build spec assumes the manylinux1 image for pypi
+#additional packages we installed: cmake 3.5, libcrypto 1.1.0j, gcc 4.8.4
+phases:
+  install:
+    commands:
+      - apt-get install python3 -y
+      - pip install pytest
+      - pip install mock
+      - pip install boto3
+  pre_build:
+    commands:
+      - echo Integration Test Starts...  `date`
+  build:
+    commands:
+      - ./test-integration/run/run.sh MutualAuth 1000 100 7
+      - ./test-integration/run/run.sh MutualAuthT 1000 100 7
+      - ./test-integration/run/run.sh Websocket 1000 100 7
+      - ./test-integration/run/run.sh ALPN 1000 100 7
+      - ./test-integration/run/run.sh ALPNT 1000 100 7
+  post_build:
+    commands:
+      - echo Integration Test completed on `date`

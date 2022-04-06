@@ -31,27 +31,27 @@ jobs:
           pip install mock
           python3 -m pytest test
 
-  integration-tests:
-    concurrency: 
-      group: integration-test
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        python-version: [ '2.x', '3.x' ]
-        #[MutualAuth, Websocket, ALPN]
-    steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
-        with:
-          python-version: ${{ matrix.python-version }}
-      - name: Integration tests
-        run: |
-          pip install pytest
-          pip install mock
-          pip install boto3
-          ./test-integration/run/run.sh MutualAuth 1000 100 7
-          ./test-integration/run/run.sh MutualAuthT 1000 100 7
-          ./test-integration/run/run.sh Websocket 1000 100 7
-          ./test-integration/run/run.sh ALPN 1000 100 7
-          ./test-integration/run/run.sh ALPNT 1000 100 7
+  # integration-tests:
+  #   concurrency: 
+  #     group: integration-test
+  #   runs-on: ubuntu-latest
+  #   strategy:
+  #     fail-fast: false
+  #     matrix:
+  #       python-version: [ '2.x', '3.x' ]
+  #       #[MutualAuth, Websocket, ALPN]
+  #   steps:
+  #     - uses: actions/checkout@v2
+  #     - uses: actions/setup-python@v2
+  #       with:
+  #         python-version: ${{ matrix.python-version }}
+  #     - name: Integration tests
+  #       run: |
+  #         pip install pytest
+  #         pip install mock
+  #         pip install boto3
+  #         ./test-integration/run/run.sh MutualAuth 1000 100 7
+  #         ./test-integration/run/run.sh MutualAuthT 1000 100 7
+  #         ./test-integration/run/run.sh Websocket 1000 100 7
+  #         ./test-integration/run/run.sh ALPN 1000 100 7
+  #         ./test-integration/run/run.sh ALPNT 1000 100 7
