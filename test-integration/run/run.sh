@@ -5,11 +5,10 @@
 # SDK. The tests should be able to run both in
 # Brazil and ToD Worker environment.
 # The script will perform the following tasks:
-# 1. Retrieve credentials as needed from Odin
+# 1. Retrieve credentials as needed from AWS
 # 2. Obtain ZIP package and unzip it locally
-# 3. Obtain Python executable
-# 4. Start the integration tests and check results
-# 5. Report any status returned.
+# 3. Start the integration tests and check results
+# 4. Report any status returned.
 # To start the tests as TodWorker:
 # > run.sh MutualAuth 1000 100 7
 # or
@@ -69,9 +68,9 @@ else
 # Determine the Python versions need to test for this SDK
     pythonExecutableArray=()
     pythonExecutableArray[0]="3"
-# Retrieve credentials as needed from Odin
+# Retrieve credentials as needed from AWS
     TestMode=""
-    echo "[STEP] Retrieve credentials from Odin"
+    echo "[STEP] Retrieve credentials from AWS"
     echo "***************************************************"
     if [ "$1"x == "MutualAuth"x -o "$1"x == "MutualAuthT"x ]; then
         AWSSetName_privatekey=${AWSMutualAuth_TodWorker_private_key}
