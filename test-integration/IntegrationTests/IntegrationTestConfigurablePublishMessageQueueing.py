@@ -172,7 +172,7 @@ class threadSub:
             print("Type: " + str(type(e)))
             print("Message: " + str(e.message))
         time.sleep(2.2)
-        print("Thread B: Subscribed to self._topic.")
+        print("Thread B: Subscribed to " + self._topic)
         print("Thread B: Now wait for Thread A.")
         # Scanning rate is 100 TPS
         while self._keepRunning:
