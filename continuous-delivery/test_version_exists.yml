@@ -1,0 +1,21 @@
+version: 0.2
+#this build spec assumes the ubuntu 14.04 trusty image
+#this build run simply verifies we haven't published something at this tag yet.
+#if we have we fail the build and stop the pipeline, if we haven't we allow the pipeline to run.
+phases:
+  install:
+    commands:
+      - sudo apt-get update -y
+      - sudo apt-get install python3 python3-pip -y
+      - pip3 install --upgrade setuptools
+  pre_build:
+    commands:
+  build:
+    commands:
+      - echo Build started on `date`
+      - cd aws-iot-device-sdk-python-v2
+      - bash ./continuous-delivery/test_version_exists
+  post_build:
+    commands:
+      - echo Build completed on `date`
+

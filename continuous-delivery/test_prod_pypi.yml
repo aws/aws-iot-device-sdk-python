@@ -1,0 +1,28 @@
+version: 0.2
+# this image assumes Ubuntu 14.04 base image
+phases:
+  install:
+    commands:
+      - sudo apt-get update -y
+      - sudo apt-get install python3 python3-pip -y
+      - python3 -m pip install --upgrade pip
+      - python3 -m pip install --upgrade setuptools
+
+  pre_build:
+    commands:
+      - curl https://www.amazontrust.com/repository/AmazonRootCA1.pem --output /tmp/AmazonRootCA1.pem
+      - cert=$(aws secretsmanager get-secret-value --secret-id "unit-test/certificate" --query "SecretString" | cut -f2 -d":" | cut -f2 -d\") && echo "$cert" > /tmp/certificate.pem
+      - key=$(aws secretsmanager get-secret-value --secret-id "unit-test/privatekey" --query "SecretString" | cut -f2 -d":" | cut -f2 -d\") && echo "$key" > /tmp/privatekey.pem
+      - ENDPOINT=$(aws secretsmanager get-secret-value --secret-id "unit-test/endpoint" --query "SecretString" | cut -f2 -d":" | sed -e 's/[\\\"\}]//g')
+  build:
+    commands:
+      - echo Build started on `date`
+      - cd aws-iot-device-sdk-python-v2
+      - CURRENT_TAG_VERSION=$(git describe --tags | cut -f2 -dv)
+      - python3 continuous-delivery/pip-install-with-retry.py --no-cache-dir --user awsiotsdk==$CURRENT_TAG_VERSION
+      - python3 samples/basic_discovery.py --region us-east-1 --cert /tmp/certificate.pem --key /tmp/privatekey.pem --root-ca /tmp/AmazonRootCA1.pem --thing-name aws-sdk-crt-unit-test --print-discover-resp-only -v Trace
+
+  post_build:
+    commands:
+      - echo Build completed on `date`
+

@@ -1,0 +1,25 @@
+version: 0.2
+# this image assumes Ubuntu 14.04 base image
+phases:
+  install:
+    commands:
+      - sudo apt-get update -y
+      - sudo apt-get install python3 python3-pip -y
+      - export PATH=$PATH:$HOME/.local/bin
+      - python3 -m pip install --user --upgrade pip
+      - python3 -m pip install --user --upgrade twine setuptools wheel awscli PyOpenSSL six
+  pre_build:
+    commands:
+      - pypirc=$(aws secretsmanager get-secret-value --secret-id "alpha/aws-crt-python/.pypirc" --query "SecretString" | cut -f2 -d\") && echo "$pypirc" > ~/.pypirc
+      - cd aws-iot-device-sdk-python-v2
+      - export PKG_VERSION=$(git describe --tags | cut -f2 -dv)
+      - echo "Updating package version to ${PKG_VERSION}"
+      - sed --in-place -E "s/__version__ = '.+'/__version__ = '${PKG_VERSION}'/" awsiot/__init__.py
+  build:
+    commands:
+      - echo Build started on `date`
+      - python3 setup.py sdist bdist_wheel
+      - python3 -m twine upload -r testpypi dist/*
+  post_build:
+    commands:
+      - echo Build completed on `date`
