@@ -21,8 +21,8 @@ phases:
       - CURRENT_TAG_VERSION=$(git describe --tags | cut -f2 -dv)
       # this is here because typing isn't in testpypi, so pull it from prod instead
       - python3 -m pip install typing
-      - python3 continuous-delivery/pip-install-with-retry.py -i https://testpypi.python.org/simple --user awsiotsdk==$CURRENT_TAG_VERSION
-      - python3 samples/basic_discovery.py --region us-east-1 --cert /tmp/certificate.pem --key /tmp/privatekey.pem --root-ca /tmp/AmazonRootCA1.pem --thing-name aws-sdk-crt-unit-test --print-discover-resp-only -v Trace
+      - python3 continuous-delivery/pip-install-with-retry.py -i https://testpypi.python.org/simple --user AWSIoTPythonSDK==$CURRENT_TAG_VERSION
+      - python3 samples/greengrass/basicDiscovery.py -e ${ENDPOINT} -c /tmp/certificate.pem -k /tmp/privatekey.pem -r /tmp/AmazonRootCA1.pem -n aws-sdk-crt-unit-test
 
   post_build:
     commands:

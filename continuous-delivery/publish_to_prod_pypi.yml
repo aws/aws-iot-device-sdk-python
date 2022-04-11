@@ -10,7 +10,7 @@ phases:
       - python3 -m pip install --user --upgrade twine setuptools wheel awscli PyOpenSSL six
   pre_build:
     commands:
-      - cd aws-iot-device-sdk-python-v2
+      - cd aws-iot-device-sdk-python
       - pypirc=$(aws secretsmanager get-secret-value --secret-id "prod/aws-crt-python/.pypirc" --query "SecretString" | cut -f2 -d\") && echo "$pypirc" > ~/.pypirc
       - export PKG_VERSION=$(git describe --tags | cut -f2 -dv)
       - echo "Updating package version to ${PKG_VERSION}"

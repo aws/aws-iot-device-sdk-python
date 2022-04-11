@@ -11,10 +11,10 @@ phases:
   pre_build:
     commands:
       - pypirc=$(aws secretsmanager get-secret-value --secret-id "alpha/aws-crt-python/.pypirc" --query "SecretString" | cut -f2 -d\") && echo "$pypirc" > ~/.pypirc
-      - cd aws-iot-device-sdk-python-v2
+      - cd aws-iot-device-sdk-python
       - export PKG_VERSION=$(git describe --tags | cut -f2 -dv)
       - echo "Updating package version to ${PKG_VERSION}"
-      - sed --in-place -E "s/__version__ = '.+'/__version__ = '${PKG_VERSION}'/" awsiot/__init__.py
+      - sed --in-place -E "s/__version__ = '.+'/__version__ = '${PKG_VERSION}'/" AWSIoTPythonSDK/__init__.py
   build:
     commands:
       - echo Build started on `date`
