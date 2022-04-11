@@ -17,7 +17,7 @@ phases:
   build:
     commands:
       - echo Build started on `date`
-      - cd aws-iot-device-sdk-python-v2
+      - cd aws-iot-device-sdk-python
       - CURRENT_TAG_VERSION=$(git describe --tags | cut -f2 -dv)
       - python3 continuous-delivery/pip-install-with-retry.py --no-cache-dir --user awsiotsdk==$CURRENT_TAG_VERSION
       - python3 samples/basic_discovery.py --region us-east-1 --cert /tmp/certificate.pem --key /tmp/privatekey.pem --root-ca /tmp/AmazonRootCA1.pem --thing-name aws-sdk-crt-unit-test --print-discover-resp-only -v Trace
