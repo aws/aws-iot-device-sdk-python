@@ -10,10 +10,10 @@ phases:
       - pip3 install --upgrade setuptools
   pre_build:
     commands:
+      - echo Build start on `date`
   build:
     commands:
-      - echo Build started on `date`
-      - cd aws-iot-device-sdk-python-v2
+      - cd aws-iot-device-sdk-python
       - bash ./continuous-delivery/test_version_exists
   post_build:
     commands:
