@@ -51,8 +51,8 @@ HOST = "ajje7lpljulm4-ats.iot.us-east-1.amazonaws.com"
 ROOT_CA = "./test-integration/Credentials/rootCA.crt"
 CERT = "./test-integration/Credentials/certificate.pem.crt"
 KEY = "./test-integration/Credentials/privateKey.pem.key"
-CLIENT_PUB_ID = "PySdkIntegTest_OfflineSubUnsub_pub"
-CLIENT_SUB_UNSUB_ID = "PySdkIntegTest_OfflineSubUnsub_subunsub"
+CLIENT_PUB_ID = "PySdkIntegTest_OfflineSubUnsub_pub" + get_random_string(4)
+CLIENT_SUB_UNSUB_ID = "PySdkIntegTest_OfflineSubUnsub_subunsub" + get_random_string(4)
 KEEP_ALIVE_SEC = 1
 EVENT_WAIT_TIME_OUT_SEC = 5
 

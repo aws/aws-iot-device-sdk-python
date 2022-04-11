@@ -39,6 +39,8 @@ from TestToolLibrary.skip import Python3VersionLowerThan
 
 # Global configuration
 TPS = 1  # Update speed, Spectre does not tolerate high TPS shadow operations...
+CLIENT_ID_PUB = "integrationTestMQTT_ClientPub" + "".join(random.choice(string.ascii_lowercase) for i in range(4))
+CLIENT_ID_SUB = "integrationTestMQTT_ClientSub" + "".join(random.choice(string.ascii_lowercase) for i in range(4))
 
 
 # Class that manages the generation and chopping of the random string
@@ -163,9 +165,9 @@ skip_when_match(ModeIsALPN(mode).And(
 
 # Init Python core and connect
 myMQTTClientManager = MQTTClientManager.MQTTClientManager()
-clientPub = myMQTTClientManager.create_connected_mqtt_core("integrationTestMQTT_ClientPub", host, rootCA,
+clientPub = myMQTTClientManager.create_connected_mqtt_core(CLIENT_ID_PUB, host, rootCA,
                                                            certificate, privateKey, mode=mode)
-clientSub = myMQTTClientManager.create_connected_mqtt_core("integrationTestMQTT_ClientSub", host, rootCA,
+clientSub = myMQTTClientManager.create_connected_mqtt_core(CLIENT_ID_SUB, host, rootCA,
                                                            certificate, privateKey, mode=mode)
 
 if clientPub is None or clientSub is None:

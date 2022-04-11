@@ -30,6 +30,8 @@ from TestToolLibrary.skip import ModeIsALPN
 from TestToolLibrary.skip import Python2VersionLowerThan
 from TestToolLibrary.skip import Python3VersionLowerThan
 
+CLIENT_ID_PUB = "integrationTestMQTT_ClientPub" + "".join(random.choice(string.ascii_lowercase) for i in range(4))
+CLIENT_ID_SUB = "integrationTestMQTT_ClientSub" + "".join(random.choice(string.ascii_lowercase) for i in range(4))
 
 # Callback unit
 class callbackUnit:
@@ -148,9 +150,9 @@ skip_when_match(ModeIsALPN(mode).And(
 
 # Init Python core and connect
 myMQTTClientManager = MQTTClientManager.MQTTClientManager()
-clientPub = myMQTTClientManager.create_connected_mqtt_core("integrationTestMQTT_ClientPub", host, rootCA,
+clientPub = myMQTTClientManager.create_connected_mqtt_core(CLIENT_ID_PUB, host, rootCA,
                                                            certificate, privateKey, mode=mode)
-clientSub = myMQTTClientManager.create_connected_mqtt_core("integrationTestMQTT_ClientSub", host, rootCA,
+clientSub = myMQTTClientManager.create_connected_mqtt_core(CLIENT_ID_SUB, host, rootCA,
                                                            certificate, privateKey, mode=mode)
 
 if clientPub is None or clientSub is None:

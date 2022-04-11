@@ -37,6 +37,7 @@ import argparse
 import json
 
 IOT_JOBS_MQTT_RESPONSE_WAIT_SECONDS = 5
+CLIENT_ID = "integrationTestMQTT_Client" + "".join(random.choice(string.ascii_lowercase) for i in range(4))
 
 class JobsMessageProcessor(object):
     def __init__(self, awsIoTMQTTThingJobsClient, clientToken):
@@ -168,7 +169,7 @@ skip_when_match(ModeIsALPN(mode).And(
 
 # Init Python core and connect
 myMQTTClientManager = MQTTClientManager.MQTTClientManager()
-client = myMQTTClientManager.create_connected_mqtt_client(mode, "integrationTestJobs_Client", host, (rootCA, certificate, privateKey))
+client = myMQTTClientManager.create_connected_mqtt_client(mode, CLIENT_ID, host, (rootCA, certificate, privateKey))
 
 clientId = 'AWSPythonkSDKTestThingClient'
 thingName = 'AWSPythonkSDKTestThing'
