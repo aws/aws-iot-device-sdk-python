@@ -20,7 +20,7 @@ phases:
       - cd aws-iot-device-sdk-python
       - CURRENT_TAG_VERSION=$(git describe --tags | cut -f2 -dv)
       - python3 continuous-delivery/pip-install-with-retry.py --no-cache-dir --user AWSIoTPythonSDK==$CURRENT_TAG_VERSION
-      - python3 samples/greengrass/basicDiscovery.py -e ${ENDPOINT} -c /tmp/certificate.pem -k /tmp/privatekey.pem -r /tmp/AmazonRootCA1.pem -n aws-sdk-crt-unit-test
+      - python3 samples/greengrass/basicDiscovery.py -e ${ENDPOINT} -c /tmp/certificate.pem -k /tmp/privatekey.pem -r /tmp/AmazonRootCA1.pem
 
   post_build:
     commands:

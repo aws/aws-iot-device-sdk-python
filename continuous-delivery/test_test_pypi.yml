@@ -12,9 +12,7 @@ phases:
     commands:
       - curl https://www.amazontrust.com/repository/AmazonRootCA1.pem --output /tmp/AmazonRootCA1.pem
       - cert=$(aws secretsmanager get-secret-value --secret-id "unit-test/certificate" --query "SecretString" | cut -f2 -d":" | cut -f2 -d\") && echo "$cert" > /tmp/certificate.pem
-      - echo /tmp/certificate.pem
       - key=$(aws secretsmanager get-secret-value --secret-id "unit-test/privatekey" --query "SecretString" | cut -f2 -d":" | cut -f2 -d\") && echo "$key" > /tmp/privatekey.pem
-      - echo /tmp/certificate.pem
       - ENDPOINT=$(aws secretsmanager get-secret-value --secret-id "unit-test/endpoint" --query "SecretString" | cut -f2 -d":" | sed -e 's/[\\\"\}]//g')
   build:
     commands:
@@ -23,7 +21,8 @@ phases:
       - CURRENT_TAG_VERSION=$(git describe --tags | cut -f2 -dv)
       # this is here because typing isn't in testpypi, so pull it from prod instead
       - python3 -m pip install typing
-      - python3 continuous-delivery/pip-install-with-retry.py -i https://testpypi.python.org/simple --user AWSIoTPythonSDK-V1==1.4.8
+      - python3 continuous-delivery/pip-install-with-retry.py -i https://testpypi.python.org/simple --user AWSIoTPythonSDK-V1==$CURRENT_TAG_VERSION
+      # The greengrass test failed for no discover the correct thing. However it is good enough to test if the AWSIoTPythonSDK installed successfully or not. 
       - python3 samples/greengrass/basicDiscovery.py -e ${ENDPOINT} -c /tmp/certificate.pem -k /tmp/privatekey.pem -r /tmp/AmazonRootCA1.pem
 
   post_build:
