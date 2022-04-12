@@ -19,7 +19,7 @@ phases:
     commands:
       - echo Build started on `date`
       - python3 setup_test.py sdist bdist_wheel --universal
-      - python3 -m twine upload -r testpypi dist/*
+      - python3 -m twine upload -r testpypi dist/* --verbose
   post_build:
     commands:
       - echo Build completed on `date`
