@@ -22,8 +22,7 @@ phases:
       # this is here because typing isn't in testpypi, so pull it from prod instead
       - python3 -m pip install typing
       - python3 continuous-delivery/pip-install-with-retry.py -i https://testpypi.python.org/simple --user AWSIoTPythonSDK-V1==$CURRENT_TAG_VERSION
-      # The greengrass test failed for no discover the correct thing. However it is good enough to test if the AWSIoTPythonSDK installed successfully or not. 
-      - python3 samples/greengrass/basicDiscovery.py -e ${ENDPOINT} -c /tmp/certificate.pem -k /tmp/privatekey.pem -r /tmp/AmazonRootCA1.pem
+      - python3 samples/greengrass/basicDiscovery.py -e ${ENDPOINT} -c /tmp/certificate.pem -k /tmp/privatekey.pem -r /tmp/AmazonRootCA1.pem --print_discover_resp_only
 
   post_build:
     commands:

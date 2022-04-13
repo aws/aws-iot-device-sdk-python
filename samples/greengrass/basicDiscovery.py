@@ -47,6 +47,8 @@ parser.add_argument("-m", "--mode", action="store", dest="mode", default="both",
                     help="Operation modes: %s"%str(AllowedActions))
 parser.add_argument("-M", "--message", action="store", dest="message", default="Hello World!",
                     help="Message to publish")
+#--print_discover_resp_only used for delopyment testing. The test run will return 0 as long as the SDK installed correctly.
+parser.add_argument("-p", "--print_discover_resp_only", action="store_true", dest="print_only", default=False)
 
 args = parser.parse_args()
 host = args.host
@@ -56,6 +58,7 @@ privateKeyPath = args.privateKeyPath
 clientId = args.thingName
 thingName = args.thingName
 topic = args.topic
+print_only = args.print_only
 
 if args.mode not in AllowedActions:
     parser.error("Unknown --mode option %s. Must be one of %s" % (args.mode, str(AllowedActions)))
@@ -94,7 +97,7 @@ discoveryInfoProvider.configureEndpoint(host)
 discoveryInfoProvider.configureCredentials(rootCAPath, certificatePath, privateKeyPath)
 discoveryInfoProvider.configureTimeout(10)  # 10 sec
 
-retryCount = MAX_DISCOVERY_RETRIES
+retryCount = MAX_DISCOVERY_RETRIES if not print_only else 1
 discovered = False
 groupCA = None
 coreInfo = None
@@ -136,6 +139,9 @@ while retryCount != 0:
         backOffCore.backOff()
 
 if not discovered:
+    # With print_discover_resp_only flag, we only woud like to check if the API get called correctly. 
+    if print_only:
+        sys.exit(0)
     print("Discovery failed after %d retries. Exiting...\n" % (MAX_DISCOVERY_RETRIES))
     sys.exit(-1)
 
