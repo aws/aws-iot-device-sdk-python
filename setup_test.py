@@ -1,3 +1,7 @@
+# For test deployment with package AWSIoTPythonSDK. The package name has already taken. Therefore we used an
+# alternative name for test pypi.
+# prod_pypi : AWSIoTPythonSDK
+# test_pypi : AWSIoTPythonSDK-V1
 import sys
 sys.path.insert(0, 'AWSIoTPythonSDK')
 import AWSIoTPythonSDK
