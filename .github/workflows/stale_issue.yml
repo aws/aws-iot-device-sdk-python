@@ -9,6 +9,9 @@ jobs:
   cleanup:
     runs-on: ubuntu-latest
     name: Stale issue job
+    permissions:
+      issues: write
+      pull-requests: write
     steps:
     - uses: aws-actions/stale-issue-cleanup@v3
       with:
