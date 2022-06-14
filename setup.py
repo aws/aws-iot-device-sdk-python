@@ -3,7 +3,7 @@ sys.path.insert(0, 'AWSIoTPythonSDK')
 import AWSIoTPythonSDK
 currentVersion = AWSIoTPythonSDK.__version__
 
-from distutils.core import setup
+from setuptools import setup
 setup(
     name = 'AWSIoTPythonSDK',
     packages=['AWSIoTPythonSDK', 'AWSIoTPythonSDK.core',
