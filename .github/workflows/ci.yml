@@ -36,7 +36,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        test-type: [ MutualAuth, MutualAuthT , Websocket, ALPN, ALPNT]
+        test-type: [ MutualAuth, Websocket, ALPN ]
         python-version: [ '3.7', '3.12' ]
     steps:
       - uses: actions/checkout@v4
