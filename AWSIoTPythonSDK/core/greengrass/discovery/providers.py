@@ -282,6 +282,7 @@ class DiscoveryInfoProvider(object):
         if sys.version_info[0] < 3 or (sys.version_info[0] == 3 and sys.version_info[1] < 2):
             self._tls_match_hostname(ssl_sock)
         elif sys.version_info[0] == 3 and sys.version_info[1] < 7:
+            # host name verification is handled internally in Python3.7+
             ssl.match_hostname(ssl_sock.getpeercert(), self._host)
 
         return ssl_sock
