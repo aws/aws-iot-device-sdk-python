@@ -49,4 +49,5 @@ jobs:
           pip install pytest
           pip install mock
           pip install boto3
+          python --version
           ./test-integration/run/run.sh ${{ matrix.test-type }} 1000 100 7
