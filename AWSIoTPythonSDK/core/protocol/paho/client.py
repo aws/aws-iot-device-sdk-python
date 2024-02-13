@@ -849,7 +849,8 @@ class Client(object):
             if verify_hostname:
                 if sys.version_info[0] < 3 or (sys.version_info[0] == 3 and sys.version_info[1] < 5):  # No IP host match before 3.5.x
                     self._tls_match_hostname()
-                else:
+                elif sys.version_info[0] == 3 and sys.version_info[1] < 7:
+                    # host name verification is handled internally in Python3.7+
                     ssl.match_hostname(self._ssl.getpeercert(), self._host)
 
         self._sock = sock
