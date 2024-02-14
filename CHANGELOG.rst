@@ -2,6 +2,9 @@
 CHANGELOG
 =========
 
+1.5.3
+* improvement: Support Python3.12+ by conditionally removing deprecated API usage
+
 1.4.9
 =====
 * bugfix: Fixing possible race condition with timer in deviceShadow.
