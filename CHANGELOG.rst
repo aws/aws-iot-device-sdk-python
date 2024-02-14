@@ -2,6 +2,9 @@
 CHANGELOG
 =========
 
+1.5.4
+* chore: CD pipeline flushing try #1
+
 1.5.3
 * improvement: Support Python3.12+ by conditionally removing deprecated API usage
 
