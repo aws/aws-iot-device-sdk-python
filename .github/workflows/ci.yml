@@ -36,11 +36,10 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        test-type: [ MutualAuth, MutualAuthT , Websocket, ALPN, ALPNT]
-        python-version: [ '2.x', '3.x' ]
-        #[MutualAuth, Websocket, ALPN]
+        test-type: [ MutualAuth, Websocket, ALPN ]
+        python-version: [ '3.7', '3.12' ]
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - uses: actions/setup-python@v2
         with:
           python-version: ${{ matrix.python-version }}
@@ -49,4 +48,5 @@ jobs:
           pip install pytest
           pip install mock
           pip install boto3
+          python --version
           ./test-integration/run/run.sh ${{ matrix.test-type }} 1000 100 7

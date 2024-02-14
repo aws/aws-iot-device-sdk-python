@@ -261,17 +261,28 @@ class DiscoveryInfoProvider(object):
             ssl_sock = ssl_context.wrap_socket(sock, server_hostname=self._host, do_handshake_on_connect=False)
             ssl_sock.do_handshake()
         else:
-            ssl_sock = ssl.wrap_socket(sock,
-                                       certfile=self._cert_path,
-                                       keyfile=self._key_path,
-                                       ca_certs=self._ca_path,
-                                       cert_reqs=ssl.CERT_REQUIRED,
-                                       ssl_version=ssl_protocol_version)
+            # To keep the SSL Context update minimal, only apply forced ssl context to python3.12+
+            force_ssl_context = sys.version_info[0] > 3 or (sys.version_info[0] == 3 and sys.version_info[1] >= 12)
+            if force_ssl_context:
+                ssl_context = ssl.SSLContext(ssl_protocol_version)
+                ssl_context.load_cert_chain(self._cert_path, self._key_path)
+                ssl_context.load_verify_locations(self._ca_path)
+                ssl_context.verify_mode = ssl.CERT_REQUIRED
+
+                ssl_sock = ssl_context.wrap_socket(sock)
+            else:
+                ssl_sock = ssl.wrap_socket(sock,
+                                           certfile=self._cert_path,
+                                           keyfile=self._key_path,
+                                           ca_certs=self._ca_path,
+                                           cert_reqs=ssl.CERT_REQUIRED,
+                                           ssl_version=ssl_protocol_version)
 
         self._logger.debug("Matching host name...")
         if sys.version_info[0] < 3 or (sys.version_info[0] == 3 and sys.version_info[1] < 2):
             self._tls_match_hostname(ssl_sock)
-        else:
+        elif sys.version_info[0] == 3 and sys.version_info[1] < 7:
+            # host name verification is handled internally in Python3.7+
             ssl.match_hostname(ssl_sock.getpeercert(), self._host)
 
         return ssl_sock

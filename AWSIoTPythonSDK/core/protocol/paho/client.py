@@ -793,11 +793,22 @@ class Client(object):
 
         verify_hostname = self._tls_insecure is False  # Decide whether we need to verify hostname
 
+        # To keep the SSL Context update minimal, only apply forced ssl context to python3.12+
+        force_ssl_context = sys.version_info[0] > 3 or (sys.version_info[0] == 3 and sys.version_info[1] >= 12)
+
         if self._tls_ca_certs is not None:
             if self._useSecuredWebsocket:
                 # Never assign to ._ssl before wss handshake is finished
                 # Non-None value for ._ssl will allow ops before wss-MQTT connection is established
-                rawSSL = ssl.wrap_socket(sock, ca_certs=self._tls_ca_certs, cert_reqs=ssl.CERT_REQUIRED)  # Add server certificate verification
+                if force_ssl_context:
+                    ssl_context = ssl.SSLContext()
+                    ssl_context.load_verify_locations(self._tls_ca_certs)
+                    ssl_context.verify_mode = ssl.CERT_REQUIRED
+
+                    rawSSL = ssl_context.wrap_socket(sock)
+                else:
+                    rawSSL = ssl.wrap_socket(sock, ca_certs=self._tls_ca_certs, cert_reqs=ssl.CERT_REQUIRED)  # Add server certificate verification
+
                 rawSSL.setblocking(0)  # Non-blocking socket
                 self._ssl = SecuredWebSocketCore(rawSSL, self._host, self._port, self._AWSAccessKeyIDCustomConfig, self._AWSSecretAccessKeyCustomConfig, self._AWSSessionTokenCustomConfig)  # Override the _ssl socket
                 # self._ssl.enableDebug()
@@ -816,19 +827,30 @@ class Client(object):
                 verify_hostname = False  # Since check_hostname in SSLContext is already set to True, no need to verify it again
                 self._ssl.do_handshake()
             else:
-                self._ssl = ssl.wrap_socket(
-                    sock,
-                    certfile=self._tls_certfile,
-                    keyfile=self._tls_keyfile,
-                    ca_certs=self._tls_ca_certs,
-                    cert_reqs=self._tls_cert_reqs,
-                    ssl_version=self._tls_version,
-                    ciphers=self._tls_ciphers)
+                if force_ssl_context:
+                    ssl_context = ssl.SSLContext(self._tls_version)
+                    ssl_context.load_cert_chain(self._tls_certfile, self._tls_keyfile)
+                    ssl_context.load_verify_locations(self._tls_ca_certs)
+                    ssl_context.verify_mode = self._tls_cert_reqs
+                    if self._tls_ciphers is not None:
+                        ssl_context.set_ciphers(self._tls_ciphers)
+
+                    self._ssl = ssl_context.wrap_socket(sock)
+                else:
+                    self._ssl = ssl.wrap_socket(
+                        sock,
+                        certfile=self._tls_certfile,
+                        keyfile=self._tls_keyfile,
+                        ca_certs=self._tls_ca_certs,
+                        cert_reqs=self._tls_cert_reqs,
+                        ssl_version=self._tls_version,
+                        ciphers=self._tls_ciphers)
 
             if verify_hostname:
                 if sys.version_info[0] < 3 or (sys.version_info[0] == 3 and sys.version_info[1] < 5):  # No IP host match before 3.5.x
                     self._tls_match_hostname()
-                else:
+                elif sys.version_info[0] == 3 and sys.version_info[1] < 7:
+                    # host name verification is handled internally in Python3.7+
                     ssl.match_hostname(self._ssl.getpeercert(), self._host)
 
         self._sock = sock

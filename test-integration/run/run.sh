@@ -35,16 +35,13 @@ USAGE="usage: run.sh <testMode> <NumberOfMQTTMessages> <LengthOfShadowRandomStri
 
 AWSMutualAuth_TodWorker_private_key="arn:aws:secretsmanager:us-east-1:123124136734:secret:V1IotSdkIntegrationTestPrivateKey-vNUQU8"
 AWSMutualAuth_TodWorker_certificate="arn:aws:secretsmanager:us-east-1:123124136734:secret:V1IotSdkIntegrationTestCertificate-vTRwjE"
-AWSMutualAuth_Desktop_private_key="arn:aws:secretsmanager:us-east-1:123124136734:secret:V1IotSdkIntegrationTestDesktopPrivateKey-DdC7nv"
-AWSMutualAuth_Desktop_certificate="arn:aws:secretsmanager:us-east-1:123124136734:secret:V1IotSdkIntegrationTestDesktopCertificate-IA4xbj"
 
 AWSGGDiscovery_TodWorker_private_key="arn:aws:secretsmanager:us-east-1:123124136734:secret:V1IotSdkIntegrationTestGGDiscoveryPrivateKey-YHQI1F"
 AWSGGDiscovery_TodWorker_certificate="arn:aws:secretsmanager:us-east-1:123124136734:secret:V1IotSdkIntegrationTestGGDiscoveryCertificate-TwlAcS"
 
 AWSSecretForWebsocket_TodWorker_KeyId="arn:aws:secretsmanager:us-east-1:123124136734:secret:V1IotSdkIntegrationTestWebsocketAccessKeyId-1YdB9z"
 AWSSecretForWebsocket_TodWorker_SecretKey="arn:aws:secretsmanager:us-east-1:123124136734:secret:V1IotSdkIntegrationTestWebsocketSecretAccessKey-MKTSaV"
-AWSSecretForWebsocket_Desktop_KeyId="arn:aws:secretsmanager:us-east-1:123124136734:secret:V1IotSdkIntegrationTestWebsocketAccessKeyId-1YdB9z"
-AWSSecretForWebsocket_Desktop_SecretKey="arn:aws:secretsmanager:us-east-1:123124136734:secret:V1IotSdkIntegrationTestWebsocketSecretAccessKey-MKTSaV"
+
 
 SDKLocation="./AWSIoTPythonSDK"
 RetrieveAWSKeys="./test-integration/Tools/retrieve-key.py"
@@ -72,55 +69,41 @@ else
     TestMode=""
     echo "[STEP] Retrieve credentials from AWS"
     echo "***************************************************"
-    if [ "$1"x == "MutualAuth"x -o "$1"x == "MutualAuthT"x ]; then
+    if [ "$1"x == "MutualAuth"x ]; then
         AWSSetName_privatekey=${AWSMutualAuth_TodWorker_private_key}
-    	AWSSetName_certificate=${AWSMutualAuth_TodWorker_certificate}
-    	AWSDRSName_privatekey=${AWSGGDiscovery_TodWorker_private_key}
+    	  AWSSetName_certificate=${AWSMutualAuth_TodWorker_certificate}
+    	  AWSDRSName_privatekey=${AWSGGDiscovery_TodWorker_private_key}
         AWSDRSName_certificate=${AWSGGDiscovery_TodWorker_certificate}
         TestMode="MutualAuth"
-        if [ "$1"x == "MutualAuthT"x ]; then
-            AWSSetName_privatekey=${AWSMutualAuth_Desktop_private_key}
-    	    AWSSetName_certificate=${AWSMutualAuth_Desktop_certificate}
-        fi
-    	python ${RetrieveAWSKeys} ${AWSSetName_certificate} > ${CREDENTIAL_DIR}certificate.pem.crt
-    	python ${RetrieveAWSKeys} ${AWSSetName_privatekey} > ${CREDENTIAL_DIR}privateKey.pem.key
+    	  python ${RetrieveAWSKeys} ${AWSSetName_certificate} > ${CREDENTIAL_DIR}certificate.pem.crt
+    	  python ${RetrieveAWSKeys} ${AWSSetName_privatekey} > ${CREDENTIAL_DIR}privateKey.pem.key
         curl -s "${CA_CERT_URL}" > ${CA_CERT_PATH}
-        echo -e "URL retrieved certificate data:\n$(cat ${CA_CERT_PATH})\n"
-    	python ${RetrieveAWSKeys} ${AWSDRSName_certificate} > ${CREDENTIAL_DIR}certificate_drs.pem.crt
-    	python ${RetrieveAWSKeys} ${AWSDRSName_privatekey} > ${CREDENTIAL_DIR}privateKey_drs.pem.key
-    elif [ "$1"x == "Websocket"x -o "$1"x == "WebsocketT"x ]; then
-    	ACCESS_KEY_ID_ARN=$(python ${RetrieveAWSKeys} ${AWSSecretForWebsocket_TodWorker_KeyId})
+        echo -e "URL retrieved certificate data\n"
+    	  python ${RetrieveAWSKeys} ${AWSDRSName_certificate} > ${CREDENTIAL_DIR}certificate_drs.pem.crt
+    	  python ${RetrieveAWSKeys} ${AWSDRSName_privatekey} > ${CREDENTIAL_DIR}privateKey_drs.pem.key
+    elif [ "$1"x == "Websocket"x ]; then
+    	  ACCESS_KEY_ID_ARN=$(python ${RetrieveAWSKeys} ${AWSSecretForWebsocket_TodWorker_KeyId})
         ACCESS_SECRET_KEY_ARN=$(python ${RetrieveAWSKeys} ${AWSSecretForWebsocket_TodWorker_SecretKey})
         TestMode="Websocket"
-        if [ "$1"x == "WebsocketT"x ]; then
-            ACCESS_KEY_ID_ARN=$(python ${RetrieveAWSKeys} ${AWSSecretForWebsocket_Desktop_KeyId})
-            ACCESS_SECRET_KEY_ARN=$(python ${RetrieveAWSKeys} ${AWSSecretForWebsocket_Desktop_SecretKey})
-        fi
-        echo ${ACCESS_KEY_ID_ARN}
-        echo ${ACCESS_SECRET_KEY_ARN}
         export AWS_ACCESS_KEY_ID=${ACCESS_KEY_ID_ARN}
         export AWS_SECRET_ACCESS_KEY=${ACCESS_SECRET_KEY_ARN}
         curl -s "${CA_CERT_URL}" > ${CA_CERT_PATH}
-        echo -e "URL retrieved certificate data:\n$(cat ${CA_CERT_PATH})\n"
-    elif [ "$1"x == "ALPN"x -o "$1"x == "ALPNT"x ]; then
+        echo -e "URL retrieved certificate data\n"
+    elif [ "$1"x == "ALPN"x ]; then
         AWSSetName_privatekey=${AWSMutualAuth_TodWorker_private_key}
-    	AWSSetName_certificate=${AWSMutualAuth_TodWorker_certificate}
-    	AWSDRSName_privatekey=${AWSGGDiscovery_TodWorker_private_key}
+    	  AWSSetName_certificate=${AWSMutualAuth_TodWorker_certificate}
+    	  AWSDRSName_privatekey=${AWSGGDiscovery_TodWorker_private_key}
         AWSDRSName_certificate=${AWSGGDiscovery_TodWorker_certificate}
         TestMode="ALPN"
-        if [ "$1"x == "ALPNT"x ]; then
-            AWSSetName_privatekey=${AWSMutualAuth_Desktop_private_key}
-    	    AWSSetName_certificate=${AWSMutualAuth_Desktop_certificate}
-        fi
         python ${RetrieveAWSKeys} ${AWSSetName_certificate} > ${CREDENTIAL_DIR}certificate.pem.crt
-    	python ${RetrieveAWSKeys} ${AWSSetName_privatekey} > ${CREDENTIAL_DIR}privateKey.pem.key
+    	  python ${RetrieveAWSKeys} ${AWSSetName_privatekey} > ${CREDENTIAL_DIR}privateKey.pem.key
         curl -s "${CA_CERT_URL}" > ${CA_CERT_PATH}
-        echo -e "URL retrieved certificate data:\n$(cat ${CA_CERT_PATH})\n"
-    	python ${RetrieveAWSKeys} ${AWSDRSName_certificate} > ${CREDENTIAL_DIR}certificate_drs.pem.crt
-    	python ${RetrieveAWSKeys} ${AWSDRSName_privatekey} > ${CREDENTIAL_DIR}privateKey_drs.pem.key
+        echo -e "URL retrieved certificate data\n"
+    	  python ${RetrieveAWSKeys} ${AWSDRSName_certificate} > ${CREDENTIAL_DIR}certificate_drs.pem.crt
+    	  python ${RetrieveAWSKeys} ${AWSDRSName_privatekey} > ${CREDENTIAL_DIR}privateKey_drs.pem.key
     else
-    	echo "Mode not supported"
-    	exit 1
+    	  echo "Mode not supported"
+    	  exit 1
     fi
 # Obtain ZIP package and unzip it locally
     echo ${TestMode}
