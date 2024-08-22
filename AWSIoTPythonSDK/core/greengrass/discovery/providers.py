@@ -261,7 +261,7 @@ class DiscoveryInfoProvider(object):
             ssl_sock = ssl_context.wrap_socket(sock, server_hostname=self._host, do_handshake_on_connect=False)
             ssl_sock.do_handshake()
         else:
-            ssl_sock = ssl.wrap_socket(sock,
+            ssl_sock = ssl.SSLContext.wrap_socket(sock,
                                        certfile=self._cert_path,
                                        keyfile=self._key_path,
                                        ca_certs=self._ca_path,

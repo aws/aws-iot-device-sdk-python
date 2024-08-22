@@ -797,7 +797,7 @@ class Client(object):
             if self._useSecuredWebsocket:
                 # Never assign to ._ssl before wss handshake is finished
                 # Non-None value for ._ssl will allow ops before wss-MQTT connection is established
-                rawSSL = ssl.wrap_socket(sock, ca_certs=self._tls_ca_certs, cert_reqs=ssl.CERT_REQUIRED)  # Add server certificate verification
+                rawSSL = ssl.SSLContext.wrap_socket(sock, ca_certs=self._tls_ca_certs, cert_reqs=ssl.CERT_REQUIRED)  # Add server certificate verification
                 rawSSL.setblocking(0)  # Non-blocking socket
                 self._ssl = SecuredWebSocketCore(rawSSL, self._host, self._port, self._AWSAccessKeyIDCustomConfig, self._AWSSecretAccessKeyCustomConfig, self._AWSSessionTokenCustomConfig)  # Override the _ssl socket
                 # self._ssl.enableDebug()
@@ -816,7 +816,7 @@ class Client(object):
                 verify_hostname = False  # Since check_hostname in SSLContext is already set to True, no need to verify it again
                 self._ssl.do_handshake()
             else:
-                self._ssl = ssl.wrap_socket(
+                self._ssl = ssl.SSLContext.wrap_socket(
                     sock,
                     certfile=self._tls_certfile,
                     keyfile=self._tls_keyfile,
@@ -990,7 +990,7 @@ class Client(object):
             message.retain = retain
             message.dup = False
 
-            self._out_message_mutex.acquire()                
+            self._out_message_mutex.acquire()
             self._out_messages.append(message)
             if self._max_inflight_messages == 0 or self._inflight_messages < self._max_inflight_messages:
                 self._inflight_messages = self._inflight_messages+1
@@ -999,7 +999,7 @@ class Client(object):
                 elif qos == 2:
                     message.state = mqtt_ms_wait_for_pubrec
                 self._out_message_mutex.release()
-                    
+
                 rc = self._send_publish(message.mid, message.topic, message.payload, message.qos, message.retain, message.dup)
 
                 # remove from inflight messages so it will be send after a connection is made
@@ -1007,7 +1007,7 @@ class Client(object):
                     with self._out_message_mutex:
                         self._inflight_messages -= 1
                         message.state = mqtt_ms_publish
-                        
+
                 return (rc, local_mid)
             else:
                 message.state = mqtt_ms_queued;
@@ -1033,7 +1033,7 @@ class Client(object):
         socket_factory: create_connection function which creates a socket to user's specification
         """
         self._socket_factory = socket_factory
-        
+
     def disconnect(self):
         """Disconnect a connected client from the broker."""
         self._state_mutex.acquire()
@@ -1435,10 +1435,10 @@ class Client(object):
         Messages that match 'sub' will be passed to 'callback'. Any
         non-matching messages will be passed to the default on_message
         callback.
-        
+
         Call multiple times with different 'sub' to define multiple topic
         specific callbacks.
-        
+
         Topic specific callbacks may be removed with
         message_callback_remove()."""
         if callback is None or sub is None:
@@ -2448,7 +2448,7 @@ class Client(object):
         raise ssl.SSLError('Certificate subject does not match remote hostname.')
 
 
-# Compatibility class for easy porting from mosquitto.py. 
+# Compatibility class for easy porting from mosquitto.py.
 class Mosquitto(Client):
     def __init__(self, client_id="", clean_session=True, userdata=None):
         super(Mosquitto, self).__init__(client_id, clean_session, userdata)
