@@ -85,7 +85,6 @@ else
     	python ${RetrieveAWSKeys} ${AWSSetName_certificate} > ${CREDENTIAL_DIR}certificate.pem.crt
     	python ${RetrieveAWSKeys} ${AWSSetName_privatekey} > ${CREDENTIAL_DIR}privateKey.pem.key
         curl -s "${CA_CERT_URL}" > ${CA_CERT_PATH}
-        echo -e "URL retrieved certificate data:\n$(cat ${CA_CERT_PATH})\n"
     	python ${RetrieveAWSKeys} ${AWSDRSName_certificate} > ${CREDENTIAL_DIR}certificate_drs.pem.crt
     	python ${RetrieveAWSKeys} ${AWSDRSName_privatekey} > ${CREDENTIAL_DIR}privateKey_drs.pem.key
     elif [ "$1"x == "Websocket"x -o "$1"x == "WebsocketT"x ]; then
@@ -96,12 +95,9 @@ else
             ACCESS_KEY_ID_ARN=$(python ${RetrieveAWSKeys} ${AWSSecretForWebsocket_Desktop_KeyId})
             ACCESS_SECRET_KEY_ARN=$(python ${RetrieveAWSKeys} ${AWSSecretForWebsocket_Desktop_SecretKey})
         fi
-        echo ${ACCESS_KEY_ID_ARN}
-        echo ${ACCESS_SECRET_KEY_ARN}
         export AWS_ACCESS_KEY_ID=${ACCESS_KEY_ID_ARN}
         export AWS_SECRET_ACCESS_KEY=${ACCESS_SECRET_KEY_ARN}
         curl -s "${CA_CERT_URL}" > ${CA_CERT_PATH}
-        echo -e "URL retrieved certificate data:\n$(cat ${CA_CERT_PATH})\n"
     elif [ "$1"x == "ALPN"x -o "$1"x == "ALPNT"x ]; then
         AWSSetName_privatekey=${AWSMutualAuth_TodWorker_private_key}
     	AWSSetName_certificate=${AWSMutualAuth_TodWorker_certificate}
@@ -115,7 +111,6 @@ else
         python ${RetrieveAWSKeys} ${AWSSetName_certificate} > ${CREDENTIAL_DIR}certificate.pem.crt
     	python ${RetrieveAWSKeys} ${AWSSetName_privatekey} > ${CREDENTIAL_DIR}privateKey.pem.key
         curl -s "${CA_CERT_URL}" > ${CA_CERT_PATH}
-        echo -e "URL retrieved certificate data:\n$(cat ${CA_CERT_PATH})\n"
     	python ${RetrieveAWSKeys} ${AWSDRSName_certificate} > ${CREDENTIAL_DIR}certificate_drs.pem.crt
     	python ${RetrieveAWSKeys} ${AWSDRSName_privatekey} > ${CREDENTIAL_DIR}privateKey_drs.pem.key
     else
