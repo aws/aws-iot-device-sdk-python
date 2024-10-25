@@ -2,10 +2,16 @@
 CHANGELOG
 =========
 
+1.5.5
+=====
+* chore: Update minimum Python version based on current supportable levels
+
 1.5.4
+=====
 * chore: CD pipeline flushing try #1
 
 1.5.3
+=====
 * improvement: Support Python3.12+ by conditionally removing deprecated API usage
 
 1.4.9
