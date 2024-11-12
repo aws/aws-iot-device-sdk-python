@@ -41,9 +41,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
-      - uses: aws-actions/configure-aws-credentials@v2
         with:
           python-version: ${{ matrix.python-version }}
+      - uses: aws-actions/configure-aws-credentials@v2
+        with:
           role-to-assume: ${{ env.CI_SDK_V1_ROLE }}
           aws-region: ${{ env.AWS_DEFAULT_REGION }}
       - name: Integration tests
