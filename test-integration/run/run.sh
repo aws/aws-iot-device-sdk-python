@@ -33,8 +33,8 @@
 # Define const
 USAGE="usage: run.sh <testMode> <NumberOfMQTTMessages> <LengthOfShadowRandomString> <NumberOfNetworkFailure>"
 
-AWSMutualAuth_TodWorker_private_key="arn:aws:secretsmanager:us-east-1:123124136734:secret:V1IotSdkIntegrationTestPrivateKey-vNUQU8"
-AWSMutualAuth_TodWorker_certificate="arn:aws:secretsmanager:us-east-1:123124136734:secret:V1IotSdkIntegrationTestCertificate-vTRwjE"
+AWSMutualAuth_TodWorker_private_key="arn:aws:secretsmanager:us-east-1:180635532705:secret:ci/mqtt5/us/Mqtt5Prod/key-kqgyvf"
+AWSMutualAuth_TodWorker_certificate="arn:aws:secretsmanager:us-east-1:180635532705:secret:ci/mqtt5/us/Mqtt5Prod/cert-VDI1Gd"
 
 AWSGGDiscovery_TodWorker_private_key="arn:aws:secretsmanager:us-east-1:123124136734:secret:V1IotSdkIntegrationTestGGDiscoveryPrivateKey-YHQI1F"
 AWSGGDiscovery_TodWorker_certificate="arn:aws:secretsmanager:us-east-1:123124136734:secret:V1IotSdkIntegrationTestGGDiscoveryCertificate-TwlAcS"
@@ -82,11 +82,11 @@ else
     	  python ${RetrieveAWSKeys} ${AWSDRSName_certificate} > ${CREDENTIAL_DIR}certificate_drs.pem.crt
     	  python ${RetrieveAWSKeys} ${AWSDRSName_privatekey} > ${CREDENTIAL_DIR}privateKey_drs.pem.key
     elif [ "$1"x == "Websocket"x ]; then
-    	  ACCESS_KEY_ID_ARN=$(python ${RetrieveAWSKeys} ${AWSSecretForWebsocket_TodWorker_KeyId})
-        ACCESS_SECRET_KEY_ARN=$(python ${RetrieveAWSKeys} ${AWSSecretForWebsocket_TodWorker_SecretKey})
+    	# ACCESS_KEY_ID_ARN=$(python ${RetrieveAWSKeys} ${AWSSecretForWebsocket_TodWorker_KeyId})
+        # ACCESS_SECRET_KEY_ARN=$(python ${RetrieveAWSKeys} ${AWSSecretForWebsocket_TodWorker_SecretKey})
         TestMode="Websocket"
-        export AWS_ACCESS_KEY_ID=${ACCESS_KEY_ID_ARN}
-        export AWS_SECRET_ACCESS_KEY=${ACCESS_SECRET_KEY_ARN}
+        # export AWS_ACCESS_KEY_ID=${ACCESS_KEY_ID_ARN}
+        # export AWS_SECRET_ACCESS_KEY=${ACCESS_SECRET_KEY_ARN}
         curl -s "${CA_CERT_URL}" > ${CA_CERT_PATH}
         echo -e "URL retrieved certificate data\n"
     elif [ "$1"x == "ALPN"x ]; then
