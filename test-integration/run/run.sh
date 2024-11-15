@@ -33,6 +33,8 @@
 # Define const
 USAGE="usage: run.sh <testMode> <NumberOfMQTTMessages> <LengthOfShadowRandomString> <NumberOfNetworkFailure>"
 
+AWSHost="arn:aws:secretsmanager:us-east-1:180635532705:secret:unit-test/endpoint-HSpeEu"
+
 AWSMutualAuth_TodWorker_private_key="arn:aws:secretsmanager:us-east-1:180635532705:secret:ci/mqtt5/us/Mqtt5Prod/key-kqgyvf"
 AWSMutualAuth_TodWorker_certificate="arn:aws:secretsmanager:us-east-1:180635532705:secret:ci/mqtt5/us/Mqtt5Prod/cert-VDI1Gd"
 
@@ -49,6 +51,7 @@ CREDENTIAL_DIR="./test-integration/Credentials/"
 TEST_DIR="./test-integration/IntegrationTests/"
 CA_CERT_URL="https://www.amazontrust.com/repository/AmazonRootCA1.pem"
 CA_CERT_PATH=${CREDENTIAL_DIR}rootCA.crt
+Host=$(python ${RetrieveAWSKeys} ${AWSHost})
 
 
 
@@ -142,7 +145,7 @@ else
                 "IntegrationTestJobsClient.py") Scale=""
             esac
 
-            python ${TEST_DIR}${file} ${TestMode} ${Scale}
+            python ${TEST_DIR}${file} ${TestMode} ${Host} ${Scale}
             currentTestStatus=$?
             echo "[SUB] Test: ${file} completed. Exiting with status: ${currentTestStatus}"
             if [ ${currentTestStatus} -ne 0 ]; then

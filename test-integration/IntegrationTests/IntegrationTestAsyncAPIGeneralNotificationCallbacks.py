@@ -32,7 +32,6 @@ from TestToolLibrary.skip import Python3VersionLowerThan
 TOPIC = "topic/test/async_cb/"
 MESSAGE_PREFIX = "MagicMessage-"
 NUMBER_OF_PUBLISHES = 3
-HOST = "ajje7lpljulm4-ats.iot.us-east-1.amazonaws.com"
 ROOT_CA = "./test-integration/Credentials/rootCA.crt"
 CERT = "./test-integration/Credentials/certificate.pem.crt"
 KEY = "./test-integration/Credentials/privateKey.pem.key"
@@ -102,9 +101,10 @@ def get_random_string(length):
 ############################################################################
 # Main #
 # Check inputs
-my_check_in_manager = checkInManager(1)
+my_check_in_manager = checkInManager(2)
 my_check_in_manager.verify(sys.argv)
 mode = my_check_in_manager.mode
+HOST = my_check_in_manager.host
 
 skip_when_match(ModeIsALPN(mode).And(
     Python2VersionLowerThan((2, 7, 10)).Or(Python3VersionLowerThan((3, 5, 0)))

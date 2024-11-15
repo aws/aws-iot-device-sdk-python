@@ -7,6 +7,7 @@ class checkInManager:
     def __init__(self, numberOfInputParameters):
         self._numberOfInputParameters = numberOfInputParameters
         self.mode = None
+        self.host = None
         self.customParameter = None
 
     def verify(self, args):
@@ -14,5 +15,6 @@ class checkInManager:
         if len(args) != self._numberOfInputParameters + 1:
             exit(4)
         self.mode = str(args[1])
+        self.host = str(args[2])
         if self._numberOfInputParameters + 1 > 2:
-            self.customParameter = int(args[2])
+            self.customParameter = int(args[3])
