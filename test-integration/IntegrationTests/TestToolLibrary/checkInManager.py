@@ -16,5 +16,5 @@ class checkInManager:
             exit(4)
         self.mode = str(args[1])
         self.host = str(args[2])
-        if self._numberOfInputParameters + 1 > 2:
+        if self._numberOfInputParameters + 1 > 3:
             self.customParameter = int(args[3])

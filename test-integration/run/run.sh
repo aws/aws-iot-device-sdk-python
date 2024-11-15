@@ -51,7 +51,8 @@ CREDENTIAL_DIR="./test-integration/Credentials/"
 TEST_DIR="./test-integration/IntegrationTests/"
 CA_CERT_URL="https://www.amazontrust.com/repository/AmazonRootCA1.pem"
 CA_CERT_PATH=${CREDENTIAL_DIR}rootCA.crt
-Host=$(python ${RetrieveAWSKeys} ${AWSHost})
+TestHost=$(python ${RetrieveAWSKeys} ${AWSHost})
+echo ${TestHost}
 
 
 
@@ -145,7 +146,7 @@ else
                 "IntegrationTestJobsClient.py") Scale=""
             esac
 
-            python ${TEST_DIR}${file} ${TestMode} ${Host} ${Scale}
+            python ${TEST_DIR}${file} ${TestMode} ${TestHost} ${Scale}
             currentTestStatus=$?
             echo "[SUB] Test: ${file} completed. Exiting with status: ${currentTestStatus}"
             if [ ${currentTestStatus} -ne 0 ]; then
