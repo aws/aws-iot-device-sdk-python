@@ -104,7 +104,7 @@ def get_random_string(length):
 my_check_in_manager = checkInManager(2)
 my_check_in_manager.verify(sys.argv)
 mode = my_check_in_manager.mode
-HOST = my_check_in_manager.host
+host = my_check_in_manager.host
 
 skip_when_match(ModeIsALPN(mode).And(
     Python2VersionLowerThan((2, 7, 10)).Or(Python3VersionLowerThan((3, 5, 0)))
@@ -115,7 +115,7 @@ skip_when_match(ModeIsALPN(mode).And(
 print("Connecting...")
 callback_manager = CallbackManager()
 sdk_mqtt_client = MQTTClientManager()\
-    .create_nonconnected_mqtt_client(mode, CLIENT_ID, HOST, (ROOT_CA, CERT, KEY), callback_manager)
+    .create_nonconnected_mqtt_client(mode, CLIENT_ID, host, (ROOT_CA, CERT, KEY), callback_manager)
 sdk_mqtt_client.connectAsync(keepAliveIntervalSecond=1, ackCallback=callback_manager.connack)  # Add callback
 print("Wait some time to make sure we are connected...")
 time.sleep(10)  # 10 sec

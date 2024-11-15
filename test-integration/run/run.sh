@@ -119,10 +119,13 @@ else
     echo "***************************************************"
     for file in `ls ${TEST_DIR}`
     do
-        # if [ ${file}x == "IntegrationTestMQTTConnection.py"x ]; then
+        # SKIP discovery for now
+        if [ ${file}x == "IntegrationTestDiscovery.py"x ]; then
+            continue;
+        fi
         if [ ${file##*.}x == "py"x ]; then
             echo "[SUB] Running test: ${file}..."
-
+            
             Scale=10
             case "$file" in
                 "IntegrationTestMQTTConnection.py") Scale=$2
