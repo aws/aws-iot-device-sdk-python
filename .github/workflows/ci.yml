@@ -9,8 +9,7 @@ on:
 env:
   RUN: ${{ github.run_id }}-${{ github.run_number }}
   AWS_DEFAULT_REGION: us-east-1
-  CI_SDK_V1_ROLE: arn:aws:iam::123124136734:role/CI_SDK_V1_ROLE
-  CI_JOBS_ROLE: arn:aws:iam::180635532705:role/CI_Jobs_Role
+  CI_SDK_V1_ROLE: arn:aws:iam::180635532705:role/CI_SDK_V1_ROLE
   PACKAGE_NAME: aws-iot-device-sdk-python
   AWS_EC2_METADATA_DISABLED: true
 
@@ -49,7 +48,7 @@ jobs:
           python-version: ${{ matrix.python-version }}
       - uses: aws-actions/configure-aws-credentials@v2
         with:
-          role-to-assume: ${{ env.CI_JOBS_ROLE }}
+          role-to-assume: ${{ env.CI_SDK_V1_ROLE }}
           aws-region: ${{ env.AWS_DEFAULT_REGION }}
       - name: Integration tests
         run: |
