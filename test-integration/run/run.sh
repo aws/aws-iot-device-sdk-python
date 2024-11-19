@@ -119,10 +119,10 @@ else
     echo "***************************************************"
     for file in `ls ${TEST_DIR}`
     do
-        # SKIP discovery for now
-        if [ ${file}x == "IntegrationTestDiscovery.py"x ]; then
-            continue;
-        fi
+        # # SKIP discovery for now
+        # if [ ${file}x == "IntegrationTestDiscovery.py"x ]; then
+        #     continue;
+        # fi
         if [ ${file##*.}x == "py"x ]; then
             echo "[SUB] Running test: ${file}..."
             
