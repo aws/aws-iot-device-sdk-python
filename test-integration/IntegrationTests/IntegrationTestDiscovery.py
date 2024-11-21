@@ -15,12 +15,12 @@ KEY = "./test-integration/Credentials/privateKey_drs.pem.key"
 TIME_OUT_SEC = 30
 # This is a pre-generated test data from DRS integration tests
 ID_PREFIX = "Id-"
-GGC_ARN = "arn:aws:iot:us-east-1:180635532705:thing/CI_Greengrass_Discovery_Thing"
+GGC_ARN = "arn:aws:iot:us-east-1:003261610643:thing/DRS_GGC_0kegiNGA_0"
 GGC_PORT_NUMBER_BASE = 8080
 GGC_HOST_ADDRESS_PREFIX = "192.168.101."
 METADATA_PREFIX = "Description-"
 GROUP_ID = "627bf63d-ae64-4f58-a18c-80a44fcf4088"
-THING_NAME = "CI_Greengrass_Discovery_Thing"
+THING_NAME = "DRS_GGAD_0kegiNGA_0"
 EXPECTED_CA_CONTENT = "-----BEGIN CERTIFICATE-----\n" \
                 "MIIEFTCCAv2gAwIBAgIVAPZfc4GMLZPmXbnoaZm6jRDqDs4+MA0GCSqGSIb3DQEB\n" \
                 "CwUAMIGoMQswCQYDVQQGEwJVUzEYMBYGA1UECgwPQW1hem9uLmNvbSBJbmMuMRww\n" \
@@ -155,8 +155,9 @@ def _verify_ca_list(ca_list):
 
 
 def verify_all_cores(discovery_info):
+    print("Verifying \"getAllCores\"...")
     ggc_info_list = discovery_info.getAllCores()
-    print("Verifying \"getAllCores\"... {0}".format(len(ggc_info_list)))
+    assert len(ggc_info_list) == 1
     _verify_ggc_info(ggc_info_list[0])
     print("Pass!")
 

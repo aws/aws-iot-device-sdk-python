@@ -33,23 +33,14 @@
 # Define const
 USAGE="usage: run.sh <testMode> <NumberOfMQTTMessages> <LengthOfShadowRandomString> <NumberOfNetworkFailure>"
 
-AWSHost="arn:aws:secretsmanager:us-east-1:180635532705:secret:unit-test/endpoint-HSpeEu"
+UnitTestHostArn="arn:aws:secretsmanager:us-east-1:180635532705:secret:unit-test/endpoint-HSpeEu"
+GreenGrassHostArn="arn:aws:secretsmanager:us-east-1:180635532705:secret:ci/greengrassv1/endpoint-DgM00X"
 
 AWSMutualAuth_TodWorker_private_key="arn:aws:secretsmanager:us-east-1:180635532705:secret:ci/mqtt5/us/Mqtt5Prod/key-kqgyvf"
 AWSMutualAuth_TodWorker_certificate="arn:aws:secretsmanager:us-east-1:180635532705:secret:ci/mqtt5/us/Mqtt5Prod/cert-VDI1Gd"
 
-# AWSGGDiscovery_TodWorker_private_key="arn:aws:secretsmanager:us-east-1:180635532705:secret:ci/greengrassv1/key-QEWWRI"
-# AWSGGDiscovery_TodWorker_certificate="arn:aws:secretsmanager:us-east-1:180635532705:secret:ci/greengrassv1/cert-2GJc26"
-
-# AWSGGDiscovery_TodWorker_private_key="arn:aws:secretsmanager:us-east-1:180635532705:secret:ci/GreengrassDiscovery/key-Ki81FY"
-# AWSGGDiscovery_TodWorker_certificate="arn:aws:secretsmanager:us-east-1:180635532705:secret:ci/GreengrassDiscovery/cert-bxUN3i"
-
-AWSGGDiscovery_TodWorker_private_key="arn:aws:secretsmanager:us-east-1:180635532705:secret:ci/Greengrass/key-tHGj1k"
-AWSGGDiscovery_TodWorker_certificate="arn:aws:secretsmanager:us-east-1:180635532705:secret:ci/Greengrass/cert-6RYeYf"
-
-
-# AWSSecretForWebsocket_TodWorker_KeyId="arn:aws:secretsmanager:us-east-1:123124136734:secret:V1IotSdkIntegrationTestWebsocketAccessKeyId-1YdB9z"
-# AWSSecretForWebsocket_TodWorker_SecretKey="arn:aws:secretsmanager:us-east-1:123124136734:secret:V1IotSdkIntegrationTestWebsocketSecretAccessKey-MKTSaV"
+AWSGGDiscovery_TodWorker_private_key="arn:aws:secretsmanager:us-east-1:180635532705:secret:V1IotSdkIntegrationTestGGDiscoveryPrivateKey-BsLvNP"
+AWSGGDiscovery_TodWorker_certificate="arn:aws:secretsmanager:us-east-1:180635532705:secret:V1IotSdkIntegrationTestGGDiscoveryCertificate-DSwdhA"
 
 
 SDKLocation="./AWSIoTPythonSDK"
@@ -58,8 +49,8 @@ CREDENTIAL_DIR="./test-integration/Credentials/"
 TEST_DIR="./test-integration/IntegrationTests/"
 CA_CERT_URL="https://www.amazontrust.com/repository/AmazonRootCA1.pem"
 CA_CERT_PATH=${CREDENTIAL_DIR}rootCA.crt
-TestHost=$(python3 ${RetrieveAWSKeys} ${AWSHost})
-echo ${TestHost}
+TestHost=$(python ${RetrieveAWSKeys} ${UnitTestHostArn})
+GreengrassHost=$(python ${RetrieveAWSKeys} ${GreenGrassHostArn})
 
 
 
@@ -122,14 +113,11 @@ else
     echo "***************************************************"
     for file in `ls ${TEST_DIR}`
     do
-        # SKIP discovery for now
-        if [ ${file}x != "IntegrationTestDiscovery.py"x ]; then
-            continue;
-        fi
         if [ ${file##*.}x == "py"x ]; then
             echo "[SUB] Running test: ${file}..."
             
             Scale=10
+            Host=TestHost
             case "$file" in
                 "IntegrationTestMQTTConnection.py") Scale=$2
                 ;;
@@ -141,7 +129,8 @@ else
                 ;;
                 "IntegrationTestConfigurablePublishMessageQueueing.py") Scale=""
                 ;;
-                "IntegrationTestDiscovery.py") Scale=""
+                "IntegrationTestDiscovery.py") Scale="" 
+                Host=${GreengrassHost}
                 ;;
                 "IntegrationTestAsyncAPIGeneralNotificationCallbacks.py") Scale=""
                 ;;
