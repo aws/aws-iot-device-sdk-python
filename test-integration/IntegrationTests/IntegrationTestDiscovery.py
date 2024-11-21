@@ -14,6 +14,7 @@ CERT = "./test-integration/Credentials/certificate_drs.pem.crt"
 KEY = "./test-integration/Credentials/privateKey_drs.pem.key"
 TIME_OUT_SEC = 30
 # This is a pre-generated test data from DRS integration tests
+# The test resources point to account # <aws-iot-greengrass-integ-test-drs@amazon.com> 003261610643
 ID_PREFIX = "Id-"
 GGC_ARN = "arn:aws:iot:us-east-1:003261610643:thing/DRS_GGC_0kegiNGA_0"
 GGC_PORT_NUMBER_BASE = 8080
