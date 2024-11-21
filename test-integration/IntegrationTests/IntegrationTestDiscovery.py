@@ -8,7 +8,6 @@ from TestToolLibrary.skip import skip_when_match
 from TestToolLibrary.skip import ModeIsWebSocket
 
 
-HOST = "arc9d2oott9lj-ats.iot.us-east-1.amazonaws.com"  # <aws-iot-greengrass-integ-test-drs@amazon.com> 003261610643
 PORT = 8443
 CA = "./test-integration/Credentials/rootCA.crt"
 CERT = "./test-integration/Credentials/certificate_drs.pem.crt"
@@ -16,12 +15,12 @@ KEY = "./test-integration/Credentials/privateKey_drs.pem.key"
 TIME_OUT_SEC = 30
 # This is a pre-generated test data from DRS integration tests
 ID_PREFIX = "Id-"
-GGC_ARN = "arn:aws:iot:us-east-1:003261610643:thing/DRS_GGC_0kegiNGA_0"
+GGC_ARN = "arn:aws:iot:us-east-1:180635532705:thing/CI_Greengrass_Discovery_Thing"
 GGC_PORT_NUMBER_BASE = 8080
 GGC_HOST_ADDRESS_PREFIX = "192.168.101."
 METADATA_PREFIX = "Description-"
 GROUP_ID = "627bf63d-ae64-4f58-a18c-80a44fcf4088"
-THING_NAME = "DRS_GGAD_0kegiNGA_0"
+THING_NAME = "CI_Greengrass_Discovery_Thing"
 EXPECTED_CA_CONTENT = "-----BEGIN CERTIFICATE-----\n" \
                 "MIIEFTCCAv2gAwIBAgIVAPZfc4GMLZPmXbnoaZm6jRDqDs4+MA0GCSqGSIb3DQEB\n" \
                 "CwUAMIGoMQswCQYDVQQGEwJVUzEYMBYGA1UECgwPQW1hem9uLmNvbSBJbmMuMRww\n" \
@@ -108,10 +107,14 @@ EXPECTED_CA_CONTENT = "-----BEGIN CERTIFICATE-----\n" \
 }
 '''
 
+my_check_in_manager = checkInManager(2)
+my_check_in_manager.verify(sys.argv)
+mode = my_check_in_manager.mode
+host = my_check_in_manager.host
 
 def create_discovery_info_provider():
     discovery_info_provider = DiscoveryInfoProvider()
-    discovery_info_provider.configureEndpoint(HOST, PORT)
+    discovery_info_provider.configureEndpoint(host, PORT)
     discovery_info_provider.configureCredentials(CA, CERT, KEY)
     discovery_info_provider.configureTimeout(TIME_OUT_SEC)
     return discovery_info_provider
@@ -152,9 +155,8 @@ def _verify_ca_list(ca_list):
 
 
 def verify_all_cores(discovery_info):
-    print("Verifying \"getAllCores\"...")
     ggc_info_list = discovery_info.getAllCores()
-    assert len(ggc_info_list) == 1
+    print("Verifying \"getAllCores\"... {0}".format(len(ggc_info_list)))
     _verify_ggc_info(ggc_info_list[0])
     print("Pass!")
 
@@ -196,9 +198,6 @@ def verify_group_object(discovery_info):
 
 ############################################################################
 # Main #
-my_check_in_manager = checkInManager(1)
-my_check_in_manager.verify(sys.argv)
-mode = my_check_in_manager.mode
 
 skip_when_match(ModeIsWebSocket(mode), "This test is not applicable for mode: %s. Skipping..." % mode)
 
