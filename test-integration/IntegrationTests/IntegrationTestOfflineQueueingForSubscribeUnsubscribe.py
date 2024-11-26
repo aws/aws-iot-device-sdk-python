@@ -47,7 +47,6 @@ TOPIC_A = "topic/test/offline_sub_unsub/a" + get_random_string(4)
 TOPIC_B = "topic/test/offline_sub_unsub/b" + get_random_string(4)
 MESSAGE_PREFIX = "MagicMessage-"
 NUMBER_OF_PUBLISHES = 3
-HOST = "ajje7lpljulm4-ats.iot.us-east-1.amazonaws.com"
 ROOT_CA = "./test-integration/Credentials/rootCA.crt"
 CERT = "./test-integration/Credentials/certificate.pem.crt"
 KEY = "./test-integration/Credentials/privateKey.pem.key"
@@ -74,7 +73,7 @@ class DualClientRunner(object):
         time.sleep(2)  # Make sure the subscription is valid
 
     def _create_connected_client(self, id_prefix):
-        return MQTTClientManager().create_connected_mqtt_client(self.__mode, id_prefix, HOST, (ROOT_CA, CERT, KEY))
+        return MQTTClientManager().create_connected_mqtt_client(self.__mode, id_prefix, host, (ROOT_CA, CERT, KEY))
 
     def start(self):
         thread_client_sub_unsub = Thread(target=self._thread_client_sub_unsub_runtime)
@@ -192,9 +191,10 @@ class DualClientRunner(object):
 ############################################################################
 # Main #
 # Check inputs
-my_check_in_manager = checkInManager(1)
+my_check_in_manager = checkInManager(2)
 my_check_in_manager.verify(sys.argv)
 mode = my_check_in_manager.mode
+host = my_check_in_manager.host
 
 skip_when_match(ModeIsALPN(mode).And(
     Python2VersionLowerThan((2, 7, 10)).Or(Python3VersionLowerThan((3, 5, 0)))

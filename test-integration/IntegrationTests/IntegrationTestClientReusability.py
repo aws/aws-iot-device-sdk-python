@@ -40,7 +40,6 @@ MESSAGE_PREFIX = "Message-"
 NUMBER_OF_MESSAGES_PER_LOOP = 3
 NUMBER_OF_LOOPS = 3
 SUB_WAIT_TIME_OUT_SEC = 20
-HOST = "ajje7lpljulm4-ats.iot.us-east-1.amazonaws.com"
 ROOT_CA = "./test-integration/Credentials/rootCA.crt"
 CERT = "./test-integration/Credentials/certificate.pem.crt"
 KEY = "./test-integration/Credentials/privateKey.pem.key"
@@ -94,9 +93,10 @@ class ClientTwins(object):
 
 ############################################################################
 # Main #
-my_check_in_manager = checkInManager(1)
+my_check_in_manager = checkInManager(2)
 my_check_in_manager.verify(sys.argv)
 mode = my_check_in_manager.mode
+host = my_check_in_manager.host
 
 skip_when_match(ModeIsALPN(mode).And(
     Python2VersionLowerThan((2, 7, 10)).Or(Python3VersionLowerThan((3, 5, 0)))
@@ -104,9 +104,9 @@ skip_when_match(ModeIsALPN(mode).And(
 
 simple_thread_manager = simpleThreadManager()
 
-client_pub = MQTTClientManager().create_nonconnected_mqtt_client(mode, CLIENT_ID_PUB, HOST, (ROOT_CA, CERT, KEY))
+client_pub = MQTTClientManager().create_nonconnected_mqtt_client(mode, CLIENT_ID_PUB, host, (ROOT_CA, CERT, KEY))
 print("Client publisher initialized.")
-client_sub = MQTTClientManager().create_nonconnected_mqtt_client(mode, CLIENT_ID_SUB, HOST, (ROOT_CA, CERT, KEY))
+client_sub = MQTTClientManager().create_nonconnected_mqtt_client(mode, CLIENT_ID_SUB, host, (ROOT_CA, CERT, KEY))
 print("Client subscriber initialized.")
 client_twins = ClientTwins(client_pub, client_sub)
 print("Client twins initialized.")
