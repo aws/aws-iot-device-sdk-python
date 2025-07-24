@@ -59,7 +59,7 @@ else:
     from queue import Queue
 
 
-class AckPacket(object):
+class SubackPacket(object):
     def __init__(self):
         self.event = Event()
         self.data = None
@@ -305,15 +305,15 @@ class MqttCore(object):
         if ClientStatus.STABLE != self._client_status.get_status():
             self._handle_offline_request(RequestTypes.SUBSCRIBE, (topic, qos, message_callback, None))
         else:
-            ack = AckPacket()
-            rc, mid = self._subscribe_async(topic, qos, self._create_blocking_ack_callback_ret(ack), message_callback)
-            if not ack.event.wait(self._operation_timeout_sec):
+            suback = SubackPacket()
+            rc, mid = self._subscribe_async(topic, qos, self._create_blocking_suback_callback(suback), message_callback)
+            if not suback.event.wait(self._operation_timeout_sec):
                 self._internal_async_client.remove_event_callback(mid)
                 self._logger.error("Subscribe timed out")
                 raise subscribeTimeoutException()
-            if ack.data[0] == MQTT_ERR_SUBACK_ERROR:
-                self._logger.error(f"Subscribe error: {ack.data}")
-                raise subscribeError(ack.data)
+            if suback.data and suback.data[0] == MQTT_ERR_SUBACK_ERROR:
+                self._logger.error(f"Subscribe error: {suback.data}")
+                raise subscribeError(suback.data)
             ret = True
         return ret
 
@@ -371,7 +371,7 @@ class MqttCore(object):
             event.set()
         return ack_callback
 
-    def _create_blocking_ack_callback_ret(self, ack: AckPacket):
+    def _create_blocking_suback_callback(self, ack: SubackPacket):
         def ack_callback(mid, data=None):
             ack.data = data
             ack.event.set()
