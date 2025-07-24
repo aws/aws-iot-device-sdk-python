@@ -29,6 +29,7 @@ from AWSIoTPythonSDK.core.protocol.internal.defaults import METRICS_PREFIX
 from AWSIoTPythonSDK.core.protocol.internal.defaults import ALPN_PROTCOLS
 from AWSIoTPythonSDK.core.protocol.internal.events import FixedEventMids
 from AWSIoTPythonSDK.core.protocol.paho.client import MQTT_ERR_SUCCESS
+from AWSIoTPythonSDK.core.protocol.paho.client import MQTT_ERR_SUBACK_ERROR
 from AWSIoTPythonSDK.exception.AWSIoTExceptions import connectError
 from AWSIoTPythonSDK.exception.AWSIoTExceptions import connectTimeoutException
 from AWSIoTPythonSDK.exception.AWSIoTExceptions import disconnectError
@@ -56,6 +57,12 @@ if sys.version_info[0] < 3:
     from Queue import Queue
 else:
     from queue import Queue
+
+
+class AckPacket(object):
+    def __init__(self):
+        self.event = Event()
+        self.data = None
 
 
 class MqttCore(object):
@@ -298,12 +305,15 @@ class MqttCore(object):
         if ClientStatus.STABLE != self._client_status.get_status():
             self._handle_offline_request(RequestTypes.SUBSCRIBE, (topic, qos, message_callback, None))
         else:
-            event = Event()
-            rc, mid = self._subscribe_async(topic, qos, self._create_blocking_ack_callback(event), message_callback)
-            if not event.wait(self._operation_timeout_sec):
+            ack = AckPacket()
+            rc, mid = self._subscribe_async(topic, qos, self._create_blocking_ack_callback_ret(ack), message_callback)
+            if not ack.event.wait(self._operation_timeout_sec):
                 self._internal_async_client.remove_event_callback(mid)
                 self._logger.error("Subscribe timed out")
                 raise subscribeTimeoutException()
+            if ack.data[0] == MQTT_ERR_SUBACK_ERROR:
+                self._logger.error(f"Subscribe error: {ack.data}")
+                raise subscribeError(ack.data)
             ret = True
         return ret
 
@@ -359,6 +369,12 @@ class MqttCore(object):
     def _create_blocking_ack_callback(self, event):
         def ack_callback(mid, data=None):
             event.set()
+        return ack_callback
+
+    def _create_blocking_ack_callback_ret(self, ack: AckPacket):
+        def ack_callback(mid, data=None):
+            ack.data = data
+            ack.event.set()
         return ack_callback
 
     def _handle_offline_request(self, type, data):
