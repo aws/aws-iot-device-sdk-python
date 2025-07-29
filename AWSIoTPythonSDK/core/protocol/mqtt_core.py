@@ -28,8 +28,7 @@ from AWSIoTPythonSDK.core.protocol.internal.defaults import DEFAULT_OPERATION_TI
 from AWSIoTPythonSDK.core.protocol.internal.defaults import METRICS_PREFIX
 from AWSIoTPythonSDK.core.protocol.internal.defaults import ALPN_PROTCOLS
 from AWSIoTPythonSDK.core.protocol.internal.events import FixedEventMids
-from AWSIoTPythonSDK.core.protocol.paho.client import MQTT_ERR_SUCCESS
-from AWSIoTPythonSDK.core.protocol.paho.client import MQTT_ERR_SUBACK_ERROR
+from AWSIoTPythonSDK.core.protocol.paho.client import MQTT_ERR_SUCCESS, SUBACK_ERROR
 from AWSIoTPythonSDK.exception.AWSIoTExceptions import connectError
 from AWSIoTPythonSDK.exception.AWSIoTExceptions import connectTimeoutException
 from AWSIoTPythonSDK.exception.AWSIoTExceptions import disconnectError
@@ -42,7 +41,7 @@ from AWSIoTPythonSDK.exception.AWSIoTExceptions import subscribeQueueFullExcepti
 from AWSIoTPythonSDK.exception.AWSIoTExceptions import subscribeQueueDisabledException
 from AWSIoTPythonSDK.exception.AWSIoTExceptions import unsubscribeQueueFullException
 from AWSIoTPythonSDK.exception.AWSIoTExceptions import unsubscribeQueueDisabledException
-from AWSIoTPythonSDK.exception.AWSIoTExceptions import subscribeError
+from AWSIoTPythonSDK.exception.AWSIoTExceptions import subscribeError, subackError
 from AWSIoTPythonSDK.exception.AWSIoTExceptions import subscribeTimeoutException
 from AWSIoTPythonSDK.exception.AWSIoTExceptions import unsubscribeError
 from AWSIoTPythonSDK.exception.AWSIoTExceptions import unsubscribeTimeoutException
@@ -311,9 +310,9 @@ class MqttCore(object):
                 self._internal_async_client.remove_event_callback(mid)
                 self._logger.error("Subscribe timed out")
                 raise subscribeTimeoutException()
-            if suback.data and suback.data[0] == MQTT_ERR_SUBACK_ERROR:
-                self._logger.error(f"Subscribe error: {suback.data}")
-                raise subscribeError(suback.data)
+            if suback.data and suback.data[0] == SUBACK_ERROR:
+                self._logger.error(f"Suback error return code: {suback.data[0]}")
+                raise subackError(suback=suback.data)
             ret = True
         return ret
 

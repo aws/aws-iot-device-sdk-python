@@ -97,6 +97,9 @@ CONNACK_REFUSED_SERVER_UNAVAILABLE = 3
 CONNACK_REFUSED_BAD_USERNAME_PASSWORD = 4
 CONNACK_REFUSED_NOT_AUTHORIZED = 5
 
+# SUBACK codes
+SUBACK_ERROR = 0x80
+
 # Connection state
 mqtt_cs_new = 0
 mqtt_cs_connected = 1
@@ -137,8 +140,6 @@ MQTT_ERR_ERRNO = 14
 MSG_QUEUEING_DROP_OLDEST = 0
 MSG_QUEUEING_DROP_NEWEST = 1
 
-# Packet Error Codes
-MQTT_ERR_SUBACK_ERROR = 0x80
 
 if sys.version_info[0] < 3:
     sockpair_data = "0"
