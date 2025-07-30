@@ -1,5 +1,6 @@
 import AWSIoTPythonSDK
 from AWSIoTPythonSDK.core.protocol.mqtt_core import MqttCore
+from AWSIoTPythonSDK.core.protocol.mqtt_core import SubackPacket
 from AWSIoTPythonSDK.core.protocol.internal.clients import InternalAsyncMqttClient
 from AWSIoTPythonSDK.core.protocol.internal.clients import ClientStatusContainer
 from AWSIoTPythonSDK.core.protocol.internal.clients import ClientStatus
@@ -20,6 +21,7 @@ from AWSIoTPythonSDK.exception.AWSIoTExceptions import publishTimeoutException
 from AWSIoTPythonSDK.exception.AWSIoTExceptions import publishQueueFullException
 from AWSIoTPythonSDK.exception.AWSIoTExceptions import publishQueueDisabledException
 from AWSIoTPythonSDK.exception.AWSIoTExceptions import subscribeError
+from AWSIoTPythonSDK.exception.AWSIoTExceptions import subackError
 from AWSIoTPythonSDK.exception.AWSIoTExceptions import subscribeTimeoutException
 from AWSIoTPythonSDK.exception.AWSIoTExceptions import subscribeQueueFullException
 from AWSIoTPythonSDK.exception.AWSIoTExceptions import subscribeQueueDisabledException
@@ -29,6 +31,7 @@ from AWSIoTPythonSDK.exception.AWSIoTExceptions import unsubscribeQueueFullExcep
 from AWSIoTPythonSDK.exception.AWSIoTExceptions import unsubscribeQueueDisabledException
 from AWSIoTPythonSDK.core.protocol.paho.client import MQTT_ERR_SUCCESS
 from AWSIoTPythonSDK.core.protocol.paho.client import MQTT_ERR_ERRNO
+from AWSIoTPythonSDK.core.protocol.paho.client import SUBACK_ERROR
 from AWSIoTPythonSDK.core.protocol.paho.client import MQTTv311
 from AWSIoTPythonSDK.core.protocol.internal.defaults import ALPN_PROTCOLS
 try:
@@ -61,6 +64,7 @@ KEY_EXPECTED_REQUEST_RC = "ExpectedRequestRc"
 KEY_EXPECTED_QUEUE_APPEND_RESULT = "ExpectedQueueAppendResult"
 KEY_EXPECTED_REQUEST_MID_OVERRIDE = "ExpectedRequestMidOverride"
 KEY_EXPECTED_REQUEST_TIMEOUT = "ExpectedRequestTimeout"
+KEY_EXPECTED_ACK_RESULT = "ExpectedAckPacketResult"
 SUCCESS_RC_EXPECTED_VALUES = {
     KEY_EXPECTED_REQUEST_RC : DUMMY_SUCCESS_RC
 }
@@ -73,6 +77,10 @@ TIMEOUT_EXPECTED_VALUES = {
 NO_TIMEOUT_EXPECTED_VALUES = {
     KEY_EXPECTED_REQUEST_TIMEOUT : False
 }
+ERROR_SUBACK_EXPECTED_VALUES = {
+    KEY_EXPECTED_ACK_RESULT : (SUBACK_ERROR, None)
+}
+
 QUEUED_EXPECTED_VALUES = {
     KEY_EXPECTED_QUEUE_APPEND_RESULT : AppendResults.APPEND_SUCCESS
 }
@@ -120,6 +128,9 @@ class TestMqttCore:
             RequestTypes.PUBLISH : publishError,
             RequestTypes.SUBSCRIBE: subscribeError,
             RequestTypes.UNSUBSCRIBE: unsubscribeError
+        }
+        cls.ack_error = {
+            RequestTypes.SUBSCRIBE : subackError,
         }
         cls.request_queue_full = {
             RequestTypes.PUBLISH : publishQueueFullException,
@@ -518,6 +529,9 @@ class TestMqttCore:
 
     def test_subscribe_timeout(self):
         self._internal_test_sync_api_with(RequestTypes.SUBSCRIBE, TIMEOUT_EXPECTED_VALUES)
+    
+    def test_subscribe_error_suback(self):
+        self._internal_test_sync_api_with(RequestTypes.SUBSCRIBE, ERROR_SUBACK_EXPECTED_VALUES)
 
     def test_subscribe_queued(self):
         self._internal_test_sync_api_with(RequestTypes.SUBSCRIBE, QUEUED_EXPECTED_VALUES)
@@ -547,6 +561,7 @@ class TestMqttCore:
         expected_request_mid = expected_values.get(KEY_EXPECTED_REQUEST_MID_OVERRIDE)
         expected_timeout = expected_values.get(KEY_EXPECTED_REQUEST_TIMEOUT)
         expected_append_result = expected_values.get(KEY_EXPECTED_QUEUE_APPEND_RESULT)
+        expected_suback_result = expected_values.get(KEY_EXPECTED_ACK_RESULT)
 
         if expected_request_mid is None:
             expected_request_mid = DUMMY_REQUEST_MID
@@ -562,7 +577,16 @@ class TestMqttCore:
                     self.invoke_mqtt_core_sync_api[request_type](self, message_callback)
             else:
                 self.python_event_mock.wait.return_value = True
-                assert self.invoke_mqtt_core_sync_api[request_type](self, message_callback) is True
+                if expected_suback_result is not None:
+                    self._use_mock_python_suback()
+                    # mock the suback with expected suback result
+                    self.python_suback_mock.data = expected_suback_result
+                    if expected_suback_result[0] == SUBACK_ERROR:
+                        with pytest.raises(self.ack_error[request_type]):
+                            self.invoke_mqtt_core_sync_api[request_type](self, message_callback)
+                    self.python_suback_patcher.stop()
+                else:
+                    assert self.invoke_mqtt_core_sync_api[request_type](self, message_callback) is True
 
         if expected_append_result is not None:
             self.client_status_mock.get_status.return_value = ClientStatus.ABNORMAL_DISCONNECT
@@ -583,3 +607,10 @@ class TestMqttCore:
         self.python_event_constructor = self.python_event_patcher.start()
         self.python_event_mock = MagicMock()
         self.python_event_constructor.return_value = self.python_event_mock
+
+    # Create a SubackPacket mock, which would mock the data in SubackPacket
+    def _use_mock_python_suback(self):
+        self.python_suback_patcher = patch(PATCH_MODULE_LOCATION + "SubackPacket", spec=SubackPacket)
+        self.python_suback_constructor = self.python_suback_patcher.start()
+        self.python_suback_mock = MagicMock()
+        self.python_suback_constructor.return_value = self.python_suback_mock
