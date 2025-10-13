@@ -511,7 +511,8 @@ class Client(object):
         self._alpn_protocols = None
 
     def __del__(self):
-        pass
+        # Closes socket in client destructor to avoid FD leak.
+        self._reset_sockets()
 
 
     def setBackoffTiming(self, srcBaseReconnectTimeSecond, srcMaximumReconnectTimeSecond, srcMinimumConnectTimeSecond):
@@ -543,7 +544,8 @@ class Client(object):
         """
         self._alpn_protocols = alpn_protocols
 
-    def reinitialise(self, client_id="", clean_session=True, userdata=None):
+    # Closes socket in client destructor to avoid FD leak.
+    def _reset_sockets(self):
         if self._ssl:
             self._ssl.close()
             self._ssl = None
@@ -558,6 +560,9 @@ class Client(object):
             self._sockpairW.close()
             self._sockpairW = None
 
+    # Closes socket in client destructor to avoid FD leak.
+    def reinitialise(self, client_id="", clean_session=True, userdata=None):
+        self._reset_sockets()
         self.__init__(client_id, clean_session, userdata)
 
     def tls_set(self, ca_certs, certfile=None, keyfile=None, cert_reqs=cert_reqs, tls_version=tls_version, ciphers=None):
