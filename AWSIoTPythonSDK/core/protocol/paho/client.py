@@ -492,6 +492,7 @@ class Client(object):
         self._msgtime_mutex = threading.Lock()
         self._out_message_mutex = threading.Lock()
         self._in_message_mutex = threading.Lock()
+        self._mid_generate_mutex = threading.Lock()
         self._thread = None
         self._thread_terminate = False
         self._ssl = None
@@ -836,7 +837,8 @@ class Client(object):
 
                     self._ssl = ssl_context.wrap_socket(sock)
                 else:
-                    self._ssl = ssl.wrap_socket(
+                    # ssl.wrap_socket is deprecated in Python 3.10+
+                    self._ssl = ssl.SSLContext.wrap_socket(
                         sock,
                         certfile=self._tls_certfile,
                         keyfile=self._tls_keyfile,
@@ -1050,8 +1052,11 @@ class Client(object):
         username: The username to authenticate with. Need have no relationship to the client id.
         password: The password to authenticate with. Optional, set to None if not required.
         """
-        self._username = username.encode('utf-8')
+        # [MQTT-3.1.3-11] User name must be UTF-8 encoded string
+        self._username = None if username is None else username.encode('utf-8')
         self._password = password
+        if isinstance(self._password, unicode):
+            self._password = self._password.encode('utf-8')
 
     def socket_factory_set(self, socket_factory):
         """Set a socket factory to custom configure a different socket type for
@@ -1745,10 +1750,12 @@ class Client(object):
                 self._callback_mutex.release()
 
     def _mid_generate(self):
-        self._last_mid = self._last_mid + 1
-        if self._last_mid == 65536:
-            self._last_mid = 1
-        return self._last_mid
+        # Make sure mid generation that was thread-safe.
+        with self._mid_generate_mutex:
+            self._last_mid += 1
+            if self._last_mid == 65536:
+                self._last_mid = 1
+            return self._last_mid
 
     def _topic_wildcard_len_check(self, topic):
         # Search for + or # in a topic. Return MQTT_ERR_INVAL if found.
@@ -1912,11 +1919,11 @@ class Client(object):
             connect_flags = connect_flags | 0x04 | ((self._will_qos&0x03) << 3) | ((self._will_retain&0x01) << 5)
 
         if self._username:
-            remaining_length = remaining_length + 2+len(self._username)
+            remaining_length += 2+len(self._username)
             connect_flags = connect_flags | 0x80
             if self._password:
                 connect_flags = connect_flags | 0x40
-                remaining_length = remaining_length + 2+len(self._password)
+                remaining_length += 2+len(self._password)
 
         command = CONNECT
         packet = bytearray()
