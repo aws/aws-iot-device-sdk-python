@@ -984,8 +984,6 @@ class Client(object):
         # Client.publish() now accepts bytes() payloads on Python 3.
         elif sys.version_info[0] == 3 and isinstance(payload, bytes):
             local_payload = bytearray(payload)
-        elif sys.version_info[0] < 3 and isinstance(payload, unicode):
-            local_payload = payload
         elif isinstance(payload, int) or isinstance(payload, float):
             local_payload = str(payload)
         elif payload is None:
@@ -1050,12 +1048,14 @@ class Client(object):
         Requires a broker that supports MQTT v3.1.
 
         username: The username to authenticate with. Need have no relationship to the client id.
+                  [MQTT-3.1.3-11].
+                  Set to None to reset client back to not using username/password for broker authentication.
         password: The password to authenticate with. Optional, set to None if not required.
         """
         # [MQTT-3.1.3-11] User name must be UTF-8 encoded string
         self._username = None if username is None else username.encode('utf-8')
         self._password = password
-        if isinstance(self._password, unicode):
+        if isinstance(self._password, str):
             self._password = self._password.encode('utf-8')
 
     def socket_factory_set(self, socket_factory):
