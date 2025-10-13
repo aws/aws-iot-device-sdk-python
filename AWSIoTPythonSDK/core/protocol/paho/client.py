@@ -49,11 +49,6 @@ from AWSIoTPythonSDK.core.protocol.connection.cores import ProgressiveBackOffCor
 from AWSIoTPythonSDK.core.protocol.connection.cores import SecuredWebSocketCore
 from AWSIoTPythonSDK.core.protocol.connection.alpn import SSLContextBuilder
 
-VERSION_MAJOR=1
-VERSION_MINOR=0
-VERSION_REVISION=0
-VERSION_NUMBER=(VERSION_MAJOR*1000000+VERSION_MINOR*1000+VERSION_REVISION)
-
 MQTTv31 = 3
 MQTTv311 = 4
 
@@ -924,6 +919,9 @@ class Client(object):
             # Can occur if we just reconnected but rlist/wlist contain a -1 for
             # some reason.
             return MQTT_ERR_CONN_LOST
+        except KeyboardInterrupt:
+            # Allow ^C to interrupt
+            raise
         except:
             return MQTT_ERR_UNKNOWN
 
@@ -981,6 +979,9 @@ class Client(object):
             raise ValueError('Invalid QoS level.')
         if isinstance(payload, str) or isinstance(payload, bytearray):
             local_payload = payload
+        # Client.publish() now accepts bytes() payloads on Python 3.
+        elif sys.version_info[0] == 3 and isinstance(payload, bytes):
+            local_payload = bytearray(payload)
         elif sys.version_info[0] < 3 and isinstance(payload, unicode):
             local_payload = payload
         elif isinstance(payload, int) or isinstance(payload, float):
@@ -1117,7 +1118,8 @@ class Client(object):
         zero string length, or if topic is not a string, tuple or list.
         """
         topic_qos_list = None
-        if isinstance(topic, str):
+        # Client.subscribe() now accepts unicode type topic inputs on Python 2
+        if isinstance(topic, str) or (sys.version_info[0] == 2 and isinstance(topic, unicode)):
             if qos<0 or qos>2:
                 raise ValueError('Invalid QoS level.')
             if topic is None or len(topic) == 0:
@@ -1165,7 +1167,8 @@ class Client(object):
         topic_list = None
         if topic is None:
             raise ValueError('Invalid topic.')
-        if isinstance(topic, str):
+        # Client.unsubscribe() now accepts unicode type topic inputs on Python 2
+        if isinstance(topic, str) or (sys.version_info[0] == 2 and isinstance(topic, unicode)):
             if len(topic) == 0:
                 raise ValueError('Invalid topic.')
             topic_list = [topic.encode('utf-8')]
@@ -1453,8 +1456,10 @@ class Client(object):
             return MQTT_ERR_INVAL
 
         self._thread_terminate = True
-        self._thread.join()
-        self._thread = None
+        # Don't attempt to join() own thread.
+        if threading.current_thread() != self._thread:
+            self._thread.join()
+            self._thread = None
 
     def message_callback_add(self, sub, callback):
         """Register a message callback for a specific topic.
@@ -1704,6 +1709,10 @@ class Client(object):
             self.on_log(self, self._userdata, level, buf)
 
     def _check_keepalive(self):
+        # Fix for keepalive=0 causing an infinite disconnect/reconnect loop.
+        if self._keepalive == 0:
+            return MQTT_ERR_SUCCESS
+
         now = time.time()
         self._msgtime_mutex.acquire()
         last_msg_out = self._last_msg_out
