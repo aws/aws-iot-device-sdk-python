@@ -1123,8 +1123,7 @@ class Client(object):
         zero string length, or if topic is not a string, tuple or list.
         """
         topic_qos_list = None
-        # Client.subscribe() now accepts unicode type topic inputs on Python 2
-        if isinstance(topic, str) or (sys.version_info[0] == 2 and isinstance(topic, unicode)):
+        if isinstance(topic, str) :
             if qos<0 or qos>2:
                 raise ValueError('Invalid QoS level.')
             if topic is None or len(topic) == 0:
@@ -1172,8 +1171,7 @@ class Client(object):
         topic_list = None
         if topic is None:
             raise ValueError('Invalid topic.')
-        # Client.unsubscribe() now accepts unicode type topic inputs on Python 2
-        if isinstance(topic, str) or (sys.version_info[0] == 2 and isinstance(topic, unicode)):
+        if isinstance(topic, str) :
             if len(topic) == 0:
                 raise ValueError('Invalid topic.')
             topic_list = [topic.encode('utf-8')]
