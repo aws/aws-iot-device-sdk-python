@@ -827,25 +827,14 @@ class Client(object):
                 verify_hostname = False  # Since check_hostname in SSLContext is already set to True, no need to verify it again
                 self._ssl.do_handshake()
             else:
-                if force_ssl_context:
-                    ssl_context = ssl.SSLContext(self._tls_version)
-                    ssl_context.load_cert_chain(self._tls_certfile, self._tls_keyfile)
-                    ssl_context.load_verify_locations(self._tls_ca_certs)
-                    ssl_context.verify_mode = self._tls_cert_reqs
-                    if self._tls_ciphers is not None:
-                        ssl_context.set_ciphers(self._tls_ciphers)
-
-                    self._ssl = ssl_context.wrap_socket(sock)
-                else:
-                    # ssl.wrap_socket is deprecated in Python 3.10+
-                    self._ssl = ssl.SSLContext.wrap_socket(
-                        sock,
-                        certfile=self._tls_certfile,
-                        keyfile=self._tls_keyfile,
-                        ca_certs=self._tls_ca_certs,
-                        cert_reqs=self._tls_cert_reqs,
-                        ssl_version=self._tls_version,
-                        ciphers=self._tls_ciphers)
+                # ssl.wrap_socket is deprecated in Python 3.7+. Use SSLContext instead.
+                ssl_context = ssl.SSLContext(self._tls_version)
+                ssl_context.load_cert_chain(self._tls_certfile, self._tls_keyfile)
+                ssl_context.load_verify_locations(self._tls_ca_certs)
+                ssl_context.verify_mode = self._tls_cert_reqs
+                if self._tls_ciphers is not None:
+                    ssl_context.set_ciphers(self._tls_ciphers)
+                self._ssl = ssl_context.wrap_socket(sock)
 
             if verify_hostname:
                 if sys.version_info[0] < 3 or (sys.version_info[0] == 3 and sys.version_info[1] < 5):  # No IP host match before 3.5.x
