@@ -20,15 +20,11 @@ setup(
     download_url = 'https://s3.amazonaws.com/aws-iot-device-sdk-python/aws-iot-device-sdk-python-latest.zip',
     keywords = ['aws', 'iot', 'mqtt'],
     classifiers = [
-        "Development Status :: 5 - Production/Stable",
+        "Development Status :: 6 - Mature",
         "Intended Audience :: Developers",
         "Natural Language :: English",
         "License :: OSI Approved :: Apache Software License",
         "Programming Language :: Python",
-        "Programming Language :: Python :: 2.7",
-        "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 3.3",
-        "Programming Language :: Python :: 3.4",
-        "Programming Language :: Python :: 3.5"
+        "Programming Language :: Python :: 3"
     ]
 )

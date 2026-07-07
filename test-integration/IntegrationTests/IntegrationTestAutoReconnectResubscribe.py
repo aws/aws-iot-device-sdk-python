@@ -135,14 +135,14 @@ class runFunctionUnit():
 ############################################################################
 # Main #
 # Check inputs
-myCheckInManager = checkInManager.checkInManager(1)
+myCheckInManager = checkInManager.checkInManager(2)
 myCheckInManager.verify(sys.argv)
 
-host = "ajje7lpljulm4-ats.iot.us-east-1.amazonaws.com"
 rootCA = "./test-integration/Credentials/rootCA.crt"
 certificate = "./test-integration/Credentials/certificate.pem.crt"
 privateKey = "./test-integration/Credentials/privateKey.pem.key"
 mode = myCheckInManager.mode
+host = myCheckInManager.host
 
 skip_when_match(ModeIsALPN(mode).And(
     Python2VersionLowerThan((2, 7, 10)).Or(Python3VersionLowerThan((3, 5, 0)))

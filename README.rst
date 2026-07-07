@@ -1,6 +1,6 @@
 New Version Available	
 =============================
-A new AWS IoT Device SDK is [now available](https://github.com/awslabs/aws-iot-device-sdk-python-v2). It is a complete rework, built to improve reliability, performance, and security. We invite your feedback!	
+A new AWS IoT Device SDK is `now available <https://github.com/awslabs/aws-iot-device-sdk-python-v2>`__. It is a complete rework, built to improve reliability, performance, and security. We invite your feedback!
 
 This SDK will no longer receive feature updates, but will receive security updates.	
 
@@ -70,22 +70,10 @@ also allows the use of the same connection for shadow operations and non-shadow,
 Installation
 ~~~~~~~~~~~~
 
-Minimum Requirements
+Requirements
 ____________________
 
--  Python 2.7+ or Python 3.3+ for X.509 certificate-based mutual authentication via port 8883
-   and MQTT over WebSocket protocol with AWS Signature Version 4 authentication
--  Python 2.7.10+ or Python 3.5+ for X.509 certificate-based mutual authentication via port 443
--  OpenSSL version 1.0.1+ (TLS version 1.2) compiled with the Python executable for
-   X.509 certificate-based mutual authentication
-
-   To check your version of OpenSSL, use the following command in a Python interpreter:
-
-   .. code-block:: python
-
-       >>> import ssl
-       >>> ssl.OPENSSL_VERSION
-
+-  Python3.8+.  The SDK has worked for older Python versions in the past, but they are no longer formally supported.  Over time, expect the minimum Python version to loosely track the minimum non-end-of-life version.
 Install from pip
 ________________
 

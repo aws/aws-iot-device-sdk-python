@@ -8,22 +8,22 @@ on:
 
 env:
   RUN: ${{ github.run_id }}-${{ github.run_number }}
-  AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-  AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+  AWS_DEFAULT_REGION: us-east-1
+  CI_SDK_V1_ROLE: arn:aws:iam::180635532705:role/CI_SDK_V1_ROLE
   PACKAGE_NAME: aws-iot-device-sdk-python
   AWS_EC2_METADATA_DISABLED: true
 
 jobs:
   unit-tests:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     strategy:
       fail-fast: false
 
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
         with:
-          python-version: '3.6.7'
+          python-version: '3.8'
       - name: Unit tests
         run: |
           python3 setup.py install
@@ -33,16 +33,23 @@ jobs:
 
   integration-tests:
     runs-on: ubuntu-latest
+    permissions:
+      id-token: write # This is required for requesting the JWT
+      contents: read # This is required for actions/checkout
     strategy:
       fail-fast: false
       matrix:
         test-type: [ MutualAuth, Websocket, ALPN ]
-        python-version: [ '3.7', '3.12' ]
+        python-version: [ '3.8', '3.13' ]
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v2
+      - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
+      - uses: aws-actions/configure-aws-credentials@v2
+        with:
+          role-to-assume: ${{ env.CI_SDK_V1_ROLE }}
+          aws-region: ${{ env.AWS_DEFAULT_REGION }}
       - name: Integration tests
         run: |
           pip install pytest

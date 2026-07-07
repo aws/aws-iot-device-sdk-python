@@ -150,10 +150,10 @@ def randomString(lengthOfString):
 ############################################################################
 # Main #
 # Check inputs
-myCheckInManager = checkInManager.checkInManager(2)
+myCheckInManager = checkInManager.checkInManager(3)
 myCheckInManager.verify(sys.argv)
 
-host = "ajje7lpljulm4-ats.iot.us-east-1.amazonaws.com"
+host = myCheckInManager.host
 rootCA = "./test-integration/Credentials/rootCA.crt"
 certificate = "./test-integration/Credentials/certificate.pem.crt"
 privateKey = "./test-integration/Credentials/privateKey.pem.key"

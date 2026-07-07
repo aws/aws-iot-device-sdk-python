@@ -220,11 +220,11 @@ def verifyBackoffTime(answerList, resultList):
 ############################################################################
 # Main #
 # Check inputs
-myCheckInManager = checkInManager.checkInManager(2)
+myCheckInManager = checkInManager.checkInManager(3)
 myCheckInManager.verify(sys.argv)
 
 #host via describe-endpoint on this OdinMS: com.amazonaws.iot.device.sdk.credentials.testing.websocket
-host = "ajje7lpljulm4-ats.iot.us-east-1.amazonaws.com"
+host = myCheckInManager.host
 rootCA = "./test-integration/Credentials/rootCA.crt"
 certificate = "./test-integration/Credentials/certificate.pem.crt"
 privateKey = "./test-integration/Credentials/privateKey.pem.key"

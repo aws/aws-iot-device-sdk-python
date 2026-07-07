@@ -8,13 +8,13 @@ from TestToolLibrary.skip import skip_when_match
 from TestToolLibrary.skip import ModeIsWebSocket
 
 
-HOST = "arc9d2oott9lj-ats.iot.us-east-1.amazonaws.com"  # <aws-iot-greengrass-integ-test-drs@amazon.com> 003261610643
 PORT = 8443
 CA = "./test-integration/Credentials/rootCA.crt"
 CERT = "./test-integration/Credentials/certificate_drs.pem.crt"
 KEY = "./test-integration/Credentials/privateKey_drs.pem.key"
 TIME_OUT_SEC = 30
 # This is a pre-generated test data from DRS integration tests
+# The test resources point to account # <aws-iot-greengrass-integ-test-drs@amazon.com> 003261610643
 ID_PREFIX = "Id-"
 GGC_ARN = "arn:aws:iot:us-east-1:003261610643:thing/DRS_GGC_0kegiNGA_0"
 GGC_PORT_NUMBER_BASE = 8080
@@ -108,10 +108,14 @@ EXPECTED_CA_CONTENT = "-----BEGIN CERTIFICATE-----\n" \
 }
 '''
 
+my_check_in_manager = checkInManager(2)
+my_check_in_manager.verify(sys.argv)
+mode = my_check_in_manager.mode
+host = my_check_in_manager.host
 
 def create_discovery_info_provider():
     discovery_info_provider = DiscoveryInfoProvider()
-    discovery_info_provider.configureEndpoint(HOST, PORT)
+    discovery_info_provider.configureEndpoint(host, PORT)
     discovery_info_provider.configureCredentials(CA, CERT, KEY)
     discovery_info_provider.configureTimeout(TIME_OUT_SEC)
     return discovery_info_provider
@@ -196,9 +200,6 @@ def verify_group_object(discovery_info):
 
 ############################################################################
 # Main #
-my_check_in_manager = checkInManager(1)
-my_check_in_manager.verify(sys.argv)
-mode = my_check_in_manager.mode
 
 skip_when_match(ModeIsWebSocket(mode), "This test is not applicable for mode: %s. Skipping..." % mode)
 

@@ -79,6 +79,11 @@ class subscribeError(operationError.operationError):
     def __init__(self, errorCode):
         self.message = "Subscribe Error: " + str(errorCode)
 
+class subackError(operationError.operationError):
+    def __init__(self, suback=None):
+        self.message = "Received Error suback. Subscription failed."
+        self.suback = suback
+
 
 class subscribeQueueFullException(operationError.operationError):
     def __init__(self):
