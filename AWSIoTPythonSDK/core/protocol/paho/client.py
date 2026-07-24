@@ -832,7 +832,6 @@ class Client(object):
                 self._ssl = ssl_context.wrap_socket(sock, server_hostname=self._host, do_handshake_on_connect=False)
                 self._ssl.do_handshake()
             else:
-                # Standard X.509 mutual authentication (port 8883)
                 ssl_context = ssl.SSLContext(self._tls_version)
                 ssl_context.load_cert_chain(self._tls_certfile, self._tls_keyfile)
                 ssl_context.load_verify_locations(self._tls_ca_certs)
