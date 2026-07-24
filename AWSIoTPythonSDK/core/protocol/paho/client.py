@@ -809,17 +809,18 @@ class Client(object):
                     ssl_context = ssl.SSLContext()
                     ssl_context.load_verify_locations(self._tls_ca_certs)
                     ssl_context.verify_mode = ssl.CERT_REQUIRED
-
-                    rawSSL = ssl_context.wrap_socket(sock)
+                    ssl_context.check_hostname = verify_hostname
+                    rawSSL = ssl_context.wrap_socket(sock, server_hostname=self._host)
                 else:
                     rawSSL = ssl.wrap_socket(sock, ca_certs=self._tls_ca_certs, cert_reqs=ssl.CERT_REQUIRED)  # Add server certificate verification
+                    if verify_hostname:
+                        ssl.match_hostname(rawSSL.getpeercert(), self._host)
 
                 rawSSL.setblocking(0)  # Non-blocking socket
                 self._ssl = SecuredWebSocketCore(rawSSL, self._host, self._port, self._AWSAccessKeyIDCustomConfig, self._AWSSecretAccessKeyCustomConfig, self._AWSSessionTokenCustomConfig)  # Override the _ssl socket
                 # self._ssl.enableDebug()
             elif self._alpn_protocols is not None:
                 # SSLContext is required to enable ALPN support
-                # Assuming Python 2.7.10+/3.5+ till the end of this elif branch
                 ssl_context = SSLContextBuilder()\
                     .with_ca_certs(self._tls_ca_certs)\
                     .with_cert_key_pair(self._tls_certfile, self._tls_keyfile)\
@@ -829,24 +830,16 @@ class Client(object):
                     .with_alpn_protocols(self._alpn_protocols)\
                     .build()
                 self._ssl = ssl_context.wrap_socket(sock, server_hostname=self._host, do_handshake_on_connect=False)
-                verify_hostname = False  # Since check_hostname in SSLContext is already set to True, no need to verify it again
                 self._ssl.do_handshake()
             else:
-                # ssl.wrap_socket is deprecated in Python 3.7+. Use SSLContext instead.
                 ssl_context = ssl.SSLContext(self._tls_version)
                 ssl_context.load_cert_chain(self._tls_certfile, self._tls_keyfile)
                 ssl_context.load_verify_locations(self._tls_ca_certs)
                 ssl_context.verify_mode = self._tls_cert_reqs
+                ssl_context.check_hostname = verify_hostname
                 if self._tls_ciphers is not None:
                     ssl_context.set_ciphers(self._tls_ciphers)
-                self._ssl = ssl_context.wrap_socket(sock)
-
-            if verify_hostname:
-                if sys.version_info[0] < 3 or (sys.version_info[0] == 3 and sys.version_info[1] < 5):  # No IP host match before 3.5.x
-                    self._tls_match_hostname()
-                elif sys.version_info[0] == 3 and sys.version_info[1] < 7:
-                    # host name verification is handled internally in Python3.7+
-                    ssl.match_hostname(self._ssl.getpeercert(), self._host)
+                self._ssl = ssl_context.wrap_socket(sock, server_hostname=self._host)
 
         self._sock = sock
 
