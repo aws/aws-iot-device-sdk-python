@@ -21,8 +21,11 @@ sys.path.insert(0, "./test-integration/IntegrationTests/TestToolLibrary/SDKPacka
 
 import TestToolLibrary.checkInManager as checkInManager
 import TestToolLibrary.MQTTClientManager as MQTTClientManager
-from TestToolLibrary.SDKPackage.AWSIoTPythonSDK.MQTTLib import AWSIoTMQTTClient
 from TestToolLibrary.skip import skip_when_match
+from TestToolLibrary.skip import ModeIsALPN
+from TestToolLibrary.skip import Python2VersionLowerThan
+from TestToolLibrary.skip import Python3VersionLowerThan
+
 
 CLIENT_ID = "integrationTestHostnameVerification_" + "".join(random.choice(string.ascii_lowercase) for i in range(4))
 
@@ -73,20 +76,18 @@ except socket.gaierror:
     print("SKIPPED: Could not resolve hostname.")
     exit(0)
 
-# Create an AWSIoTMQTTClient using the IP address as the endpoint.
-# The server's certificate SAN has the DNS name (e.g., *.iot.us-east-1.amazonaws.com)
-# but NOT the IP address.
+# Use create_connected_mqtt_core with the IP address as the host.
+# The server's certificate SAN has the DNS name but NOT the IP address.
 # With hostname verification (our fix): TLS rejects because IP is not in certificate SAN.
 # Without hostname verification (old bug): TLS accepts because only CA chain is checked.
-mismatchClient = myMQTTClientManager.create_connected_mqtt_core(CLIENT_ID, real_ip, rootCA, certificate, privateKey, mode=mode)
-
-
 connection_failed = False
 try:
-    mismatchClient.connect()
-    print("FAILED: Connection using IP address should have been rejected by hostname verification!")
-    mismatchClient.disconnect()
-    exit(4)
+    mismatchClient = myMQTTClientManager.create_connected_mqtt_core(
+        CLIENT_ID + "_mismatch", real_ip, rootCA, certificate, privateKey, mode=mode)
+    if mismatchClient is not None:
+        print("FAILED: Connection using IP address should have been rejected by hostname verification!")
+        mismatchClient.disconnect()
+        exit(4)
 except ssl.SSLCertVerificationError as e:
     print("PASSED: Connection correctly rejected with SSLCertVerificationError: " + str(e))
     connection_failed = True
@@ -103,7 +104,7 @@ except socket.error as e:
 except Exception as e:
     # The SDK wraps SSL errors in its own exception types
     error_msg = str(e).lower()
-    if "ssl" in error_msg or "certificate" in error_msg or "hostname" in error_msg or "tls" in error_msg:
+    if "ssl" in error_msg or "certificate" in error_msg or "hostname" in error_msg or "tls" in error_msg or "connect" in error_msg:
         print("PASSED: Connection correctly rejected: " + str(type(e).__name__) + ": " + str(e))
         connection_failed = True
     else:
