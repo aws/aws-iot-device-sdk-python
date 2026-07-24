@@ -85,7 +85,7 @@ mismatchClient = myMQTTClientManager.create_nonconnected_mqtt_core(CLIENT_ID, re
 
 connection_failed = False
 try:
-    mismatchClient.connect(keepAliveIntervalSecond=600)
+    mismatchClient.connect(60)
     print("FAILED: Connection using IP address should have been rejected by hostname verification!")
     mismatchClient.disconnect()
     exit(4)
