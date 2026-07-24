@@ -23,10 +23,6 @@ import TestToolLibrary.checkInManager as checkInManager
 import TestToolLibrary.MQTTClientManager as MQTTClientManager
 from TestToolLibrary.SDKPackage.AWSIoTPythonSDK.MQTTLib import AWSIoTMQTTClient
 from TestToolLibrary.skip import skip_when_match
-from TestToolLibrary.skip import ModeIsALPN
-from TestToolLibrary.skip import Python2VersionLowerThan
-from TestToolLibrary.skip import Python3VersionLowerThan
-
 
 CLIENT_ID = "integrationTestHostnameVerification_" + "".join(random.choice(string.ascii_lowercase) for i in range(4))
 
@@ -82,11 +78,8 @@ except socket.gaierror:
 # but NOT the IP address.
 # With hostname verification (our fix): TLS rejects because IP is not in certificate SAN.
 # Without hostname verification (old bug): TLS accepts because only CA chain is checked.
-mismatchClient = AWSIoTMQTTClient(clientID=CLIENT_ID + "_mismatch")
-mismatchClient.configureEndpoint(real_ip, 8883)
-mismatchClient.configureCredentials(CAFilePath=rootCA, KeyPath=privateKey, CertificatePath=certificate)
-mismatchClient.configureConnectDisconnectTimeout(10)
-mismatchClient.configureMQTTOperationTimeout(5)
+mismatchClient = myMQTTClientManager.create_connected_mqtt_core(CLIENT_ID, real_ip, rootCA, certificate, privateKey, mode=mode)
+
 
 connection_failed = False
 try:
