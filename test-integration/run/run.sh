@@ -139,6 +139,8 @@ else
                 "IntegrationTestClientReusability.py") Scale=""
                 ;;
                 "IntegrationTestJobsClient.py") Scale=""
+                ;;
+                "IntegrationTestHostnameVerification.py") Scale=""
             esac
 
             python ${TEST_DIR}${file} ${TestMode} ${TestHost} ${Scale}
