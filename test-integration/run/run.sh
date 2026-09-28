@@ -117,7 +117,7 @@ else
             echo "[SUB] Running test: ${file}..."
             
             Scale=10
-            Host=TestHost
+            Host=${TestHost}
             case "$file" in
                 "IntegrationTestMQTTConnection.py") Scale=$2
                 ;;
@@ -141,9 +141,12 @@ else
                 "IntegrationTestJobsClient.py") Scale=""
                 ;;
                 "IntegrationTestHostnameVerification.py") Scale=""
+                ;;
+                "IntegrationTestDiscoveryHostnameVerification.py") Scale=""
+                Host=${GreengrassHost}
             esac
 
-            python ${TEST_DIR}${file} ${TestMode} ${TestHost} ${Scale}
+            python ${TEST_DIR}${file} ${TestMode} ${Host} ${Scale}
             currentTestStatus=$?
             echo "[SUB] Test: ${file} completed. Exiting with status: ${currentTestStatus}"
             if [ ${currentTestStatus} -ne 0 ]; then
