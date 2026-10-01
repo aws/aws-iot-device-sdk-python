@@ -261,81 +261,14 @@ class DiscoveryInfoProvider(object):
             ssl_sock = ssl_context.wrap_socket(sock, server_hostname=self._host, do_handshake_on_connect=False)
             ssl_sock.do_handshake()
         else:
-            # To keep the SSL Context update minimal, only apply forced ssl context to python3.12+
-            force_ssl_context = sys.version_info[0] > 3 or (sys.version_info[0] == 3 and sys.version_info[1] >= 12)
-            if force_ssl_context:
-                ssl_context = ssl.SSLContext(ssl_protocol_version)
-                ssl_context.load_cert_chain(self._cert_path, self._key_path)
-                ssl_context.load_verify_locations(self._ca_path)
-                ssl_context.verify_mode = ssl.CERT_REQUIRED
-
-                ssl_sock = ssl_context.wrap_socket(sock)
-            else:
-                ssl_sock = ssl.wrap_socket(sock,
-                                           certfile=self._cert_path,
-                                           keyfile=self._key_path,
-                                           ca_certs=self._ca_path,
-                                           cert_reqs=ssl.CERT_REQUIRED,
-                                           ssl_version=ssl_protocol_version)
-
-        self._logger.debug("Matching host name...")
-        if sys.version_info[0] < 3 or (sys.version_info[0] == 3 and sys.version_info[1] < 2):
-            self._tls_match_hostname(ssl_sock)
-        elif sys.version_info[0] == 3 and sys.version_info[1] < 7:
-            # host name verification is handled internally in Python3.7+
-            ssl.match_hostname(ssl_sock.getpeercert(), self._host)
+            ssl_context = ssl.SSLContext(ssl_protocol_version)
+            ssl_context.load_cert_chain(self._cert_path, self._key_path)
+            ssl_context.load_verify_locations(self._ca_path)
+            ssl_context.verify_mode = ssl.CERT_REQUIRED
+            ssl_context.check_hostname = True
+            ssl_sock = ssl_context.wrap_socket(sock, server_hostname=self._host)
 
         return ssl_sock
-
-    def _tls_match_hostname(self, ssl_sock):
-        try:
-            cert = ssl_sock.getpeercert()
-        except AttributeError:
-            # the getpeercert can throw Attribute error: object has no attribute 'peer_certificate'
-            # Don't let that crash the whole client. See also: http://bugs.python.org/issue13721
-            raise ssl.SSLError('Not connected')
-
-        san = cert.get('subjectAltName')
-        if san:
-            have_san_dns = False
-            for (key, value) in san:
-                if key == 'DNS':
-                    have_san_dns = True
-                    if self._host_matches_cert(self._host.lower(), value.lower()) == True:
-                        return
-                if key == 'IP Address':
-                    have_san_dns = True
-                    if value.lower() == self._host.lower():
-                        return
-
-            if have_san_dns:
-                # Only check subject if subjectAltName dns not found.
-                raise ssl.SSLError('Certificate subject does not match remote hostname.')
-        subject = cert.get('subject')
-        if subject:
-            for ((key, value),) in subject:
-                if key == 'commonName':
-                    if self._host_matches_cert(self._host.lower(), value.lower()) == True:
-                        return
-
-        raise ssl.SSLError('Certificate subject does not match remote hostname.')
-
-    def _host_matches_cert(self, host, cert_host):
-        if cert_host[0:2] == "*.":
-            if cert_host.count("*") != 1:
-                return False
-
-            host_match = host.split(".", 1)[1]
-            cert_match = cert_host.split(".", 1)[1]
-            if host_match == cert_match:
-                return True
-            else:
-                return False
-        else:
-            if host == cert_host:
-                return True
-            else:
-                return False
 
     def _send_discovery_request(self, ssl_sock, thing_name):
         request = self.REQUEST_TYPE_PREFIX + \
